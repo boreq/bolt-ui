@@ -56,6 +56,8 @@ func NewHandler(app *application.Application, authProvider AuthProvider) (*Handl
 	h.router.HandlerFunc(http.MethodGet, "/api/auth/users", rest.Wrap(h.getUsers))
 	h.router.HandlerFunc(http.MethodPost, "/api/auth/users/:username/remove", rest.Wrap(h.removeUser))
 
+	h.router.HandlerFunc(http.MethodGet, "/api/setup", rest.Wrap(h.setup))
+
 	// Frontend
 	ffs, err := frontend.NewFrontendFileSystem()
 	if err != nil {
@@ -154,6 +156,25 @@ func (h *Handler) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 //
 //	return rest.NewResponse(stats)
 //}
+
+type SetupResponse struct {
+	Completed bool `json:"completed"`
+}
+
+// todo  rework
+func (h *Handler) setup(r *http.Request) rest.RestResponse {
+	users, err := h.app.Auth.List.Execute()
+	if err != nil {
+		h.log.Error("list error", "err", err)
+		return rest.ErrInternalServerError
+	}
+
+	response := SetupResponse{
+		Completed: len(users) > 0,
+	}
+
+	return rest.NewResponse(response)
+}
 
 type registerInitialInput struct {
 	Username string `json:"username"`
