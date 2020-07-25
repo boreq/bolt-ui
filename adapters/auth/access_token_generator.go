@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/boreq/eggplant/application/auth"
+	"github.com/boreq/velo/application/auth"
 	"github.com/boreq/errors"
 )
 

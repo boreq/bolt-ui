@@ -3,7 +3,7 @@ package domain
 import (
 	"fmt"
 
-	"github.com/boreq/eggplant/internal/eventsourcing"
+	"github.com/boreq/velo/internal/eventsourcing"
 	"github.com/boreq/errors"
 )
 

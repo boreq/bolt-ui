@@ -5,7 +5,7 @@ import (
 	"sort"
 	"time"
 
-	"github.com/boreq/eggplant/internal/eventsourcing"
+	"github.com/boreq/velo/internal/eventsourcing"
 	"github.com/boreq/errors"
 )
 

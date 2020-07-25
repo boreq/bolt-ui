@@ -1,8 +1,8 @@
 package auth
 
 import (
-	"github.com/boreq/eggplant/application/auth"
-	"github.com/boreq/eggplant/application/queries"
+	"github.com/boreq/velo/application/auth"
+	"github.com/boreq/velo/application/queries"
 	"github.com/boreq/errors"
 	bolt "go.etcd.io/bbolt"
 )

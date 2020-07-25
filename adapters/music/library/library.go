@@ -7,10 +7,10 @@ import (
 	"sync"
 	"time"
 
-	"github.com/boreq/eggplant/adapters/music/scanner"
-	"github.com/boreq/eggplant/adapters/music/store"
-	"github.com/boreq/eggplant/application/music"
-	"github.com/boreq/eggplant/logging"
+	"github.com/boreq/velo/adapters/music/scanner"
+	"github.com/boreq/velo/adapters/music/store"
+	"github.com/boreq/velo/application/music"
+	"github.com/boreq/velo/logging"
 	"github.com/boreq/errors"
 )
 

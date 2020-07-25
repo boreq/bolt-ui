@@ -4,7 +4,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/boreq/eggplant/domain"
+	"github.com/boreq/velo/domain"
 	"github.com/stretchr/testify/require"
 )
 

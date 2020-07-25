@@ -6,9 +6,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/boreq/eggplant/application/auth"
-	"github.com/boreq/eggplant/internal/fixture"
-	"github.com/boreq/eggplant/internal/wire"
+	"github.com/boreq/velo/application/auth"
+	"github.com/boreq/velo/internal/fixture"
+	"github.com/boreq/velo/internal/wire"
 	"github.com/stretchr/testify/require"
 )
 

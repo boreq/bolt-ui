@@ -1,13 +1,13 @@
 package wire
 
 import (
-	authAdapters "github.com/boreq/eggplant/adapters/auth"
-	trackerAdapters "github.com/boreq/eggplant/adapters/tracker"
-	"github.com/boreq/eggplant/application"
-	"github.com/boreq/eggplant/application/auth"
-	"github.com/boreq/eggplant/application/music"
-	"github.com/boreq/eggplant/application/queries"
-	"github.com/boreq/eggplant/application/tracker"
+	authAdapters "github.com/boreq/velo/adapters/auth"
+	trackerAdapters "github.com/boreq/velo/adapters/tracker"
+	"github.com/boreq/velo/application"
+	"github.com/boreq/velo/application/auth"
+	"github.com/boreq/velo/application/music"
+	"github.com/boreq/velo/application/queries"
+	"github.com/boreq/velo/application/tracker"
 	"github.com/google/wire"
 	bolt "go.etcd.io/bbolt"
 )

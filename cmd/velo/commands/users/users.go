@@ -4,10 +4,10 @@ import (
 	"encoding/json"
 	"fmt"
 
-	authAdapters "github.com/boreq/eggplant/adapters/auth"
-	"github.com/boreq/eggplant/application/auth"
-	"github.com/boreq/eggplant/internal/config"
-	"github.com/boreq/eggplant/internal/wire"
+	authAdapters "github.com/boreq/velo/adapters/auth"
+	"github.com/boreq/velo/application/auth"
+	"github.com/boreq/velo/internal/config"
+	"github.com/boreq/velo/internal/wire"
 	"github.com/boreq/guinea"
 	"github.com/pkg/errors"
 )

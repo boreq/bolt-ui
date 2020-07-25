@@ -1,12 +1,12 @@
 package wire
 
 import (
-	"github.com/boreq/eggplant/adapters/music/library"
-	"github.com/boreq/eggplant/adapters/music/scanner"
-	"github.com/boreq/eggplant/adapters/music/store"
-	"github.com/boreq/eggplant/application/music"
-	"github.com/boreq/eggplant/application/queries"
-	"github.com/boreq/eggplant/internal/config"
+	"github.com/boreq/velo/adapters/music/library"
+	"github.com/boreq/velo/adapters/music/scanner"
+	"github.com/boreq/velo/adapters/music/store"
+	"github.com/boreq/velo/application/music"
+	"github.com/boreq/velo/application/queries"
+	"github.com/boreq/velo/internal/config"
 	"github.com/boreq/errors"
 	"github.com/google/wire"
 )

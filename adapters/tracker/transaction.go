@@ -1,7 +1,7 @@
 package tracker
 
 import (
-	"github.com/boreq/eggplant/application/tracker"
+	"github.com/boreq/velo/application/tracker"
 	"github.com/boreq/errors"
 	bolt "go.etcd.io/bbolt"
 )

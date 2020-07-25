@@ -9,7 +9,7 @@ import (
 	"os"
 	"path"
 
-	"github.com/boreq/eggplant/logging"
+	"github.com/boreq/velo/logging"
 	"github.com/boreq/errors"
 	"github.com/nfnt/resize"
 )

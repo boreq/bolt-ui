@@ -1,7 +1,7 @@
 package service
 
 import (
-	httpPort "github.com/boreq/eggplant/ports/http"
+	httpPort "github.com/boreq/velo/ports/http"
 )
 
 type Service struct {

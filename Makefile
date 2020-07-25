@@ -1,5 +1,5 @@
 BUILD_DIRECTORY=_build
-PROGRAM_NAME=eggplant
+PROGRAM_NAME=velo
 
 all: test lint build
 

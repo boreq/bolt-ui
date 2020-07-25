@@ -3,8 +3,8 @@ package adapters
 import (
 	"encoding/json"
 
-	"github.com/boreq/eggplant/internal/eventsourcing"
-	"github.com/boreq/eggplant/internal/eventsourcing/example/domain"
+	"github.com/boreq/velo/internal/eventsourcing"
+	"github.com/boreq/velo/internal/eventsourcing/example/domain"
 	"github.com/boreq/errors"
 )
 

@@ -4,7 +4,7 @@ import (
 	"net/http"
 
 	"github.com/NYTimes/gziphandler"
-	"github.com/boreq/eggplant/logging"
+	"github.com/boreq/velo/logging"
 	"github.com/rs/cors"
 )
 

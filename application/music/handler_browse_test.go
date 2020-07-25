@@ -3,7 +3,7 @@ package music_test
 import (
 	"testing"
 
-	"github.com/boreq/eggplant/application/music"
+	"github.com/boreq/velo/application/music"
 	"github.com/boreq/errors"
 	"github.com/stretchr/testify/require"
 )

@@ -1,9 +1,9 @@
 package application
 
 import (
-	"github.com/boreq/eggplant/application/auth"
-	"github.com/boreq/eggplant/application/music"
-	"github.com/boreq/eggplant/application/queries"
+	"github.com/boreq/velo/application/auth"
+	"github.com/boreq/velo/application/music"
+	"github.com/boreq/velo/application/queries"
 )
 
 type Application struct {

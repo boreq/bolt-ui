@@ -7,12 +7,12 @@ Eggplant is a music streaming service.
 Eggplant is written in Go which means that the Go tools can be used to install
 the program using the following command:
 
-    $  go get github.com/boreq/eggplant/cmd/eggplant
+    $  go get github.com/boreq/velo/cmd/eggplant
 
 If you prefer to do this by hand clone the repository and execute the `make`
 command:
 
-    $ git clone https://github.com/boreq/eggplant
+    $ git clone https://github.com/boreq/velo
     $ make
     $ ls _build
     eggplant

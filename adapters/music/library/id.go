@@ -8,7 +8,7 @@ import (
 	"io"
 	"os"
 
-	"github.com/boreq/eggplant/application/music"
+	"github.com/boreq/velo/application/music"
 	"github.com/boreq/errors"
 )
 

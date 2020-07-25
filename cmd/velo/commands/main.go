@@ -1,7 +1,7 @@
 package commands
 
 import (
-	"github.com/boreq/eggplant/cmd/eggplant/commands/users"
+	"github.com/boreq/velo/cmd/velo/commands/users"
 	"github.com/boreq/guinea"
 )
 

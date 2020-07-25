@@ -3,8 +3,8 @@ package http
 import (
 	"net/http"
 
-	"github.com/boreq/eggplant/application"
-	"github.com/boreq/eggplant/application/auth"
+	"github.com/boreq/velo/application"
+	"github.com/boreq/velo/application/auth"
 	"github.com/boreq/errors"
 )
 

@@ -3,8 +3,8 @@ package wire
 import (
 	"path/filepath"
 
-	"github.com/boreq/eggplant/adapters"
-	"github.com/boreq/eggplant/internal/config"
+	"github.com/boreq/velo/adapters"
+	"github.com/boreq/velo/internal/config"
 	"github.com/google/wire"
 	bolt "go.etcd.io/bbolt"
 )

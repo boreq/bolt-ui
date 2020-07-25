@@ -3,7 +3,7 @@ package adapters_test
 import (
 	"testing"
 
-	"github.com/boreq/eggplant/internal/eventsourcing/adapters"
+	"github.com/boreq/velo/internal/eventsourcing/adapters"
 )
 
 func RunTestMemory(t *testing.T, test Test) {

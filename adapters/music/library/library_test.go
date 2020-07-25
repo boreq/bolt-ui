@@ -5,10 +5,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/boreq/eggplant/adapters/music/library"
-	"github.com/boreq/eggplant/adapters/music/scanner"
-	"github.com/boreq/eggplant/adapters/music/store"
-	"github.com/boreq/eggplant/application/music"
+	"github.com/boreq/velo/adapters/music/library"
+	"github.com/boreq/velo/adapters/music/scanner"
+	"github.com/boreq/velo/adapters/music/store"
+	"github.com/boreq/velo/application/music"
 	"github.com/stretchr/testify/require"
 )
 

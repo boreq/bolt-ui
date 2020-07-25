@@ -11,8 +11,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/boreq/eggplant/application/queries"
-	"github.com/boreq/eggplant/logging"
+	"github.com/boreq/velo/application/queries"
+	"github.com/boreq/velo/logging"
 	"github.com/boreq/errors"
 )
 

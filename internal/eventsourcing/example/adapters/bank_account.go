@@ -1,9 +1,9 @@
 package adapters
 
 import (
-	"github.com/boreq/eggplant/internal/eventsourcing"
-	"github.com/boreq/eggplant/internal/eventsourcing/adapters"
-	"github.com/boreq/eggplant/internal/eventsourcing/example/domain"
+	"github.com/boreq/velo/internal/eventsourcing"
+	"github.com/boreq/velo/internal/eventsourcing/adapters"
+	"github.com/boreq/velo/internal/eventsourcing/example/domain"
 	"github.com/boreq/errors"
 )
 

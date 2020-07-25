@@ -1,4 +1,4 @@
-module github.com/boreq/eggplant
+module github.com/boreq/velo
 
 require (
 	github.com/NYTimes/gziphandler v1.1.0

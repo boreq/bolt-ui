@@ -3,8 +3,8 @@ package auth
 import (
 	"encoding/json"
 
-	"github.com/boreq/eggplant/application/auth"
-	"github.com/boreq/eggplant/logging"
+	"github.com/boreq/velo/application/auth"
+	"github.com/boreq/velo/logging"
 	"github.com/boreq/errors"
 	bolt "go.etcd.io/bbolt"
 )

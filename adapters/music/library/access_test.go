@@ -5,8 +5,8 @@ import (
 	"os"
 	"testing"
 
-	"github.com/boreq/eggplant/adapters/music/library"
-	"github.com/boreq/eggplant/internal/fixture"
+	"github.com/boreq/velo/adapters/music/library"
+	"github.com/boreq/velo/internal/fixture"
 	"github.com/stretchr/testify/require"
 )
 

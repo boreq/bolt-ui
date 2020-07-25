@@ -6,17 +6,17 @@
 package wire
 
 import (
-	auth2 "github.com/boreq/eggplant/adapters/auth"
-	"github.com/boreq/eggplant/adapters/music/library"
-	tracker2 "github.com/boreq/eggplant/adapters/tracker"
-	"github.com/boreq/eggplant/application"
-	"github.com/boreq/eggplant/application/auth"
-	"github.com/boreq/eggplant/application/music"
-	"github.com/boreq/eggplant/application/queries"
-	"github.com/boreq/eggplant/application/tracker"
-	"github.com/boreq/eggplant/internal/config"
-	"github.com/boreq/eggplant/internal/service"
-	"github.com/boreq/eggplant/ports/http"
+	auth2 "github.com/boreq/velo/adapters/auth"
+	"github.com/boreq/velo/adapters/music/library"
+	tracker2 "github.com/boreq/velo/adapters/tracker"
+	"github.com/boreq/velo/application"
+	"github.com/boreq/velo/application/auth"
+	"github.com/boreq/velo/application/music"
+	"github.com/boreq/velo/application/queries"
+	"github.com/boreq/velo/application/tracker"
+	"github.com/boreq/velo/internal/config"
+	"github.com/boreq/velo/internal/service"
+	"github.com/boreq/velo/ports/http"
 	"go.etcd.io/bbolt"
 )
 

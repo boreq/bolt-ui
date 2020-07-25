@@ -1,8 +1,8 @@
 package commands
 
 import (
-	"github.com/boreq/eggplant/internal/config"
-	"github.com/boreq/eggplant/internal/wire"
+	"github.com/boreq/velo/internal/config"
+	"github.com/boreq/velo/internal/wire"
 	"github.com/boreq/errors"
 	"github.com/boreq/guinea"
 )

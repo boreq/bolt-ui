@@ -10,7 +10,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/boreq/eggplant/logging"
+	"github.com/boreq/velo/logging"
 	"github.com/boreq/errors"
 )
 

@@ -3,11 +3,11 @@
 package wire
 
 import (
-	"github.com/boreq/eggplant/application/auth"
-	"github.com/boreq/eggplant/application/queries"
-	"github.com/boreq/eggplant/application/tracker"
-	"github.com/boreq/eggplant/internal/config"
-	"github.com/boreq/eggplant/internal/service"
+	"github.com/boreq/velo/application/auth"
+	"github.com/boreq/velo/application/queries"
+	"github.com/boreq/velo/application/tracker"
+	"github.com/boreq/velo/internal/config"
+	"github.com/boreq/velo/internal/service"
 	"github.com/google/wire"
 	bolt "go.etcd.io/bbolt"
 )

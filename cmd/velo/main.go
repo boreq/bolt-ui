@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/boreq/eggplant/cmd/eggplant/commands"
-	"github.com/boreq/eggplant/logging"
+	"github.com/boreq/velo/cmd/velo/commands"
+	"github.com/boreq/velo/logging"
 	"github.com/boreq/guinea"
 )
 
