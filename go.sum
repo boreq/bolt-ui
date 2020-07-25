@@ -1,5 +1,7 @@
 github.com/NYTimes/gziphandler v1.1.0 h1:wkMjq4kSz11Zer+ncYWNBQDlj9Y5RLloY/Tb8yOj6gA=
 github.com/NYTimes/gziphandler v1.1.0/go.mod h1:EwmLXLwj3Rvq6vawd3hKEPUcQRyz2CDE1bov6dy8HNQ=
+github.com/boreq/eggplant v0.0.0-20191115201122-ec86e7af43c5 h1:qcNYBHhTaT6eVnri8q+GAUzo/nG0/ZFFkb8y8gMaWS4=
+github.com/boreq/eggplant v0.0.0-20191115201122-ec86e7af43c5/go.mod h1:ZLioL96Lt5M2Viii9VaFrGxNGJ03Kuw9Q2bejZ3ek/Y=
 github.com/boreq/errors v0.1.0 h1:aJIXv9JnyR5KtxFpQ8/AiblH3nfYmr1e1yoTze/5A1k=
 github.com/boreq/errors v0.1.0/go.mod h1:B3dsXzhYvfgUXp7ViU/moPYM4PojgQ9MiQ21uvY6qqQ=
 github.com/boreq/guinea v0.0.0-20190218203212-75c10cec45e9 h1:CgYlE4U2Piu/oRDi97UFgjjS7W2ODdPu0BVUV4LJ0sM=

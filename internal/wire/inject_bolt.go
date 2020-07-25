@@ -15,6 +15,6 @@ var boltSet = wire.NewSet(
 )
 
 func newBolt(conf *config.Config) (*bolt.DB, error) {
-	path := filepath.Join(conf.DataDirectory, "eggplant.database")
+	path := filepath.Join(conf.DataDirectory, "velo.database")
 	return adapters.NewBolt(path)
 }

@@ -2,6 +2,7 @@ module github.com/boreq/velo
 
 require (
 	github.com/NYTimes/gziphandler v1.1.0
+	github.com/boreq/eggplant v0.0.0-20191115201122-ec86e7af43c5 // indirect
 	github.com/boreq/errors v0.1.0
 	github.com/boreq/guinea v0.0.0-20190218203212-75c10cec45e9
 	github.com/boreq/rest v0.1.0

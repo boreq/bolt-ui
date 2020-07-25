@@ -5,8 +5,6 @@ import (
 	trackerAdapters "github.com/boreq/velo/adapters/tracker"
 	"github.com/boreq/velo/application"
 	"github.com/boreq/velo/application/auth"
-	"github.com/boreq/velo/application/music"
-	"github.com/boreq/velo/application/queries"
 	"github.com/boreq/velo/application/tracker"
 	"github.com/google/wire"
 	bolt "go.etcd.io/bbolt"
@@ -27,30 +25,14 @@ var appSet = wire.NewSet(
 	auth.NewRemoveHandler,
 	auth.NewSetPasswordHandler,
 
-	wire.Struct(new(application.Music), "*"),
-	music.NewTrackHandler,
-	music.NewThumbnailHandler,
-	music.NewBrowseHandler,
-
-	wire.Struct(new(application.Queries), "*"),
-	queries.NewStatsHandler,
-
 	authAdapters.NewAuthTransactionProvider,
 	wire.Bind(new(auth.TransactionProvider), new(*authAdapters.AuthTransactionProvider)),
 
-	authAdapters.NewQueryTransactionProvider,
-	wire.Bind(new(queries.TransactionProvider), new(*authAdapters.QueryTransactionProvider)),
-
 	wire.Struct(new(auth.TransactableRepositories), "*"),
-	wire.Struct(new(queries.TransactableRepositories), "*"),
-
-	newQueryRepositoriesProvider,
-	wire.Bind(new(authAdapters.QueryRepositoriesProvider), new(*queryRepositoriesProvider)),
 
 	newAuthRepositoriesProvider,
 	wire.Bind(new(authAdapters.AuthRepositoriesProvider), new(*authRepositoriesProvider)),
 
-	wire.Bind(new(queries.UserRepository), new(*authAdapters.UserRepository)),
 	wire.Bind(new(auth.UserRepository), new(*authAdapters.UserRepository)),
 	authAdapters.NewUserRepository,
 
@@ -65,6 +47,8 @@ var appSet = wire.NewSet(
 
 	authAdapters.NewCryptoStringGenerator,
 	wire.Bind(new(auth.CryptoStringGenerator), new(*authAdapters.CryptoStringGenerator)),
+
+	trackerSet,
 )
 
 type authRepositoriesProvider struct {
@@ -76,17 +60,6 @@ func newAuthRepositoriesProvider() *authRepositoriesProvider {
 
 func (p *authRepositoriesProvider) Provide(tx *bolt.Tx) (*auth.TransactableRepositories, error) {
 	return BuildTransactableAuthRepositories(tx)
-}
-
-type queryRepositoriesProvider struct {
-}
-
-func newQueryRepositoriesProvider() *queryRepositoriesProvider {
-	return &queryRepositoriesProvider{}
-}
-
-func (p *queryRepositoriesProvider) Provide(tx *bolt.Tx) (*queries.TransactableRepositories, error) {
-	return BuildTransactableQueryRepositories(tx)
 }
 
 //lint:ignore U1000 because

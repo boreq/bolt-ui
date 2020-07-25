@@ -4,16 +4,13 @@ import (
 	"encoding/json"
 	"net/http"
 	"regexp"
-	"strings"
-	"time"
 
-	"github.com/boreq/velo/application"
-	"github.com/boreq/velo/application/auth"
-	"github.com/boreq/velo/application/music"
-	"github.com/boreq/velo/logging"
-	"github.com/boreq/velo/ports/http/frontend"
 	"github.com/boreq/errors"
 	"github.com/boreq/rest"
+	"github.com/boreq/velo/application"
+	"github.com/boreq/velo/application/auth"
+	"github.com/boreq/velo/logging"
+	"github.com/boreq/velo/ports/http/frontend"
 	"github.com/julienschmidt/httprouter"
 )
 
@@ -44,11 +41,11 @@ func NewHandler(app *application.Application, authProvider AuthProvider) (*Handl
 	}
 
 	// API
-	h.router.HandlerFunc(http.MethodGet, "/api/browse/*path", rest.Wrap(h.browse))
-	h.router.HandlerFunc(http.MethodGet, "/api/stats", rest.Wrap(Cache(30*time.Second, h.stats)))
+	//h.router.HandlerFunc(http.MethodGet, "/api/browse/*path", rest.Wrap(h.browse))
+	//h.router.HandlerFunc(http.MethodGet, "/api/stats", rest.Wrap(Cache(30*time.Second, h.stats)))
 
-	h.router.GET("/api/track/:id", h.track)
-	h.router.GET("/api/thumbnail/:id", h.thumbnail)
+	//h.router.GET("/api/track/:id", h.track)
+	//h.router.GET("/api/thumbnail/:id", h.thumbnail)
 
 	h.router.HandlerFunc(http.MethodPost, "/api/auth/register-initial", rest.Wrap(h.registerInitial))
 	h.router.HandlerFunc(http.MethodPost, "/api/auth/register", rest.Wrap(h.register))
@@ -73,90 +70,90 @@ func (h *Handler) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 	h.router.ServeHTTP(rw, req)
 }
 
-func (h *Handler) browse(r *http.Request) rest.RestResponse {
-	ps := httprouter.ParamsFromContext(r.Context())
-	path := strings.Trim(ps.ByName("path"), "/")
+//func (h *Handler) browse(r *http.Request) rest.RestResponse {
+//	ps := httprouter.ParamsFromContext(r.Context())
+//	path := strings.Trim(ps.ByName("path"), "/")
+//
+//	u, err := h.authProvider.Get(r)
+//	if err != nil {
+//		h.log.Error("auth provider get failed", "err", err)
+//		return rest.ErrInternalServerError
+//	}
+//
+//	var dirs []string
+//	if path != "" {
+//		dirs = strings.Split(path, "/")
+//	}
+//
+//	var ids []music.AlbumId
+//	for _, name := range dirs {
+//		ids = append(ids, music.AlbumId(name))
+//	}
+//
+//	cmd := music.Browse{
+//		Ids:        ids,
+//		PublicOnly: u == nil,
+//	}
+//
+//	album, err := h.app.Music.Browse.Execute(cmd)
+//	if err != nil {
+//		if errors.Is(err, music.ErrForbidden) {
+//			return rest.ErrForbidden
+//		}
+//		h.log.Error("browse error", "err", err)
+//		return rest.ErrInternalServerError
+//	}
+//
+//	return rest.NewResponse(album)
+//}
+//
+//func (h *Handler) track(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+//	id := ps.ByName("id")
+//	if !isIdValid(id) {
+//		h.log.Warn("invalid track id", "id", id)
+//		w.WriteHeader(http.StatusBadRequest)
+//		return
+//	}
+//
+//	p, err := h.app.Music.Track.Execute(id)
+//	if err != nil {
+//		h.log.Error("track error", "err", err)
+//		w.WriteHeader(http.StatusInternalServerError)
+//		return
+//	}
+//
+//	w.Header().Add("Accept-Ranges", "bytes")
+//	http.ServeFile(w, r, p)
+//}
+//
+//func (h *Handler) thumbnail(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+//	id := ps.ByName("id")
+//	if !isIdValid(id) {
+//		h.log.Warn("invalid thumbnail id", "id", id)
+//		w.WriteHeader(http.StatusBadRequest)
+//		return
+//	}
+//
+//	p, err := h.app.Music.Thumbnail.Execute(id)
+//	if err != nil {
+//		h.log.Error("track error", "err", err)
+//		w.WriteHeader(http.StatusInternalServerError)
+//		return
+//	}
+//
+//	w.Header().Add("Accept-Ranges", "bytes")
+//	http.ServeFile(w, r, p)
+//}
 
-	u, err := h.authProvider.Get(r)
-	if err != nil {
-		h.log.Error("auth provider get failed", "err", err)
-		return rest.ErrInternalServerError
-	}
-
-	var dirs []string
-	if path != "" {
-		dirs = strings.Split(path, "/")
-	}
-
-	var ids []music.AlbumId
-	for _, name := range dirs {
-		ids = append(ids, music.AlbumId(name))
-	}
-
-	cmd := music.Browse{
-		Ids:        ids,
-		PublicOnly: u == nil,
-	}
-
-	album, err := h.app.Music.Browse.Execute(cmd)
-	if err != nil {
-		if errors.Is(err, music.ErrForbidden) {
-			return rest.ErrForbidden
-		}
-		h.log.Error("browse error", "err", err)
-		return rest.ErrInternalServerError
-	}
-
-	return rest.NewResponse(album)
-}
-
-func (h *Handler) track(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	id := ps.ByName("id")
-	if !isIdValid(id) {
-		h.log.Warn("invalid track id", "id", id)
-		w.WriteHeader(http.StatusBadRequest)
-		return
-	}
-
-	p, err := h.app.Music.Track.Execute(id)
-	if err != nil {
-		h.log.Error("track error", "err", err)
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-
-	w.Header().Add("Accept-Ranges", "bytes")
-	http.ServeFile(w, r, p)
-}
-
-func (h *Handler) thumbnail(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	id := ps.ByName("id")
-	if !isIdValid(id) {
-		h.log.Warn("invalid thumbnail id", "id", id)
-		w.WriteHeader(http.StatusBadRequest)
-		return
-	}
-
-	p, err := h.app.Music.Thumbnail.Execute(id)
-	if err != nil {
-		h.log.Error("track error", "err", err)
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-
-	w.Header().Add("Accept-Ranges", "bytes")
-	http.ServeFile(w, r, p)
-}
-
-func (h *Handler) stats(r *http.Request) rest.RestResponse {
-	stats, err := h.app.Queries.Stats.Execute()
-	if err != nil {
-		h.log.Error("stats query error", "err", err)
-		return rest.ErrInternalServerError
-	}
-
-	return rest.NewResponse(stats)
-}
+//func (h *Handler) stats(r *http.Request) rest.RestResponse {
+//	stats, err := h.app.Queries.Stats.Execute()
+//	if err != nil {
+//		h.log.Error("stats query error", "err", err)
+//		return rest.ErrInternalServerError
+//	}
+//
+//	return rest.NewResponse(stats)
+//}
 
 type registerInitialInput struct {
 	Username string `json:"username"`

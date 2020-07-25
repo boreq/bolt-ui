@@ -4,7 +4,6 @@ package wire
 
 import (
 	"github.com/boreq/velo/application/auth"
-	"github.com/boreq/velo/application/queries"
 	"github.com/boreq/velo/application/tracker"
 	"github.com/boreq/velo/internal/config"
 	"github.com/boreq/velo/internal/service"
@@ -13,14 +12,6 @@ import (
 )
 
 func BuildTransactableAuthRepositories(tx *bolt.Tx) (*auth.TransactableRepositories, error) {
-	wire.Build(
-		appSet,
-	)
-
-	return nil, nil
-}
-
-func BuildTransactableQueryRepositories(tx *bolt.Tx) (*queries.TransactableRepositories, error) {
 	wire.Build(
 		appSet,
 	)
@@ -66,7 +57,6 @@ func BuildService(conf *config.Config) (*service.Service, error) {
 		service.NewService,
 		httpSet,
 		appSet,
-		musicSet,
 		boltSet,
 	)
 

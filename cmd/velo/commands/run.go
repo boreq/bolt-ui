@@ -1,44 +1,33 @@
 package commands
 
 import (
-	"github.com/boreq/velo/internal/config"
-	"github.com/boreq/velo/internal/wire"
+	"encoding/json"
+	"os"
+
 	"github.com/boreq/errors"
 	"github.com/boreq/guinea"
+	"github.com/boreq/velo/internal/config"
+	"github.com/boreq/velo/internal/wire"
 )
 
 var runCmd = guinea.Command{
 	Run: runRun,
 	Arguments: []guinea.Argument{
 		{
-			Name:        "music_directory",
+			Name:        "config",
 			Optional:    false,
 			Multiple:    false,
-			Description: "Path to a directory containing your music",
-		},
-		{
-			Name:        "data_directory",
-			Optional:    false,
-			Multiple:    false,
-			Description: "Path to a directory which will be used for data storage",
-		},
-	},
-	Options: []guinea.Option{
-		guinea.Option{
-			Name:        "address",
-			Type:        guinea.String,
-			Description: "Serve address",
-			Default:     config.Default().ServeAddress,
+			Description: "Path to the configuration file",
 		},
 	},
 	ShortDescription: "serves your music",
 }
 
 func runRun(c guinea.Context) error {
-	conf := config.Default()
-	conf.ServeAddress = c.Options["address"].Str()
-	conf.MusicDirectory = c.Arguments[0]
-	conf.DataDirectory = c.Arguments[1]
+	conf, err := loadConfig(c.Arguments[0])
+	if err != nil {
+		return errors.Wrap(err, "could not load the configuration")
+	}
 
 	service, err := wire.BuildService(conf)
 	if err != nil {
@@ -46,4 +35,19 @@ func runRun(c guinea.Context) error {
 	}
 
 	return service.HTTPServer.Serve(conf.ServeAddress)
+}
+
+func loadConfig(path string) (*config.Config, error) {
+	conf := config.Default()
+
+	f, err := os.Open(path)
+	if err != nil {
+		return nil, errors.Wrap(err, "could not open the config file")
+	}
+
+	if err := json.NewDecoder(f).Decode(&conf); err != nil {
+		return nil, errors.Wrap(err, "could not unmarshal the config")
+	}
+
+	return conf, nil
 }

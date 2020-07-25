@@ -7,12 +7,9 @@ package wire
 
 import (
 	auth2 "github.com/boreq/velo/adapters/auth"
-	"github.com/boreq/velo/adapters/music/library"
 	tracker2 "github.com/boreq/velo/adapters/tracker"
 	"github.com/boreq/velo/application"
 	"github.com/boreq/velo/application/auth"
-	"github.com/boreq/velo/application/music"
-	"github.com/boreq/velo/application/queries"
 	"github.com/boreq/velo/application/tracker"
 	"github.com/boreq/velo/internal/config"
 	"github.com/boreq/velo/internal/service"
@@ -34,17 +31,6 @@ func BuildTransactableAuthRepositories(tx *bbolt.Tx) (*auth.TransactableReposito
 	transactableRepositories := &auth.TransactableRepositories{
 		Invitations: invitationRepository,
 		Users:       userRepository,
-	}
-	return transactableRepositories, nil
-}
-
-func BuildTransactableQueryRepositories(tx *bbolt.Tx) (*queries.TransactableRepositories, error) {
-	userRepository, err := auth2.NewUserRepository(tx)
-	if err != nil {
-		return nil, err
-	}
-	transactableRepositories := &queries.TransactableRepositories{
-		Users: userRepository,
 	}
 	return transactableRepositories, nil
 }
@@ -156,38 +142,15 @@ func BuildService(conf *config.Config) (*service.Service, error) {
 		Remove:           removeHandler,
 		SetPassword:      setPasswordHandler,
 	}
-	store, err := newThumbnailStore(conf)
-	if err != nil {
-		return nil, err
-	}
-	thumbnailHandler := music.NewThumbnailHandler(store)
-	trackStore, err := newTrackStore(conf)
-	if err != nil {
-		return nil, err
-	}
-	trackHandler := music.NewTrackHandler(trackStore)
-	delimiterAccessLoader := library.NewDelimiterAccessLoader()
-	idGenerator := library.NewIdGenerator()
-	libraryLibrary, err := newLibrary(delimiterAccessLoader, trackStore, store, idGenerator, conf)
-	if err != nil {
-		return nil, err
-	}
-	browseHandler := music.NewBrowseHandler(libraryLibrary)
-	applicationMusic := application.Music{
-		Thumbnail: thumbnailHandler,
-		Track:     trackHandler,
-		Browse:    browseHandler,
-	}
-	wireQueryRepositoriesProvider := newQueryRepositoriesProvider()
-	queryTransactionProvider := auth2.NewQueryTransactionProvider(db, wireQueryRepositoriesProvider)
-	statsHandler := queries.NewStatsHandler(trackStore, store, queryTransactionProvider)
-	applicationQueries := application.Queries{
-		Stats: statsHandler,
+	wireTrackerRepositoriesProvider := newTrackerRepositoriesProvider()
+	trackerTransactionProvider := tracker2.NewTrackerTransactionProvider(db, wireTrackerRepositoriesProvider)
+	addActivityHandler := tracker.NewAddActivityHandler(trackerTransactionProvider)
+	trackerTracker := tracker.Tracker{
+		AddActivity: addActivityHandler,
 	}
 	applicationApplication := &application.Application{
 		Auth:    authAuth,
-		Music:   applicationMusic,
-		Queries: applicationQueries,
+		Tracker: trackerTracker,
 	}
 	httpAuthProvider := http.NewHttpAuthProvider(applicationApplication)
 	handler, err := http.NewHandler(applicationApplication, httpAuthProvider)
