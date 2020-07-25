@@ -2,10 +2,12 @@ package wire
 
 import (
 	authAdapters "github.com/boreq/eggplant/adapters/auth"
+	trackerAdapters "github.com/boreq/eggplant/adapters/tracker"
 	"github.com/boreq/eggplant/application"
 	"github.com/boreq/eggplant/application/auth"
 	"github.com/boreq/eggplant/application/music"
 	"github.com/boreq/eggplant/application/queries"
+	"github.com/boreq/eggplant/application/tracker"
 	"github.com/google/wire"
 	bolt "go.etcd.io/bbolt"
 )
@@ -85,4 +87,29 @@ func newQueryRepositoriesProvider() *queryRepositoriesProvider {
 
 func (p *queryRepositoriesProvider) Provide(tx *bolt.Tx) (*queries.TransactableRepositories, error) {
 	return BuildTransactableQueryRepositories(tx)
+}
+
+//lint:ignore U1000 because
+var trackerSet = wire.NewSet(
+	wire.Struct(new(tracker.Tracker), "*"),
+	tracker.NewAddActivityHandler,
+
+	trackerAdapters.NewTrackerTransactionProvider,
+	wire.Bind(new(tracker.TransactionProvider), new(*trackerAdapters.TrackerTransactionProvider)),
+
+	wire.Struct(new(tracker.TransactableRepositories), "*"),
+
+	newTrackerRepositoriesProvider,
+	wire.Bind(new(trackerAdapters.TrackerRepositoriesProvider), new(*trackerRepositoriesProvider)),
+)
+
+type trackerRepositoriesProvider struct {
+}
+
+func newTrackerRepositoriesProvider() *trackerRepositoriesProvider {
+	return &trackerRepositoriesProvider{}
+}
+
+func (p *trackerRepositoriesProvider) Provide(tx *bolt.Tx) (*tracker.TransactableRepositories, error) {
+	return BuildTransactableTrackerRepositories(tx)
 }

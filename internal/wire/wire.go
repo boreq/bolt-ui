@@ -5,6 +5,7 @@ package wire
 import (
 	"github.com/boreq/eggplant/application/auth"
 	"github.com/boreq/eggplant/application/queries"
+	"github.com/boreq/eggplant/application/tracker"
 	"github.com/boreq/eggplant/internal/config"
 	"github.com/boreq/eggplant/internal/service"
 	"github.com/google/wire"
@@ -22,6 +23,22 @@ func BuildTransactableAuthRepositories(tx *bolt.Tx) (*auth.TransactableRepositor
 func BuildTransactableQueryRepositories(tx *bolt.Tx) (*queries.TransactableRepositories, error) {
 	wire.Build(
 		appSet,
+	)
+
+	return nil, nil
+}
+
+func BuildTransactableTrackerRepositories(tx *bolt.Tx) (*tracker.TransactableRepositories, error) {
+	wire.Build(
+		trackerSet,
+	)
+
+	return nil, nil
+}
+
+func BuildTrackerForTest(db *bolt.DB) (*tracker.Tracker, error) {
+	wire.Build(
+		trackerSet,
 	)
 
 	return nil, nil

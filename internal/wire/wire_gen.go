@@ -8,10 +8,12 @@ package wire
 import (
 	auth2 "github.com/boreq/eggplant/adapters/auth"
 	"github.com/boreq/eggplant/adapters/music/library"
+	tracker2 "github.com/boreq/eggplant/adapters/tracker"
 	"github.com/boreq/eggplant/application"
 	"github.com/boreq/eggplant/application/auth"
 	"github.com/boreq/eggplant/application/music"
 	"github.com/boreq/eggplant/application/queries"
+	"github.com/boreq/eggplant/application/tracker"
 	"github.com/boreq/eggplant/internal/config"
 	"github.com/boreq/eggplant/internal/service"
 	"github.com/boreq/eggplant/ports/http"
@@ -45,6 +47,21 @@ func BuildTransactableQueryRepositories(tx *bbolt.Tx) (*queries.TransactableRepo
 		Users: userRepository,
 	}
 	return transactableRepositories, nil
+}
+
+func BuildTransactableTrackerRepositories(tx *bbolt.Tx) (*tracker.TransactableRepositories, error) {
+	transactableRepositories := &tracker.TransactableRepositories{}
+	return transactableRepositories, nil
+}
+
+func BuildTrackerForTest(db *bbolt.DB) (*tracker.Tracker, error) {
+	wireTrackerRepositoriesProvider := newTrackerRepositoriesProvider()
+	trackerTransactionProvider := tracker2.NewTrackerTransactionProvider(db, wireTrackerRepositoriesProvider)
+	addActivityHandler := tracker.NewAddActivityHandler(trackerTransactionProvider)
+	trackerTracker := &tracker.Tracker{
+		AddActivity: addActivityHandler,
+	}
+	return trackerTracker, nil
 }
 
 func BuildAuthForTest(db *bbolt.DB) (*auth.Auth, error) {
