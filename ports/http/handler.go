@@ -208,11 +208,17 @@ func (h *Handler) registerInitial(r *http.Request) rest.RestResponse {
 const maxActivityFileSize = 10 * 1024 * 1024 // max size of the activity file in bytes
 
 func (h *Handler) postActivity(r *http.Request) rest.RestResponse {
-	//if err := r.ParseMultipartForm(maxActivityFormSize); err != nil {
-	//	return rest.ErrBadRequest.WithMessage("Failed to parse the multipart form.")
-	//}
+	u, err := h.authProvider.Get(r)
+	if err != nil {
+		h.log.Error("auth provider get failed", "err", err)
+		return rest.ErrInternalServerError
+	}
 
-	file, header, err := r.FormFile("file")
+	if u == nil {
+		return rest.ErrUnauthorized
+	}
+
+	file, header, err := r.FormFile("routeFile")
 	if err != nil {
 		h.log.Warn("activity file retrieval failed", "err", err)
 		return rest.ErrBadRequest.WithMessage("Failed to retrieve the file.")
@@ -222,22 +228,21 @@ func (h *Handler) postActivity(r *http.Request) rest.RestResponse {
 		return rest.ErrBadRequest.WithMessage("Activity file too large.")
 	}
 
-	var t registerInitialInput
-	if err := json.NewDecoder(r.Body).Decode(&t); err != nil {
-		h.log.Warn("register initial decoding failed", "err", err)
-		return rest.ErrBadRequest.WithMessage("Malformed input.")
-	}
-
 	cmd := tracker.AddActivity{
 		RouteFile: file,
 	}
 
-	if _, err := h.app.Tracker.AddActivity.Execute(cmd); err != nil {
+	activityUUID, err := h.app.Tracker.AddActivity.Execute(cmd)
+	if err != nil {
 		h.log.Error("add activity command failed", "err", err)
 		return rest.ErrInternalServerError
 	}
 
-	return rest.NewResponse(nil)
+	return rest.NewResponse(
+		PostActivityResponse{
+			ActivityUUID: activityUUID.String(),
+		},
+	)
 }
 
 type loginInput struct {
