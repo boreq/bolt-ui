@@ -5,8 +5,8 @@ import (
 	"sort"
 	"time"
 
-	"github.com/boreq/velo/internal/eventsourcing"
 	"github.com/boreq/errors"
+	"github.com/boreq/velo/internal/eventsourcing"
 )
 
 type Route struct {
@@ -25,10 +25,41 @@ func NewRoute(uuid RouteUUID, points []Point) (*Route, error) {
 		return nil, errors.New("missing points")
 	}
 
-	return &Route{
-		uuid:   uuid,
-		points: NormaliseRoutePoints(points),
-	}, nil
+	points = NormaliseRoutePoints(points)
+
+	if len(points) < 2 {
+		return nil, errors.New(" a route has to have at least 2 points")
+	}
+
+	// todo use eventsourcing
+	route := &Route{}
+
+	if err := route.update(
+		RouteCreated{
+			UUID:   uuid,
+			Points: points,
+		},
+	); err != nil {
+		return nil, errors.Wrap(err, "could not consume the initial event")
+
+	}
+
+	return route, nil
+}
+
+func NewRouteFromHistory(events eventsourcing.EventSourcingEvents) (*Route, error) {
+	route := &Route{}
+
+	for _, event := range events {
+		if err := route.update(event.Event); err != nil {
+			return nil, errors.Wrap(err, "could not consume an event")
+		}
+		route.es.LoadVersion(event)
+	}
+
+	route.PopChanges()
+
+	return route, nil
 }
 
 func (r Route) UUID() RouteUUID {
@@ -43,6 +74,14 @@ func (r Route) Points() []Point {
 	}
 
 	return points
+}
+
+func (r Route) IsZero() bool {
+	return r.uuid.IsZero() // if uuid is set then everything else must be as well
+}
+
+func (r *Route) PopChanges() eventsourcing.EventSourcingEvents {
+	return r.es.PopChanges()
 }
 
 func (r *Route) update(event eventsourcing.Event) error {
@@ -82,8 +121,8 @@ func NormaliseRoutePoints(points []Point) []Point {
 
 	var normalised []Point
 
-	for _, point := range points {
-		if len(normalised) == 0 {
+	for i, point := range points {
+		if len(normalised) == 0 || i == len(points)-1 {
 			normalised = append(normalised, point)
 		} else {
 			previous := normalised[len(normalised)-1]
@@ -97,7 +136,7 @@ func NormaliseRoutePoints(points []Point) []Point {
 }
 
 func shouldAdd(previous Point, next Point) bool {
-	if !next.Time().Before(previous.Time().Add(intervalBetweenPoints)) {
+	if next.Time().Before(previous.Time().Add(intervalBetweenPoints)) {
 		return false
 	}
 	return true

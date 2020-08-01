@@ -2,7 +2,6 @@ package wire
 
 import (
 	authAdapters "github.com/boreq/velo/adapters/auth"
-	trackerAdapters "github.com/boreq/velo/adapters/tracker"
 	"github.com/boreq/velo/application"
 	"github.com/boreq/velo/application/auth"
 	"github.com/boreq/velo/application/tracker"
@@ -24,6 +23,7 @@ var appSet = wire.NewSet(
 	auth.NewRegisterHandler,
 	auth.NewRemoveHandler,
 	auth.NewSetPasswordHandler,
+	auth.NewGetUserHandler,
 
 	authAdapters.NewAuthTransactionProvider,
 	wire.Bind(new(auth.TransactionProvider), new(*authAdapters.AuthTransactionProvider)),
@@ -66,23 +66,8 @@ func (p *authRepositoriesProvider) Provide(tx *bolt.Tx) (*auth.TransactableRepos
 var trackerSet = wire.NewSet(
 	wire.Struct(new(tracker.Tracker), "*"),
 	tracker.NewAddActivityHandler,
+	tracker.NewGetActivityHandler,
 
-	trackerAdapters.NewTrackerTransactionProvider,
-	wire.Bind(new(tracker.TransactionProvider), new(*trackerAdapters.TrackerTransactionProvider)),
-
-	wire.Struct(new(tracker.TransactableRepositories), "*"),
-
-	newTrackerRepositoriesProvider,
-	wire.Bind(new(trackerAdapters.TrackerRepositoriesProvider), new(*trackerRepositoriesProvider)),
+	trackerRepositoriesSet,
+	trackerTransactableRepositoriesSet,
 )
-
-type trackerRepositoriesProvider struct {
-}
-
-func newTrackerRepositoriesProvider() *trackerRepositoriesProvider {
-	return &trackerRepositoriesProvider{}
-}
-
-func (p *trackerRepositoriesProvider) Provide(tx *bolt.Tx) (*tracker.TransactableRepositories, error) {
-	return BuildTransactableTrackerRepositories(tx)
-}

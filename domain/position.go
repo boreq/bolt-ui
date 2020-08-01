@@ -14,6 +14,14 @@ func NewPosition(latitude Latitude, longitude Longitude) Position {
 	}
 }
 
+func (p Position) Latitude() Latitude {
+	return p.latitude
+}
+
+func (p Position) Longitude() Longitude {
+	return p.longitude
+}
+
 type Longitude struct {
 	longitude float64
 }
@@ -36,6 +44,10 @@ func MustNewLongitude(longitude float64) Longitude {
 	return v
 }
 
+func (l Longitude) Float64() float64 {
+	return l.longitude
+}
+
 type Latitude struct {
 	latitude float64
 }
@@ -56,4 +68,8 @@ func MustNewLatitude(latitude float64) Latitude {
 		panic(err)
 	}
 	return v
+}
+
+func (l Latitude) Float64() float64 {
+	return l.latitude
 }

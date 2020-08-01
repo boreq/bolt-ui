@@ -116,6 +116,7 @@ type Auth struct {
 	CreateInvitation *CreateInvitationHandler
 	Remove           *RemoveHandler
 	SetPassword      *SetPasswordHandler
+	GetUser          *GetUserHandler
 }
 
 const maxUsernameLen = 100

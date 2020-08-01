@@ -46,3 +46,16 @@ func Bolt(t *testing.T) (*bolt.DB, CleanupFunc) {
 
 	return db, cleanup
 }
+
+func TestDataFile(t *testing.T, name string) (*os.File, CleanupFunc) {
+	f, err := os.Open(name)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	cleanup := func() {
+		f.Close()
+	}
+
+	return f, cleanup
+}

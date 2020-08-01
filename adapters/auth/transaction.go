@@ -1,9 +1,8 @@
 package auth
 
 import (
-	"github.com/boreq/velo/application/auth"
-	"github.com/boreq/velo/application/queries"
 	"github.com/boreq/errors"
+	"github.com/boreq/velo/application/auth"
 	bolt "go.etcd.io/bbolt"
 )
 
@@ -38,35 +37,6 @@ func (p *AuthTransactionProvider) Read(handler auth.TransactionHandler) error {
 
 func (p *AuthTransactionProvider) Write(handler auth.TransactionHandler) error {
 	return p.db.Update(func(tx *bolt.Tx) error {
-		repositories, err := p.repositoriesProvider.Provide(tx)
-		if err != nil {
-			return errors.Wrap(err, "could not provide the repositories")
-		}
-		return handler(repositories)
-	})
-}
-
-type QueryRepositoriesProvider interface {
-	Provide(tx *bolt.Tx) (*queries.TransactableRepositories, error)
-}
-
-type QueryTransactionProvider struct {
-	db                   *bolt.DB
-	repositoriesProvider QueryRepositoriesProvider
-}
-
-func NewQueryTransactionProvider(
-	db *bolt.DB,
-	repositoriesProvider QueryRepositoriesProvider,
-) *QueryTransactionProvider {
-	return &QueryTransactionProvider{
-		db:                   db,
-		repositoriesProvider: repositoriesProvider,
-	}
-}
-
-func (p *QueryTransactionProvider) Read(handler queries.TransactionHandler) error {
-	return p.db.View(func(tx *bolt.Tx) error {
 		repositories, err := p.repositoriesProvider.Provide(tx)
 		if err != nil {
 			return errors.Wrap(err, "could not provide the repositories")

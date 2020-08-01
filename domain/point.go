@@ -35,3 +35,11 @@ func MustNewPoint(t time.Time, position Position, altitude Altitude) Point {
 func (p Point) Time() time.Time {
 	return p.time
 }
+
+func (p Point) Position() Position {
+	return p.position
+}
+
+func (p Point) Altitude() Altitude {
+	return p.altitude
+}

@@ -36,16 +36,31 @@ func BuildTransactableAuthRepositories(tx *bbolt.Tx) (*auth.TransactableReposito
 }
 
 func BuildTransactableTrackerRepositories(tx *bbolt.Tx) (*tracker.TransactableRepositories, error) {
-	transactableRepositories := &tracker.TransactableRepositories{}
+	routeRepository, err := tracker2.NewRouteRepository(tx)
+	if err != nil {
+		return nil, err
+	}
+	activityRepository, err := tracker2.NewActivityRepository(tx)
+	if err != nil {
+		return nil, err
+	}
+	transactableRepositories := &tracker.TransactableRepositories{
+		Route:    routeRepository,
+		Activity: activityRepository,
+	}
 	return transactableRepositories, nil
 }
 
 func BuildTrackerForTest(db *bbolt.DB) (*tracker.Tracker, error) {
 	wireTrackerRepositoriesProvider := newTrackerRepositoriesProvider()
 	trackerTransactionProvider := tracker2.NewTrackerTransactionProvider(db, wireTrackerRepositoriesProvider)
-	addActivityHandler := tracker.NewAddActivityHandler(trackerTransactionProvider)
+	routeFileParser := tracker2.NewRouteFileParser()
+	uuidGenerator := tracker2.NewUUIDGenerator()
+	addActivityHandler := tracker.NewAddActivityHandler(trackerTransactionProvider, routeFileParser, uuidGenerator)
+	getActivityHandler := tracker.NewGetActivityHandler(trackerTransactionProvider)
 	trackerTracker := &tracker.Tracker{
 		AddActivity: addActivityHandler,
+		GetActivity: getActivityHandler,
 	}
 	return trackerTracker, nil
 }
@@ -65,6 +80,7 @@ func BuildAuthForTest(db *bbolt.DB) (*auth.Auth, error) {
 	createInvitationHandler := auth.NewCreateInvitationHandler(cryptoStringGenerator, authTransactionProvider)
 	removeHandler := auth.NewRemoveHandler(authTransactionProvider)
 	setPasswordHandler := auth.NewSetPasswordHandler(bcryptPasswordHasher, authTransactionProvider)
+	getUserHandler := auth.NewGetUserHandler(authTransactionProvider)
 	authAuth := &auth.Auth{
 		RegisterInitial:  registerInitialHandler,
 		Register:         registerHandler,
@@ -75,6 +91,7 @@ func BuildAuthForTest(db *bbolt.DB) (*auth.Auth, error) {
 		CreateInvitation: createInvitationHandler,
 		Remove:           removeHandler,
 		SetPassword:      setPasswordHandler,
+		GetUser:          getUserHandler,
 	}
 	return authAuth, nil
 }
@@ -98,6 +115,7 @@ func BuildAuth(conf *config.Config) (*auth.Auth, error) {
 	createInvitationHandler := auth.NewCreateInvitationHandler(cryptoStringGenerator, authTransactionProvider)
 	removeHandler := auth.NewRemoveHandler(authTransactionProvider)
 	setPasswordHandler := auth.NewSetPasswordHandler(bcryptPasswordHasher, authTransactionProvider)
+	getUserHandler := auth.NewGetUserHandler(authTransactionProvider)
 	authAuth := &auth.Auth{
 		RegisterInitial:  registerInitialHandler,
 		Register:         registerHandler,
@@ -108,6 +126,7 @@ func BuildAuth(conf *config.Config) (*auth.Auth, error) {
 		CreateInvitation: createInvitationHandler,
 		Remove:           removeHandler,
 		SetPassword:      setPasswordHandler,
+		GetUser:          getUserHandler,
 	}
 	return authAuth, nil
 }
@@ -131,6 +150,7 @@ func BuildService(conf *config.Config) (*service.Service, error) {
 	createInvitationHandler := auth.NewCreateInvitationHandler(cryptoStringGenerator, authTransactionProvider)
 	removeHandler := auth.NewRemoveHandler(authTransactionProvider)
 	setPasswordHandler := auth.NewSetPasswordHandler(bcryptPasswordHasher, authTransactionProvider)
+	getUserHandler := auth.NewGetUserHandler(authTransactionProvider)
 	authAuth := auth.Auth{
 		RegisterInitial:  registerInitialHandler,
 		Register:         registerHandler,
@@ -141,12 +161,17 @@ func BuildService(conf *config.Config) (*service.Service, error) {
 		CreateInvitation: createInvitationHandler,
 		Remove:           removeHandler,
 		SetPassword:      setPasswordHandler,
+		GetUser:          getUserHandler,
 	}
 	wireTrackerRepositoriesProvider := newTrackerRepositoriesProvider()
 	trackerTransactionProvider := tracker2.NewTrackerTransactionProvider(db, wireTrackerRepositoriesProvider)
-	addActivityHandler := tracker.NewAddActivityHandler(trackerTransactionProvider)
+	routeFileParser := tracker2.NewRouteFileParser()
+	uuidGenerator := tracker2.NewUUIDGenerator()
+	addActivityHandler := tracker.NewAddActivityHandler(trackerTransactionProvider, routeFileParser, uuidGenerator)
+	getActivityHandler := tracker.NewGetActivityHandler(trackerTransactionProvider)
 	trackerTracker := tracker.Tracker{
 		AddActivity: addActivityHandler,
+		GetActivity: getActivityHandler,
 	}
 	applicationApplication := &application.Application{
 		Auth:    authAuth,

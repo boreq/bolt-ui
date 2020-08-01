@@ -9,3 +9,7 @@ func NewAltitude(altitude float64) Altitude {
 		altitude: altitude,
 	}
 }
+
+func (a Altitude) Float64() float64 {
+	return a.altitude
+}

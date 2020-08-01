@@ -4,8 +4,8 @@ import (
 	"encoding/binary"
 	"encoding/json"
 
-	"github.com/boreq/velo/internal/eventsourcing"
 	"github.com/boreq/errors"
+	"github.com/boreq/velo/internal/eventsourcing"
 	bolt "go.etcd.io/bbolt"
 )
 

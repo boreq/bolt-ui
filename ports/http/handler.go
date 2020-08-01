@@ -9,6 +9,7 @@ import (
 	"github.com/boreq/rest"
 	"github.com/boreq/velo/application"
 	"github.com/boreq/velo/application/auth"
+	"github.com/boreq/velo/application/tracker"
 	"github.com/boreq/velo/logging"
 	"github.com/boreq/velo/ports/http/frontend"
 	"github.com/julienschmidt/httprouter"
@@ -57,6 +58,9 @@ func NewHandler(app *application.Application, authProvider AuthProvider) (*Handl
 	h.router.HandlerFunc(http.MethodPost, "/api/auth/users/:username/remove", rest.Wrap(h.removeUser))
 
 	h.router.HandlerFunc(http.MethodGet, "/api/setup", rest.Wrap(h.setup))
+
+	h.router.HandlerFunc(http.MethodPost, "/api/activities", rest.Wrap(h.postActivity))
+	h.router.HandlerFunc(http.MethodGet, "/api/users/:username", rest.Wrap(h.getUser))
 
 	// Frontend
 	ffs, err := frontend.NewFrontendFileSystem()
@@ -201,6 +205,41 @@ func (h *Handler) registerInitial(r *http.Request) rest.RestResponse {
 	return rest.NewResponse(nil)
 }
 
+const maxActivityFileSize = 10 * 1024 * 1024 // max size of the activity file in bytes
+
+func (h *Handler) postActivity(r *http.Request) rest.RestResponse {
+	//if err := r.ParseMultipartForm(maxActivityFormSize); err != nil {
+	//	return rest.ErrBadRequest.WithMessage("Failed to parse the multipart form.")
+	//}
+
+	file, header, err := r.FormFile("file")
+	if err != nil {
+		h.log.Warn("activity file retrieval failed", "err", err)
+		return rest.ErrBadRequest.WithMessage("Failed to retrieve the file.")
+	}
+
+	if header.Size > maxActivityFileSize {
+		return rest.ErrBadRequest.WithMessage("Activity file too large.")
+	}
+
+	var t registerInitialInput
+	if err := json.NewDecoder(r.Body).Decode(&t); err != nil {
+		h.log.Warn("register initial decoding failed", "err", err)
+		return rest.ErrBadRequest.WithMessage("Malformed input.")
+	}
+
+	cmd := tracker.AddActivity{
+		RouteFile: file,
+	}
+
+	if _, err := h.app.Tracker.AddActivity.Execute(cmd); err != nil {
+		h.log.Error("add activity command failed", "err", err)
+		return rest.ErrInternalServerError
+	}
+
+	return rest.NewResponse(nil)
+}
+
 type loginInput struct {
 	Username string `json:"username"`
 	Password string `json:"password"`
@@ -282,6 +321,28 @@ func (h *Handler) getCurrentUser(r *http.Request) rest.RestResponse {
 	}
 
 	return rest.NewResponse(u.User)
+}
+
+func (h *Handler) getUser(r *http.Request) rest.RestResponse {
+	ps := httprouter.ParamsFromContext(r.Context())
+	username := ps.ByName("username")
+
+	query := auth.GetUser{
+		Username: username,
+	}
+
+	user, err := h.app.Auth.GetUser.Execute(query)
+	if err != nil {
+		h.log.Error("could not get a user", "err", err)
+		return rest.ErrInternalServerError
+	}
+
+	profile := UserProfile{
+		Username:    user.Username,
+		DisplayName: user.Username,
+	}
+
+	return rest.NewResponse(profile)
 }
 
 func (h *Handler) getUsers(r *http.Request) rest.RestResponse {

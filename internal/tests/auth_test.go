@@ -541,6 +541,45 @@ func TestSetPassword(t *testing.T) {
 	require.NoError(t, err)
 }
 
+func TestGetUser(t *testing.T) {
+	const username = "username"
+	const password = "password"
+
+	a, cleanup := NewAuth(t)
+	defer cleanup()
+
+	err := a.RegisterInitial.Execute(
+		auth.RegisterInitial{
+			Username: username,
+			Password: password,
+		},
+	)
+	require.NoError(t, err)
+
+	query := auth.GetUser{
+		Username: username,
+	}
+
+	user, err := a.GetUser.Execute(query)
+	require.NoError(t, err)
+
+	require.Equal(t, username, user.Username)
+}
+
+func TestGetUserMissingUserReturnsAppropriateError(t *testing.T) {
+	a, cleanup := NewAuth(t)
+	defer cleanup()
+
+	query := auth.GetUser{
+		Username: "invalid-username",
+	}
+
+	_, err := a.GetUser.Execute(query)
+	require.Error(t, err)
+
+	require.True(t, errors.Is(err, auth.ErrNotFound))
+}
+
 func NewAuth(t *testing.T) (*auth.Auth, fixture.CleanupFunc) {
 	db, cleanup := fixture.Bolt(t)
 

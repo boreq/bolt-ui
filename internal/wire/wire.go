@@ -21,7 +21,7 @@ func BuildTransactableAuthRepositories(tx *bolt.Tx) (*auth.TransactableRepositor
 
 func BuildTransactableTrackerRepositories(tx *bolt.Tx) (*tracker.TransactableRepositories, error) {
 	wire.Build(
-		trackerSet,
+		trackerTransactableRepositoriesSet,
 	)
 
 	return nil, nil
