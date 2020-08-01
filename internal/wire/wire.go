@@ -30,6 +30,7 @@ func BuildTransactableTrackerRepositories(tx *bolt.Tx) (*tracker.TransactableRep
 func BuildTrackerForTest(db *bolt.DB) (*tracker.Tracker, error) {
 	wire.Build(
 		trackerSet,
+		adaptersSet,
 	)
 
 	return nil, nil
@@ -38,6 +39,7 @@ func BuildTrackerForTest(db *bolt.DB) (*tracker.Tracker, error) {
 func BuildAuthForTest(db *bolt.DB) (*auth.Auth, error) {
 	wire.Build(
 		appSet,
+		adaptersSet,
 	)
 
 	return nil, nil
@@ -47,6 +49,7 @@ func BuildAuth(conf *config.Config) (*auth.Auth, error) {
 	wire.Build(
 		appSet,
 		boltSet,
+		adaptersSet,
 	)
 
 	return nil, nil
@@ -58,6 +61,7 @@ func BuildService(conf *config.Config) (*service.Service, error) {
 		httpSet,
 		appSet,
 		boltSet,
+		adaptersSet,
 	)
 
 	return nil, nil

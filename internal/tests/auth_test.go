@@ -31,6 +31,7 @@ func TestRegisterInitial(t *testing.T) {
 				require.NoError(t, err)
 
 				require.Equal(t, 1, len(users))
+				require.NotEmpty(t, users[0].UUID)
 				require.Equal(t, testCase.Username, users[0].Username)
 				require.Equal(t, true, users[0].Administrator)
 				require.False(t, users[0].Created.IsZero())
@@ -126,6 +127,7 @@ func TestCheckAccessToken(t *testing.T) {
 	)
 	require.NoError(t, err)
 
+	require.NotEmpty(t, u.UUID)
 	require.Equal(t, username, u.Username)
 	require.Equal(t, true, u.Administrator)
 	require.False(t, u.Created.IsZero())
@@ -267,6 +269,7 @@ func TestList(t *testing.T) {
 
 	users, err := a.List.Execute()
 	require.NoError(t, err)
+	require.NotEmpty(t, users[0].UUID)
 	require.Equal(t, 1, len(users))
 	require.Equal(t, username, users[0].Username)
 	require.Equal(t, true, users[0].Administrator)
@@ -382,6 +385,7 @@ func TestRegisterInvalid(t *testing.T) {
 				users, err := a.List.Execute()
 				require.NoError(t, err)
 				require.Equal(t, 1, len(users))
+				require.NotEmpty(t, users[0].UUID)
 				require.Equal(t, testCase.Username, users[0].Username)
 				require.Equal(t, false, users[0].Administrator)
 				require.False(t, users[0].Created.IsZero())

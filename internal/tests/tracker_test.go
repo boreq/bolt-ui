@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"github.com/boreq/velo/application/tracker"
-	"github.com/boreq/velo/domain"
+	"github.com/boreq/velo/domain/auth"
 	"github.com/boreq/velo/internal/fixture"
 	"github.com/boreq/velo/internal/wire"
 	"github.com/stretchr/testify/require"
@@ -17,7 +17,7 @@ func TestAddActivity(t *testing.T) {
 	gpxFile, cleanupFile := fixture.TestDataFile(t, "data/strava_export.gpx")
 	defer cleanupFile()
 
-	userUUID := domain.MustNewUserUUID("user-uuid")
+	userUUID := auth.MustNewUserUUID("user-uuid")
 
 	cmd := tracker.AddActivity{
 		RouteFile: gpxFile,

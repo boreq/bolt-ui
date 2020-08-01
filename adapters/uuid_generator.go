@@ -1,4 +1,4 @@
-package tracker
+package adapters
 
 import (
 	"math/rand"

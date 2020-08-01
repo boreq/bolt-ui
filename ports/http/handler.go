@@ -229,6 +229,7 @@ func (h *Handler) postActivity(r *http.Request) rest.RestResponse {
 	}
 
 	cmd := tracker.AddActivity{
+		UserUUID:  u.User.UUID,
 		RouteFile: file,
 	}
 

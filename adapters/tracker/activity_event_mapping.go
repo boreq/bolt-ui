@@ -5,6 +5,7 @@ import (
 
 	"github.com/boreq/errors"
 	"github.com/boreq/velo/domain"
+	"github.com/boreq/velo/domain/auth"
 	"github.com/boreq/velo/internal/eventsourcing"
 )
 
@@ -33,7 +34,7 @@ var activityEventMapping = eventsourcing.Mapping{
 				return nil, errors.Wrap(err, "could not create a uuid")
 			}
 
-			userUUID, err := domain.NewUserUUID(transportEvent.UserUUID)
+			userUUID, err := auth.NewUserUUID(transportEvent.UserUUID)
 			if err != nil {
 				return nil, errors.Wrap(err, "could not create a user uuid")
 			}

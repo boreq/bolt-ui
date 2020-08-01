@@ -4,18 +4,19 @@ import (
 	"fmt"
 
 	"github.com/boreq/errors"
+	"github.com/boreq/velo/domain/auth"
 	"github.com/boreq/velo/internal/eventsourcing"
 )
 
 type Activity struct {
 	uuid      ActivityUUID
-	userUUID  UserUUID
+	userUUID  auth.UserUUID
 	routeUUID RouteUUID
 
 	es eventsourcing.EventSourcing
 }
 
-func NewActivity(uuid ActivityUUID, userUUID UserUUID, routeUUID RouteUUID) (*Activity, error) {
+func NewActivity(uuid ActivityUUID, userUUID auth.UserUUID, routeUUID RouteUUID) (*Activity, error) {
 	if uuid.IsZero() {
 		return nil, errors.New("zero value of uuid")
 	}
@@ -67,7 +68,7 @@ func (a Activity) RouteUUID() RouteUUID {
 	return a.routeUUID
 }
 
-func (a Activity) UserUUID() UserUUID {
+func (a Activity) UserUUID() auth.UserUUID {
 	return a.userUUID
 }
 
@@ -94,7 +95,7 @@ func (a *Activity) handleActivityCreated(event ActivityCreated) {
 
 type ActivityCreated struct {
 	UUID      ActivityUUID
-	UserUUID  UserUUID
+	UserUUID  auth.UserUUID
 	RouteUUID RouteUUID
 }
 

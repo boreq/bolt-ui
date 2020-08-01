@@ -4,11 +4,17 @@ import (
 	"errors"
 	"fmt"
 	"time"
+
+	"github.com/boreq/velo/domain/auth"
 )
 
 var ErrUnauthorized = errors.New("unauthorized")
 var ErrUsernameTaken = errors.New("username taken")
 var ErrNotFound = errors.New("not found")
+
+type UUIDGenerator interface {
+	Generate() (string, error)
+}
 
 type CryptoStringGenerator interface {
 	Generate(bytes int) (string, error)
@@ -64,12 +70,13 @@ type InvitationToken string
 type PasswordHash []byte
 
 type User struct {
-	Username      string       `json:"username"`
-	Password      PasswordHash `json:"password"`
-	Administrator bool         `json:"administrator"`
-	Created       time.Time    `json:"created"`
-	LastSeen      time.Time    `json:"lastSeen"`
-	Sessions      []Session    `json:"sessions"`
+	UUID          auth.UserUUID `json:"uuid"`
+	Username      string        `json:"username"`
+	Password      PasswordHash  `json:"password"`
+	Administrator bool          `json:"administrator"`
+	Created       time.Time     `json:"created"`
+	LastSeen      time.Time     `json:"lastSeen"`
+	Sessions      []Session     `json:"sessions"`
 }
 
 type Session struct {
@@ -78,6 +85,7 @@ type Session struct {
 }
 
 type ReadUser struct {
+	UUID          auth.UserUUID `json:"-"`
 	Username      string        `json:"username"`
 	Administrator bool          `json:"administrator"`
 	Created       time.Time     `json:"created"`
@@ -152,6 +160,7 @@ func toReadUsers(users []User) []ReadUser {
 
 func toReadUser(user User) ReadUser {
 	rv := ReadUser{
+		UUID:          user.UUID,
 		Username:      user.Username,
 		Administrator: user.Administrator,
 		Created:       user.Created,

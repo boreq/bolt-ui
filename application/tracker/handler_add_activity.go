@@ -5,6 +5,7 @@ import (
 
 	"github.com/boreq/errors"
 	"github.com/boreq/velo/domain"
+	"github.com/boreq/velo/domain/auth"
 )
 
 type RouteFileParser interface {
@@ -13,7 +14,7 @@ type RouteFileParser interface {
 
 type AddActivity struct {
 	RouteFile io.Reader
-	UserUUID  domain.UserUUID
+	UserUUID  auth.UserUUID
 }
 
 type AddActivityHandler struct {
@@ -77,7 +78,7 @@ func (h *AddActivityHandler) createRoute(points []domain.Point) (*domain.Route, 
 	return domain.NewRoute(routeUUID, points)
 }
 
-func (h *AddActivityHandler) createActivity(route *domain.Route, userUUID domain.UserUUID) (*domain.Activity, error) {
+func (h *AddActivityHandler) createActivity(route *domain.Route, userUUID auth.UserUUID) (*domain.Activity, error) {
 	uuid, err := h.uuidGenerator.Generate()
 	if err != nil {
 		return nil, errors.Wrap(err, "could not generate a uuid")

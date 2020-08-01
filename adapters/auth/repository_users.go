@@ -3,9 +3,10 @@ package auth
 import (
 	"encoding/json"
 
-	"github.com/boreq/velo/application/auth"
-	"github.com/boreq/velo/logging"
 	"github.com/boreq/errors"
+	"github.com/boreq/velo/application/auth"
+	authDomain "github.com/boreq/velo/domain/auth"
+	"github.com/boreq/velo/logging"
 	bolt "go.etcd.io/bbolt"
 )
 
@@ -50,11 +51,17 @@ func (r *UserRepository) List() ([]auth.User, error) {
 
 	var users []auth.User
 	for k, v := c.First(); k != nil; k, v = c.Next() {
-		var u auth.User
-		if err := json.Unmarshal(v, &u); err != nil {
+		var pu persistedUser
+		if err := json.Unmarshal(v, &pu); err != nil {
 			return nil, errors.Wrap(err, "json unmarshal failed")
 		}
-		users = append(users, u)
+
+		u, err := r.fromPersisted(pu)
+		if err != nil {
+			return nil, errors.Wrap(err, "could not convert from persisted")
+		}
+
+		users = append(users, *u)
 	}
 
 	return users, nil
@@ -78,16 +85,18 @@ func (r *UserRepository) Get(username string) (*auth.User, error) {
 		return nil, auth.ErrNotFound
 	}
 
-	u := &auth.User{}
-	if err := json.Unmarshal(j, u); err != nil {
+	u := persistedUser{}
+	if err := json.Unmarshal(j, &u); err != nil {
 		return nil, errors.Wrap(err, "json unmarshal failed")
 	}
 
-	return u, nil
+	return r.fromPersisted(u)
 }
 
 func (r *UserRepository) Put(user auth.User) error {
-	j, err := json.Marshal(user)
+	persistedUser := r.toPersisted(user)
+
+	j, err := json.Marshal(persistedUser)
 	if err != nil {
 		return errors.Wrap(err, "marshaling to json failed")
 	}
@@ -97,4 +106,51 @@ func (r *UserRepository) Put(user auth.User) error {
 		return errors.New("bucket does not exist")
 	}
 	return b.Put([]byte(user.Username), j)
+}
+
+func (r *UserRepository) toPersisted(user auth.User) persistedUser {
+	var sessions []persistedSession
+
+	for _, session := range user.Sessions {
+		sessions = append(sessions, persistedSession{
+			Token:    string(session.Token),
+			LastSeen: session.LastSeen,
+		})
+	}
+
+	return persistedUser{
+		UUID:          user.UUID.String(),
+		Username:      user.Username,
+		Password:      user.Password,
+		Administrator: user.Administrator,
+		Created:       user.Created,
+		LastSeen:      user.LastSeen,
+		Sessions:      sessions,
+	}
+}
+
+func (r *UserRepository) fromPersisted(user persistedUser) (*auth.User, error) {
+	uuid, err := authDomain.NewUserUUID(user.UUID)
+	if err != nil {
+		return nil, errors.Wrap(err, "could not create user uuid")
+	}
+
+	var sessions []auth.Session
+
+	for _, session := range user.Sessions {
+		sessions = append(sessions, auth.Session{
+			Token:    auth.AccessToken(session.Token),
+			LastSeen: session.LastSeen,
+		})
+	}
+
+	return &auth.User{
+		UUID:          uuid,
+		Username:      user.Username,
+		Password:      user.Password,
+		Administrator: user.Administrator,
+		Created:       user.Created,
+		LastSeen:      user.LastSeen,
+		Sessions:      sessions,
+	}, nil
 }

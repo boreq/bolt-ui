@@ -6,6 +6,7 @@
 package wire
 
 import (
+	"github.com/boreq/velo/adapters"
 	auth2 "github.com/boreq/velo/adapters/auth"
 	tracker2 "github.com/boreq/velo/adapters/tracker"
 	"github.com/boreq/velo/application"
@@ -55,7 +56,7 @@ func BuildTrackerForTest(db *bbolt.DB) (*tracker.Tracker, error) {
 	wireTrackerRepositoriesProvider := newTrackerRepositoriesProvider()
 	trackerTransactionProvider := tracker2.NewTrackerTransactionProvider(db, wireTrackerRepositoriesProvider)
 	routeFileParser := tracker2.NewRouteFileParser()
-	uuidGenerator := tracker2.NewUUIDGenerator()
+	uuidGenerator := adapters.NewUUIDGenerator()
 	addActivityHandler := tracker.NewAddActivityHandler(trackerTransactionProvider, routeFileParser, uuidGenerator)
 	getActivityHandler := tracker.NewGetActivityHandler(trackerTransactionProvider)
 	trackerTracker := &tracker.Tracker{
@@ -69,8 +70,9 @@ func BuildAuthForTest(db *bbolt.DB) (*auth.Auth, error) {
 	bcryptPasswordHasher := auth2.NewBcryptPasswordHasher()
 	wireAuthRepositoriesProvider := newAuthRepositoriesProvider()
 	authTransactionProvider := auth2.NewAuthTransactionProvider(db, wireAuthRepositoriesProvider)
-	registerInitialHandler := auth.NewRegisterInitialHandler(bcryptPasswordHasher, authTransactionProvider)
-	registerHandler := auth.NewRegisterHandler(bcryptPasswordHasher, authTransactionProvider)
+	uuidGenerator := adapters.NewUUIDGenerator()
+	registerInitialHandler := auth.NewRegisterInitialHandler(bcryptPasswordHasher, authTransactionProvider, uuidGenerator)
+	registerHandler := auth.NewRegisterHandler(bcryptPasswordHasher, authTransactionProvider, uuidGenerator)
 	cryptoAccessTokenGenerator := auth2.NewCryptoAccessTokenGenerator()
 	loginHandler := auth.NewLoginHandler(bcryptPasswordHasher, authTransactionProvider, cryptoAccessTokenGenerator)
 	logoutHandler := auth.NewLogoutHandler(authTransactionProvider, cryptoAccessTokenGenerator)
@@ -104,8 +106,9 @@ func BuildAuth(conf *config.Config) (*auth.Auth, error) {
 	}
 	wireAuthRepositoriesProvider := newAuthRepositoriesProvider()
 	authTransactionProvider := auth2.NewAuthTransactionProvider(db, wireAuthRepositoriesProvider)
-	registerInitialHandler := auth.NewRegisterInitialHandler(bcryptPasswordHasher, authTransactionProvider)
-	registerHandler := auth.NewRegisterHandler(bcryptPasswordHasher, authTransactionProvider)
+	uuidGenerator := adapters.NewUUIDGenerator()
+	registerInitialHandler := auth.NewRegisterInitialHandler(bcryptPasswordHasher, authTransactionProvider, uuidGenerator)
+	registerHandler := auth.NewRegisterHandler(bcryptPasswordHasher, authTransactionProvider, uuidGenerator)
 	cryptoAccessTokenGenerator := auth2.NewCryptoAccessTokenGenerator()
 	loginHandler := auth.NewLoginHandler(bcryptPasswordHasher, authTransactionProvider, cryptoAccessTokenGenerator)
 	logoutHandler := auth.NewLogoutHandler(authTransactionProvider, cryptoAccessTokenGenerator)
@@ -139,8 +142,9 @@ func BuildService(conf *config.Config) (*service.Service, error) {
 	}
 	wireAuthRepositoriesProvider := newAuthRepositoriesProvider()
 	authTransactionProvider := auth2.NewAuthTransactionProvider(db, wireAuthRepositoriesProvider)
-	registerInitialHandler := auth.NewRegisterInitialHandler(bcryptPasswordHasher, authTransactionProvider)
-	registerHandler := auth.NewRegisterHandler(bcryptPasswordHasher, authTransactionProvider)
+	uuidGenerator := adapters.NewUUIDGenerator()
+	registerInitialHandler := auth.NewRegisterInitialHandler(bcryptPasswordHasher, authTransactionProvider, uuidGenerator)
+	registerHandler := auth.NewRegisterHandler(bcryptPasswordHasher, authTransactionProvider, uuidGenerator)
 	cryptoAccessTokenGenerator := auth2.NewCryptoAccessTokenGenerator()
 	loginHandler := auth.NewLoginHandler(bcryptPasswordHasher, authTransactionProvider, cryptoAccessTokenGenerator)
 	logoutHandler := auth.NewLogoutHandler(authTransactionProvider, cryptoAccessTokenGenerator)
@@ -166,7 +170,6 @@ func BuildService(conf *config.Config) (*service.Service, error) {
 	wireTrackerRepositoriesProvider := newTrackerRepositoriesProvider()
 	trackerTransactionProvider := tracker2.NewTrackerTransactionProvider(db, wireTrackerRepositoriesProvider)
 	routeFileParser := tracker2.NewRouteFileParser()
-	uuidGenerator := tracker2.NewUUIDGenerator()
 	addActivityHandler := tracker.NewAddActivityHandler(trackerTransactionProvider, routeFileParser, uuidGenerator)
 	getActivityHandler := tracker.NewGetActivityHandler(trackerTransactionProvider)
 	trackerTracker := tracker.Tracker{

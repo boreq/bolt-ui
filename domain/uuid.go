@@ -42,26 +42,6 @@ func MustNewActivityUUID(u string) ActivityUUID {
 	return v
 }
 
-type UserUUID struct {
-	uuid
-}
-
-func NewUserUUID(u string) (UserUUID, error) {
-	uuid, err := newUUID(u)
-	if err != nil {
-		return UserUUID{}, errors.New("could not create a user UUID")
-	}
-	return UserUUID{uuid}, nil
-}
-
-func MustNewUserUUID(u string) UserUUID {
-	v, err := NewUserUUID(u)
-	if err != nil {
-		panic(err)
-	}
-	return v
-}
-
 type RouteUUID struct {
 	uuid
 }

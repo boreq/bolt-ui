@@ -3,6 +3,7 @@ package auth
 import (
 	"time"
 
+	"github.com/boreq/velo/domain/auth"
 	"github.com/pkg/errors"
 )
 
@@ -14,15 +15,18 @@ type RegisterInitial struct {
 type RegisterInitialHandler struct {
 	passwordHasher      PasswordHasher
 	transactionProvider TransactionProvider
+	uuidGenerator       UUIDGenerator
 }
 
 func NewRegisterInitialHandler(
 	passwordHasher PasswordHasher,
 	transactionProvider TransactionProvider,
+	uuidGenerator UUIDGenerator,
 ) *RegisterInitialHandler {
 	return &RegisterInitialHandler{
 		passwordHasher:      passwordHasher,
 		transactionProvider: transactionProvider,
+		uuidGenerator:       uuidGenerator,
 	}
 }
 
@@ -36,7 +40,18 @@ func (h *RegisterInitialHandler) Execute(cmd RegisterInitial) error {
 		return errors.Wrap(err, "hashing the password failed")
 	}
 
+	uuid, err := h.uuidGenerator.Generate()
+	if err != nil {
+		return errors.Wrap(err, "could not generate an uuid")
+	}
+
+	userUUID, err := auth.NewUserUUID(uuid)
+	if err != nil {
+		return errors.Wrap(err, "could not create a user uuid")
+	}
+
 	u := User{
+		UUID:          userUUID,
 		Username:      cmd.Username,
 		Password:      passwordHash,
 		Administrator: true,

@@ -11,9 +11,6 @@ import (
 var trackerRepositoriesSet = wire.NewSet(
 	trackerAdapters.NewRouteFileParser,
 	wire.Bind(new(tracker.RouteFileParser), new(*trackerAdapters.RouteFileParser)),
-
-	trackerAdapters.NewUUIDGenerator,
-	wire.Bind(new(tracker.UUIDGenerator), new(*trackerAdapters.UUIDGenerator)),
 )
 
 //lint:ignore U1000 because

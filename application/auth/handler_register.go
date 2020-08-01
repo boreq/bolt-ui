@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/boreq/errors"
+	"github.com/boreq/velo/domain/auth"
 )
 
 type Register struct {
@@ -15,15 +16,18 @@ type Register struct {
 type RegisterHandler struct {
 	passwordHasher      PasswordHasher
 	transactionProvider TransactionProvider
+	uuidGenerator       UUIDGenerator
 }
 
 func NewRegisterHandler(
 	passwordHasher PasswordHasher,
 	transactionProvider TransactionProvider,
+	uuidGenerator UUIDGenerator,
 ) *RegisterHandler {
 	return &RegisterHandler{
 		passwordHasher:      passwordHasher,
 		transactionProvider: transactionProvider,
+		uuidGenerator:       uuidGenerator,
 	}
 }
 
@@ -37,7 +41,18 @@ func (h *RegisterHandler) Execute(cmd Register) error {
 		return errors.Wrap(err, "hashing the password failed")
 	}
 
+	uuid, err := h.uuidGenerator.Generate()
+	if err != nil {
+		return errors.Wrap(err, "could not generate an uuid")
+	}
+
+	userUUID, err := auth.NewUserUUID(uuid)
+	if err != nil {
+		return errors.Wrap(err, "could not create a user uuid")
+	}
+
 	u := User{
+		UUID:          userUUID,
 		Username:      cmd.Username,
 		Password:      passwordHash,
 		Administrator: false,
