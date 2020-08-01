@@ -10,6 +10,7 @@ import (
 	"github.com/boreq/velo/application"
 	"github.com/boreq/velo/application/auth"
 	"github.com/boreq/velo/application/tracker"
+	"github.com/boreq/velo/domain"
 	"github.com/boreq/velo/logging"
 	"github.com/boreq/velo/ports/http/frontend"
 	"github.com/julienschmidt/httprouter"
@@ -60,6 +61,7 @@ func NewHandler(app *application.Application, authProvider AuthProvider) (*Handl
 	h.router.HandlerFunc(http.MethodGet, "/api/setup", rest.Wrap(h.setup))
 
 	h.router.HandlerFunc(http.MethodPost, "/api/activities", rest.Wrap(h.postActivity))
+	h.router.HandlerFunc(http.MethodGet, "/api/activities/:uuid", rest.Wrap(h.getActivity))
 	h.router.HandlerFunc(http.MethodGet, "/api/users/:username", rest.Wrap(h.getUser))
 
 	// Frontend
@@ -242,6 +244,33 @@ func (h *Handler) postActivity(r *http.Request) rest.RestResponse {
 	return rest.NewResponse(
 		PostActivityResponse{
 			ActivityUUID: activityUUID.String(),
+		},
+	)
+}
+
+func (h *Handler) getActivity(r *http.Request) rest.RestResponse {
+	ps := httprouter.ParamsFromContext(r.Context())
+	uuid := ps.ByName("uuid")
+
+	activityUUID, err := domain.NewActivityUUID(uuid)
+	if err != nil {
+		return rest.ErrBadRequest.WithMessage("Invalid activity UUID.")
+	}
+
+	query := tracker.GetActivity{
+		ActivityUUID: activityUUID,
+	}
+
+	result, err := h.app.Tracker.GetActivity.Execute(query)
+	if err != nil {
+		h.log.Error("get activity query failed", "err", err)
+		return rest.ErrInternalServerError
+	}
+
+	return rest.NewResponse(
+		GetActivityResponse{
+			Activity: toActivity(result.Activity),
+			Route:    toRoute(result.Route),
 		},
 	)
 }
