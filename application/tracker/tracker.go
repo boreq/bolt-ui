@@ -4,6 +4,7 @@ import (
 	"errors"
 
 	"github.com/boreq/velo/domain"
+	"github.com/boreq/velo/domain/auth"
 )
 
 type UUIDGenerator interface {
@@ -22,6 +23,11 @@ var ErrActivityNotFound = errors.New("activity not found")
 type ActivityRepository interface {
 	Save(activity *domain.Activity) error
 	Get(uuid domain.ActivityUUID) (*domain.Activity, error)
+}
+
+type UserToActivityRepository interface {
+	Assign(userUUID auth.UserUUID, activityUUID domain.ActivityUUID) error
+	List(userUUID auth.UserUUID) ([]domain.ActivityUUID, error)
 }
 
 type Tracker struct {
