@@ -56,6 +56,10 @@ func (h *AddActivityHandler) Execute(cmd AddActivity) (domain.ActivityUUID, erro
 			return errors.Wrap(err, "could not save an activity ")
 		}
 
+		if err := repositories.UserToActivity.Assign(activity.UserUUID(), activity.UUID()); err != nil {
+			return errors.Wrap(err, "could not map an activity to a user")
+		}
+
 		return nil
 	}); err != nil {
 		return domain.ActivityUUID{}, errors.Wrap(err, "transaction failed")

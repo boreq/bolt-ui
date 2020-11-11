@@ -27,12 +27,25 @@ type ActivityRepository interface {
 
 type UserToActivityRepository interface {
 	Assign(userUUID auth.UserUUID, activityUUID domain.ActivityUUID) error
-	List(userUUID auth.UserUUID) ([]domain.ActivityUUID, error)
+	List(userUUID auth.UserUUID) (ActivityIterator, error)
+	ListAfter(userUUID auth.UserUUID, startAfter domain.ActivityUUID) (ActivityIterator, error)
+	ListBefore(userUUID auth.UserUUID, startBefore domain.ActivityUUID) (ActivityIterator, error)
+}
+
+type ActivityIterator interface {
+	// Call next in a loop in order to retrieve further items from the
+	// iterator.
+	Next() (*domain.Activity, bool)
+
+	// After next returns false make sure to call this method to check for
+	// errors.
+	Error() error
 }
 
 type Tracker struct {
-	AddActivity *AddActivityHandler
-	GetActivity *GetActivityHandler
+	AddActivity        *AddActivityHandler
+	GetActivity        *GetActivityHandler
+	ListUserActivities *ListUserActivitiesHandler
 }
 
 type TransactionProvider interface {
@@ -43,6 +56,7 @@ type TransactionProvider interface {
 type TransactionHandler func(repositories *TransactableRepositories) error
 
 type TransactableRepositories struct {
-	Route    RouteRepository
-	Activity ActivityRepository
+	Route          RouteRepository
+	Activity       ActivityRepository
+	UserToActivity UserToActivityRepository
 }

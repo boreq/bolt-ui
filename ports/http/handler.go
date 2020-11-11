@@ -56,7 +56,9 @@ func NewHandler(app *application.Application, authProvider AuthProvider) (*Handl
 
 	h.router.HandlerFunc(http.MethodPost, "/api/activities", rest.Wrap(h.postActivity))
 	h.router.HandlerFunc(http.MethodGet, "/api/activities/:uuid", rest.Wrap(h.getActivity))
+
 	h.router.HandlerFunc(http.MethodGet, "/api/users/:username", rest.Wrap(h.getUser))
+	h.router.HandlerFunc(http.MethodGet, "/api/users/:username/activities", rest.Wrap(h.getUserActivities))
 
 	// Frontend
 	ffs, err := frontend.NewFrontendFileSystem()
@@ -287,6 +289,15 @@ func (h *Handler) getUser(r *http.Request) rest.RestResponse {
 	}
 
 	return rest.NewResponse(profile)
+}
+
+func (h *Handler) getUserActivities(r *http.Request) rest.RestResponse {
+	ps := httprouter.ParamsFromContext(r.Context())
+	username := ps.ByName("username")
+
+	println(username)
+
+	return rest.ErrNotImplemented
 }
 
 func (h *Handler) getUsers(r *http.Request) rest.RestResponse {

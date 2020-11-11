@@ -28,6 +28,9 @@ var trackerTransactableRepositoriesSet = wire.NewSet(
 
 	trackerAdapters.NewRouteRepository,
 	wire.Bind(new(tracker.RouteRepository), new(*trackerAdapters.RouteRepository)),
+
+	trackerAdapters.NewUserToActivityRepository,
+	wire.Bind(new(tracker.UserToActivityRepository), new(*trackerAdapters.UserToActivityRepository)),
 )
 
 type trackerRepositoriesProvider struct {

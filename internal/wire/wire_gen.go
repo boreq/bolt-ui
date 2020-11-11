@@ -45,9 +45,14 @@ func BuildTransactableTrackerRepositories(tx *bbolt.Tx) (*tracker.TransactableRe
 	if err != nil {
 		return nil, err
 	}
+	userToActivityRepository, err := tracker2.NewUserToActivityRepository(tx, activityRepository)
+	if err != nil {
+		return nil, err
+	}
 	transactableRepositories := &tracker.TransactableRepositories{
-		Route:    routeRepository,
-		Activity: activityRepository,
+		Route:          routeRepository,
+		Activity:       activityRepository,
+		UserToActivity: userToActivityRepository,
 	}
 	return transactableRepositories, nil
 }
@@ -59,9 +64,11 @@ func BuildTrackerForTest(db *bbolt.DB) (*tracker.Tracker, error) {
 	uuidGenerator := adapters.NewUUIDGenerator()
 	addActivityHandler := tracker.NewAddActivityHandler(trackerTransactionProvider, routeFileParser, uuidGenerator)
 	getActivityHandler := tracker.NewGetActivityHandler(trackerTransactionProvider)
+	listUserActivitiesHandler := tracker.NewListUserActivitiesHandler(trackerTransactionProvider)
 	trackerTracker := &tracker.Tracker{
-		AddActivity: addActivityHandler,
-		GetActivity: getActivityHandler,
+		AddActivity:        addActivityHandler,
+		GetActivity:        getActivityHandler,
+		ListUserActivities: listUserActivitiesHandler,
 	}
 	return trackerTracker, nil
 }
@@ -172,9 +179,11 @@ func BuildService(conf *config.Config) (*service.Service, error) {
 	routeFileParser := tracker2.NewRouteFileParser()
 	addActivityHandler := tracker.NewAddActivityHandler(trackerTransactionProvider, routeFileParser, uuidGenerator)
 	getActivityHandler := tracker.NewGetActivityHandler(trackerTransactionProvider)
+	listUserActivitiesHandler := tracker.NewListUserActivitiesHandler(trackerTransactionProvider)
 	trackerTracker := tracker.Tracker{
-		AddActivity: addActivityHandler,
-		GetActivity: getActivityHandler,
+		AddActivity:        addActivityHandler,
+		GetActivity:        getActivityHandler,
+		ListUserActivities: listUserActivitiesHandler,
 	}
 	applicationApplication := &application.Application{
 		Auth:    authAuth,
