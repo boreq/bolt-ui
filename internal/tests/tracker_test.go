@@ -52,7 +52,7 @@ func TestAddActivity(t *testing.T) {
 	)
 	require.NoError(t, err)
 	require.Len(t, activities.Activities, 1)
-	require.Equal(t, activities.Activities[0].UUID(), activityUUID)
+	require.Equal(t, activities.Activities[0].Activity.UUID(), activityUUID)
 	require.False(t, activities.HasNext)
 	require.False(t, activities.HasPrev)
 }
@@ -101,7 +101,7 @@ func TestListUserActivities(t *testing.T) {
 	require.False(t, activities.HasPrev)
 	require.True(t, activities.HasNext)
 
-	afterUUID := activities.Activities[len(activities.Activities)-1].UUID()
+	afterUUID := activities.Activities[len(activities.Activities)-1].Activity.UUID()
 
 	// page2 (from page1)
 	activities, err = tr.ListUserActivities.Execute(
@@ -115,7 +115,7 @@ func TestListUserActivities(t *testing.T) {
 	require.True(t, activities.HasPrev)
 	require.True(t, activities.HasNext)
 
-	afterUUID = activities.Activities[len(activities.Activities)-1].UUID()
+	afterUUID = activities.Activities[len(activities.Activities)-1].Activity.UUID()
 
 	// page3 (from page2)
 	activities, err = tr.ListUserActivities.Execute(
@@ -129,7 +129,7 @@ func TestListUserActivities(t *testing.T) {
 	require.True(t, activities.HasPrev)
 	require.False(t, activities.HasNext)
 
-	beforeUUID := activities.Activities[0].UUID()
+	beforeUUID := activities.Activities[0].Activity.UUID()
 
 	// page2 (from page3)
 	activities, err = tr.ListUserActivities.Execute(
@@ -143,7 +143,7 @@ func TestListUserActivities(t *testing.T) {
 	require.True(t, activities.HasPrev)
 	require.True(t, activities.HasNext)
 
-	beforeUUID = activities.Activities[0].UUID()
+	beforeUUID = activities.Activities[0].Activity.UUID()
 
 	// page1 (from page2)
 	activities, err = tr.ListUserActivities.Execute(
@@ -169,11 +169,11 @@ func NewTracker(t *testing.T) (*tracker.Tracker, fixture.CleanupFunc) {
 	return tr, cleanup
 }
 
-func toUUIDs(activities []*domain.Activity) []domain.ActivityUUID {
+func toUUIDs(activities []tracker.ActivityWithRoute) []domain.ActivityUUID {
 	var uuids []domain.ActivityUUID
 
 	for _, acitivity := range activities {
-		uuids = append(uuids, acitivity.UUID())
+		uuids = append(uuids, acitivity.Activity.UUID())
 	}
 
 	return uuids

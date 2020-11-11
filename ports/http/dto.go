@@ -3,6 +3,7 @@ package http
 import (
 	"time"
 
+	"github.com/boreq/velo/application/tracker"
 	"github.com/boreq/velo/domain"
 )
 
@@ -15,13 +16,9 @@ type PostActivityResponse struct {
 	ActivityUUID string `json:"activityUUID"`
 }
 
-type GetActivityResponse struct {
-	Activity
-	Route Route `json:"route"`
-}
-
 type Activity struct {
-	UUID string `json:"uuid"`
+	UUID  string `json:"uuid"`
+	Route Route  `json:"route"`
 }
 
 type Route struct {
@@ -40,9 +37,14 @@ type Position struct {
 	Longitude float64 `json:"longitude"`
 }
 
-func toActivity(activity *domain.Activity) Activity {
+type UserActivities struct {
+	Activities []Activity `json:"activities"`
+}
+
+func toActivity(activity tracker.ActivityWithRoute) Activity {
 	return Activity{
-		UUID: activity.UUID().String(),
+		UUID:  activity.Activity.UUID().String(),
+		Route: toRoute(activity.Route),
 	}
 }
 
@@ -65,5 +67,15 @@ func toPoints(points []domain.Point) []Point {
 			Altitude: point.Altitude().Float64(),
 		})
 	}
+	return result
+}
+
+func toUserActivities(v tracker.ListUserActivitiesResult) UserActivities {
+	var result UserActivities
+
+	for _, activity := range v.Activities {
+		result.Activities = append(result.Activities, toActivity(activity))
+	}
+
 	return result
 }

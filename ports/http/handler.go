@@ -179,10 +179,7 @@ func (h *Handler) getActivity(r *http.Request) rest.RestResponse {
 	}
 
 	return rest.NewResponse(
-		GetActivityResponse{
-			Activity: toActivity(result.Activity),
-			Route:    toRoute(result.Route),
-		},
+		toActivity(result),
 	)
 }
 
@@ -295,9 +292,25 @@ func (h *Handler) getUserActivities(r *http.Request) rest.RestResponse {
 	ps := httprouter.ParamsFromContext(r.Context())
 	username := ps.ByName("username")
 
-	println(username)
+	user, err := h.app.Auth.GetUser.Execute(auth.GetUser{
+		Username: username,
+	})
+	if err != nil {
+		h.log.Error("could not get a user", "err", err)
+		return rest.ErrInternalServerError
+	}
 
-	return rest.ErrNotImplemented
+	query := tracker.ListUserActivities{
+		UserUUID: user.UUID,
+	}
+
+	userActivities, err := h.app.Tracker.ListUserActivities.Execute(query)
+	if err != nil {
+		h.log.Error("could not get user activities", "err", err)
+		return rest.ErrInternalServerError
+	}
+
+	return rest.NewResponse(toUserActivities(userActivities))
 }
 
 func (h *Handler) getUsers(r *http.Request) rest.RestResponse {

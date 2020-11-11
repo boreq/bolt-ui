@@ -5,11 +5,6 @@ import (
 	"github.com/boreq/velo/domain"
 )
 
-type GetActivityResult struct {
-	Activity *domain.Activity
-	Route    *domain.Route
-}
-
 type GetActivity struct {
 	ActivityUUID domain.ActivityUUID
 }
@@ -24,8 +19,8 @@ func NewGetActivityHandler(transactionProvider TransactionProvider) *GetActivity
 	}
 }
 
-func (h *GetActivityHandler) Execute(query GetActivity) (GetActivityResult, error) {
-	var result GetActivityResult
+func (h *GetActivityHandler) Execute(query GetActivity) (ActivityWithRoute, error) {
+	var result ActivityWithRoute
 
 	if err := h.transactionProvider.Read(func(repositories *TransactableRepositories) error {
 		activity, err := repositories.Activity.Get(query.ActivityUUID)
@@ -38,7 +33,7 @@ func (h *GetActivityHandler) Execute(query GetActivity) (GetActivityResult, erro
 			return errors.Wrap(err, "could not get a route")
 		}
 
-		result = GetActivityResult{
+		result = ActivityWithRoute{
 			Activity: activity,
 			Route:    route,
 		}

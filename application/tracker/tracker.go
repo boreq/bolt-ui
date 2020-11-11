@@ -32,6 +32,11 @@ type UserToActivityRepository interface {
 	ListBefore(userUUID auth.UserUUID, startBefore domain.ActivityUUID) (ActivityIterator, error)
 }
 
+type ActivityWithRoute struct {
+	Activity *domain.Activity
+	Route    *domain.Route
+}
+
 type ActivityIterator interface {
 	// Call next in a loop in order to retrieve further items from the
 	// iterator.

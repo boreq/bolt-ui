@@ -11,7 +11,7 @@ import (
 const activitiesPerPage = 10
 
 type ListUserActivitiesResult struct {
-	Activities []*domain.Activity
+	Activities []ActivityWithRoute
 	HasPrev    bool
 	HasNext    bool
 }
@@ -52,7 +52,15 @@ func (h *ListUserActivitiesHandler) Execute(query ListUserActivities) (ListUserA
 				break
 			}
 
-			result.Activities = append(result.Activities, activity)
+			route, err := adapters.Route.Get(activity.RouteUUID())
+			if err != nil {
+				return errors.Wrap(err, "could not get a route")
+			}
+
+			result.Activities = append(result.Activities, ActivityWithRoute{
+				Activity: activity,
+				Route:    route,
+			})
 		}
 
 		result.HasPrev, result.HasNext = h.getPrevNext(query, iter)
@@ -67,7 +75,7 @@ func (h *ListUserActivitiesHandler) Execute(query ListUserActivities) (ListUserA
 	}
 
 	sort.Slice(result.Activities, func(i, j int) bool {
-		return result.Activities[i].UUID().String() > result.Activities[j].UUID().String()
+		return result.Activities[i].Activity.UUID().String() > result.Activities[j].Activity.UUID().String()
 	})
 
 	return result, nil
