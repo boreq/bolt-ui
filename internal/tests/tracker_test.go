@@ -4,6 +4,7 @@ import (
 	"sort"
 	"testing"
 
+	appAuth "github.com/boreq/velo/application/auth"
 	"github.com/boreq/velo/application/tracker"
 	"github.com/boreq/velo/domain"
 	"github.com/boreq/velo/domain/auth"
@@ -13,13 +14,19 @@ import (
 )
 
 func TestAddActivity(t *testing.T) {
-	tr, cleanupTracker := NewTracker(t)
+	testTracker, cleanupTracker := NewTracker(t)
 	defer cleanupTracker()
+
+	tr := testTracker.Tracker
 
 	gpxFile, cleanupFile := fixture.TestDataFile(t, "data/strava_export.gpx")
 	defer cleanupFile()
 
 	userUUID := auth.MustNewUserUUID("user-uuid")
+
+	testTracker.UserRepository.Users[userUUID] = appAuth.User{
+		Username: "username",
+	}
 
 	cmd := tracker.AddActivity{
 		RouteFile: gpxFile,
@@ -31,6 +38,7 @@ func TestAddActivity(t *testing.T) {
 
 	require.False(t, activityUUID.IsZero())
 
+	// test get
 	result, err := tr.GetActivity.Execute(
 		tracker.GetActivity{
 			ActivityUUID: activityUUID,
@@ -45,6 +53,9 @@ func TestAddActivity(t *testing.T) {
 	require.False(t, result.Route.UUID().IsZero())
 	require.NotEmpty(t, result.Route.Points())
 
+	require.NotEmpty(t, result.User.Username)
+
+	// test list
 	activities, err := tr.ListUserActivities.Execute(
 		tracker.ListUserActivities{
 			UserUUID: userUUID,
@@ -53,15 +64,22 @@ func TestAddActivity(t *testing.T) {
 	require.NoError(t, err)
 	require.Len(t, activities.Activities, 1)
 	require.Equal(t, activities.Activities[0].Activity.UUID(), activityUUID)
+	require.NotEmpty(t, activities.Activities[0].User.Username)
 	require.False(t, activities.HasNext)
 	require.False(t, activities.HasPrev)
 }
 
 func TestListUserActivities(t *testing.T) {
-	tr, cleanupTracker := NewTracker(t)
+	testTracker, cleanupTracker := NewTracker(t)
 	defer cleanupTracker()
 
+	tr := testTracker.Tracker
+
 	userUUID := auth.MustNewUserUUID("user-uuid")
+
+	testTracker.UserRepository.Users[userUUID] = appAuth.User{
+		Username: "username",
+	}
 
 	var activityUUIDs []domain.ActivityUUID
 
@@ -158,7 +176,7 @@ func TestListUserActivities(t *testing.T) {
 	require.True(t, activities.HasNext)
 }
 
-func NewTracker(t *testing.T) (*tracker.Tracker, fixture.CleanupFunc) {
+func NewTracker(t *testing.T) (wire.TestTracker, fixture.CleanupFunc) {
 	db, cleanup := fixture.Bolt(t)
 
 	tr, err := wire.BuildTrackerForTest(db)
@@ -169,7 +187,7 @@ func NewTracker(t *testing.T) (*tracker.Tracker, fixture.CleanupFunc) {
 	return tr, cleanup
 }
 
-func toUUIDs(activities []tracker.ActivityWithRoute) []domain.ActivityUUID {
+func toUUIDs(activities []tracker.Activity) []domain.ActivityUUID {
 	var uuids []domain.ActivityUUID
 
 	for _, acitivity := range activities {

@@ -11,7 +11,7 @@ import (
 const activitiesPerPage = 10
 
 type ListUserActivitiesResult struct {
-	Activities []ActivityWithRoute
+	Activities []Activity
 	HasPrev    bool
 	HasNext    bool
 }
@@ -41,6 +41,11 @@ func (h *ListUserActivitiesHandler) Execute(query ListUserActivities) (ListUserA
 	}
 
 	if err := h.transactionProvider.Read(func(adapters *TransactableRepositories) error {
+		user, err := adapters.User.GetByUUID(query.UserUUID)
+		if err != nil {
+			return errors.Wrap(err, "could not get a user")
+		}
+
 		iter, err := listFn(adapters.UserToActivity, query.UserUUID)
 		if err != nil {
 			return errors.Wrap(err, "could not get the iterator")
@@ -57,9 +62,10 @@ func (h *ListUserActivitiesHandler) Execute(query ListUserActivities) (ListUserA
 				return errors.Wrap(err, "could not get a route")
 			}
 
-			result.Activities = append(result.Activities, ActivityWithRoute{
+			result.Activities = append(result.Activities, Activity{
 				Activity: activity,
 				Route:    route,
+				User:     toUser(user),
 			})
 		}
 

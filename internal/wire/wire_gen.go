@@ -14,6 +14,7 @@ import (
 	"github.com/boreq/velo/application/tracker"
 	"github.com/boreq/velo/internal/config"
 	"github.com/boreq/velo/internal/service"
+	"github.com/boreq/velo/internal/tests/mocks"
 	"github.com/boreq/velo/ports/http"
 	"go.etcd.io/bbolt"
 )
@@ -25,7 +26,11 @@ func BuildTransactableAuthRepositories(tx *bbolt.Tx) (*auth.TransactableReposito
 	if err != nil {
 		return nil, err
 	}
-	userRepository, err := auth2.NewUserRepository(tx)
+	uuidToUsernameRepository, err := auth2.NewUUIDToUsernameRepository(tx)
+	if err != nil {
+		return nil, err
+	}
+	userRepository, err := auth2.NewUserRepository(tx, uuidToUsernameRepository)
 	if err != nil {
 		return nil, err
 	}
@@ -49,17 +54,53 @@ func BuildTransactableTrackerRepositories(tx *bbolt.Tx) (*tracker.TransactableRe
 	if err != nil {
 		return nil, err
 	}
+	uuidToUsernameRepository, err := auth2.NewUUIDToUsernameRepository(tx)
+	if err != nil {
+		return nil, err
+	}
+	userRepository, err := auth2.NewUserRepository(tx, uuidToUsernameRepository)
+	if err != nil {
+		return nil, err
+	}
 	transactableRepositories := &tracker.TransactableRepositories{
 		Route:          routeRepository,
 		Activity:       activityRepository,
 		UserToActivity: userToActivityRepository,
+		User:           userRepository,
 	}
 	return transactableRepositories, nil
 }
 
-func BuildTrackerForTest(db *bbolt.DB) (*tracker.Tracker, error) {
-	wireTrackerRepositoriesProvider := newTrackerRepositoriesProvider()
-	trackerTransactionProvider := tracker2.NewTrackerTransactionProvider(db, wireTrackerRepositoriesProvider)
+func BuildTestTransactableTrackerRepositories(tx *bbolt.Tx, trackerMocks TrackerMocks) (*tracker.TransactableRepositories, error) {
+	routeRepository, err := tracker2.NewRouteRepository(tx)
+	if err != nil {
+		return nil, err
+	}
+	activityRepository, err := tracker2.NewActivityRepository(tx)
+	if err != nil {
+		return nil, err
+	}
+	userToActivityRepository, err := tracker2.NewUserToActivityRepository(tx, activityRepository)
+	if err != nil {
+		return nil, err
+	}
+	trackerUserRepositoryMock := trackerMocks.UserRepository
+	transactableRepositories := &tracker.TransactableRepositories{
+		Route:          routeRepository,
+		Activity:       activityRepository,
+		UserToActivity: userToActivityRepository,
+		User:           trackerUserRepositoryMock,
+	}
+	return transactableRepositories, nil
+}
+
+func BuildTrackerForTest(db *bbolt.DB) (TestTracker, error) {
+	trackerUserRepositoryMock := mocks.NewTrackerUserRepositoryMock()
+	trackerMocks := TrackerMocks{
+		UserRepository: trackerUserRepositoryMock,
+	}
+	wireTrackerTestRepositoriesProvider := newTrackerTestRepositoriesProvider(trackerMocks)
+	trackerTransactionProvider := tracker2.NewTrackerTransactionProvider(db, wireTrackerTestRepositoriesProvider)
 	routeFileParser := tracker2.NewRouteFileParser()
 	uuidGenerator := adapters.NewUUIDGenerator()
 	addActivityHandler := tracker.NewAddActivityHandler(trackerTransactionProvider, routeFileParser, uuidGenerator)
@@ -70,7 +111,11 @@ func BuildTrackerForTest(db *bbolt.DB) (*tracker.Tracker, error) {
 		GetActivity:        getActivityHandler,
 		ListUserActivities: listUserActivitiesHandler,
 	}
-	return trackerTracker, nil
+	testTracker := TestTracker{
+		Tracker:      trackerTracker,
+		TrackerMocks: trackerMocks,
+	}
+	return testTracker, nil
 }
 
 func BuildAuthForTest(db *bbolt.DB) (*auth.Auth, error) {
@@ -197,4 +242,15 @@ func BuildService(conf *config.Config) (*service.Service, error) {
 	server := http.NewServer(handler)
 	serviceService := service.NewService(server)
 	return serviceService, nil
+}
+
+// wire.go:
+
+type TestTracker struct {
+	Tracker *tracker.Tracker
+	TrackerMocks
+}
+
+type TrackerMocks struct {
+	UserRepository *mocks.TrackerUserRepositoryMock
 }

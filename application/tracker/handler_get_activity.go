@@ -19,8 +19,8 @@ func NewGetActivityHandler(transactionProvider TransactionProvider) *GetActivity
 	}
 }
 
-func (h *GetActivityHandler) Execute(query GetActivity) (ActivityWithRoute, error) {
-	var result ActivityWithRoute
+func (h *GetActivityHandler) Execute(query GetActivity) (Activity, error) {
+	var result Activity
 
 	if err := h.transactionProvider.Read(func(repositories *TransactableRepositories) error {
 		activity, err := repositories.Activity.Get(query.ActivityUUID)
@@ -33,9 +33,15 @@ func (h *GetActivityHandler) Execute(query GetActivity) (ActivityWithRoute, erro
 			return errors.Wrap(err, "could not get a route")
 		}
 
-		result = ActivityWithRoute{
+		user, err := repositories.User.GetByUUID(activity.UserUUID())
+		if err != nil {
+			return errors.Wrap(err, "could not get a user")
+		}
+
+		result = Activity{
 			Activity: activity,
 			Route:    route,
+			User:     toUser(user),
 		}
 
 		return nil

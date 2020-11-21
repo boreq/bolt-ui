@@ -3,6 +3,7 @@ package wire
 import (
 	authAdapters "github.com/boreq/velo/adapters/auth"
 	"github.com/boreq/velo/application/auth"
+	"github.com/boreq/velo/application/tracker"
 	"github.com/google/wire"
 	bolt "go.etcd.io/bbolt"
 )
@@ -30,7 +31,9 @@ var authTransactableRepositoriesSet = wire.NewSet(
 	wire.Bind(new(authAdapters.AuthRepositoriesProvider), new(*authRepositoriesProvider)),
 
 	wire.Bind(new(auth.UserRepository), new(*authAdapters.UserRepository)),
+	wire.Bind(new(tracker.UserRepository), new(*authAdapters.UserRepository)),
 	authAdapters.NewUserRepository,
+	authAdapters.NewUUIDToUsernameRepository,
 
 	wire.Bind(new(auth.InvitationRepository), new(*authAdapters.InvitationRepository)),
 	authAdapters.NewInvitationRepository,

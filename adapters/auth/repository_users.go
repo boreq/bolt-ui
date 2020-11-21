@@ -11,12 +11,13 @@ import (
 )
 
 type UserRepository struct {
-	tx     *bolt.Tx
-	bucket []byte
-	log    logging.Logger
+	uuidToUsernameRepository *UUIDToUsernameRepository
+	tx                       *bolt.Tx
+	bucket                   []byte
+	log                      logging.Logger
 }
 
-func NewUserRepository(tx *bolt.Tx) (*UserRepository, error) {
+func NewUserRepository(tx *bolt.Tx, uuidToUsernameRepository *UUIDToUsernameRepository) (*UserRepository, error) {
 	bucket := []byte("users")
 
 	if tx.Writable() {
@@ -26,9 +27,10 @@ func NewUserRepository(tx *bolt.Tx) (*UserRepository, error) {
 	}
 
 	return &UserRepository{
-		tx:     tx,
-		bucket: bucket,
-		log:    logging.New("UserRepository"),
+		uuidToUsernameRepository: uuidToUsernameRepository,
+		tx:                       tx,
+		bucket:                   bucket,
+		log:                      logging.New("UserRepository"),
 	}, nil
 }
 
@@ -68,6 +70,18 @@ func (r *UserRepository) List() ([]auth.User, error) {
 }
 
 func (r *UserRepository) Remove(username string) error {
+	u, err := r.Get(username)
+	if err != nil {
+		if errors.Is(err, auth.ErrNotFound) {
+			return nil
+		}
+		return errors.Wrap(err, "could not get a user")
+	}
+
+	if err := r.uuidToUsernameRepository.Remove(u.UUID); err != nil {
+		return errors.Wrap(err, "could not remove the username mapping")
+	}
+
 	b := r.tx.Bucket(r.bucket)
 	if b == nil {
 		return errors.New("bucket does not exist")
@@ -93,12 +107,39 @@ func (r *UserRepository) Get(username string) (*auth.User, error) {
 	return r.fromPersisted(u)
 }
 
+func (r *UserRepository) GetByUUID(uuid authDomain.UserUUID) (*auth.User, error) {
+	username, err := r.uuidToUsernameRepository.Get(uuid)
+	if err != nil {
+		return nil, errors.Wrap(err, "could not get the mapping")
+	}
+
+	b := r.tx.Bucket(r.bucket)
+	if b == nil {
+		return nil, errors.Wrap(auth.ErrNotFound, "bucket does not exist")
+	}
+	j := b.Get([]byte(username))
+	if j == nil {
+		return nil, auth.ErrNotFound
+	}
+
+	u := persistedUser{}
+	if err := json.Unmarshal(j, &u); err != nil {
+		return nil, errors.Wrap(err, "json unmarshal failed")
+	}
+
+	return r.fromPersisted(u)
+}
+
 func (r *UserRepository) Put(user auth.User) error {
 	persistedUser := r.toPersisted(user)
 
 	j, err := json.Marshal(persistedUser)
 	if err != nil {
 		return errors.Wrap(err, "marshaling to json failed")
+	}
+
+	if err := r.uuidToUsernameRepository.Put(user.UUID, user.Username); err != nil {
+		return errors.Wrap(err, "could not store the mapping")
 	}
 
 	b := r.tx.Bucket(r.bucket)

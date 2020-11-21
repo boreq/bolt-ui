@@ -3,6 +3,7 @@ package tracker
 import (
 	"errors"
 
+	appAuth "github.com/boreq/velo/application/auth"
 	"github.com/boreq/velo/domain"
 	"github.com/boreq/velo/domain/auth"
 )
@@ -32,9 +33,18 @@ type UserToActivityRepository interface {
 	ListBefore(userUUID auth.UserUUID, startBefore domain.ActivityUUID) (ActivityIterator, error)
 }
 
-type ActivityWithRoute struct {
+type UserRepository interface {
+	GetByUUID(uuid auth.UserUUID) (*appAuth.User, error)
+}
+
+type Activity struct {
 	Activity *domain.Activity
 	Route    *domain.Route
+	User     *User
+}
+
+type User struct {
+	Username string
 }
 
 type ActivityIterator interface {
@@ -64,4 +74,11 @@ type TransactableRepositories struct {
 	Route          RouteRepository
 	Activity       ActivityRepository
 	UserToActivity UserToActivityRepository
+	User           UserRepository
+}
+
+func toUser(user *appAuth.User) *User {
+	return &User{
+		Username: user.Username,
+	}
 }

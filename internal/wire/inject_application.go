@@ -38,7 +38,4 @@ var trackerSet = wire.NewSet(
 	tracker.NewAddActivityHandler,
 	tracker.NewGetActivityHandler,
 	tracker.NewListUserActivitiesHandler,
-
-	trackerRepositoriesSet,
-	trackerTransactableRepositoriesSet,
 )

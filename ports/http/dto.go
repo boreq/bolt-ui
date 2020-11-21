@@ -19,6 +19,7 @@ type PostActivityResponse struct {
 type Activity struct {
 	UUID  string `json:"uuid"`
 	Route Route  `json:"route"`
+	User  User   `json:"user"`
 }
 
 type Route struct {
@@ -41,10 +42,23 @@ type UserActivities struct {
 	Activities []Activity `json:"activities"`
 }
 
-func toActivity(activity tracker.ActivityWithRoute) Activity {
+type User struct {
+	Username    string `json:"username"`
+	DisplayName string `json:"displayName"`
+}
+
+func toActivity(activity tracker.Activity) Activity {
 	return Activity{
 		UUID:  activity.Activity.UUID().String(),
 		Route: toRoute(activity.Route),
+		User:  toUser(activity.User),
+	}
+}
+
+func toUser(user *tracker.User) User {
+	return User{
+		Username:    user.Username,
+		DisplayName: user.Username,
 	}
 }
 
