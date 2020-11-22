@@ -76,6 +76,14 @@ func (r Route) Points() []Point {
 	return points
 }
 
+func (r Route) TimeStarted() time.Time {
+	return r.points[0].Time()
+}
+
+func (r Route) TimeEnded() time.Time {
+	return r.points[len(r.points)-1].Time()
+}
+
 func (r Route) IsZero() bool {
 	return r.uuid.IsZero() // if uuid is set then everything else must be as well
 }

@@ -17,9 +17,11 @@ type PostActivityResponse struct {
 }
 
 type Activity struct {
-	UUID  string `json:"uuid"`
-	Route Route  `json:"route"`
-	User  User   `json:"user"`
+	UUID        string    `json:"uuid"`
+	TimeStarted time.Time `json:"timeStarted"`
+	TimeEnded   time.Time `json:"timeEnded"`
+	Route       Route     `json:"route"`
+	User        User      `json:"user"`
 }
 
 type Route struct {
@@ -49,9 +51,11 @@ type User struct {
 
 func toActivity(activity tracker.Activity) Activity {
 	return Activity{
-		UUID:  activity.Activity.UUID().String(),
-		Route: toRoute(activity.Route),
-		User:  toUser(activity.User),
+		UUID:        activity.Activity.UUID().String(),
+		TimeStarted: activity.Route.TimeStarted(),
+		TimeEnded:   activity.Route.TimeEnded(),
+		Route:       toRoute(activity.Route),
+		User:        toUser(activity.User),
 	}
 }
 
