@@ -11,9 +11,9 @@ import (
 const activitiesPerPage = 10
 
 type ListUserActivitiesResult struct {
-	Activities []Activity
-	HasPrev    bool
-	HasNext    bool
+	Activities  []Activity
+	HasPrevious bool
+	HasNext     bool
 }
 
 type ListUserActivities struct {
@@ -69,7 +69,7 @@ func (h *ListUserActivitiesHandler) Execute(query ListUserActivities) (ListUserA
 			})
 		}
 
-		result.HasPrev, result.HasNext = h.getPrevNext(query, iter)
+		result.HasPrevious, result.HasNext = h.getPreviousNext(query, iter)
 
 		if err := iter.Error(); err != nil {
 			return errors.Wrap(err, "iterator error")
@@ -87,7 +87,7 @@ func (h *ListUserActivitiesHandler) Execute(query ListUserActivities) (ListUserA
 	return result, nil
 }
 
-func (h *ListUserActivitiesHandler) getPrevNext(query ListUserActivities, iter ActivityIterator) (bool, bool) {
+func (h *ListUserActivitiesHandler) getPreviousNext(query ListUserActivities, iter ActivityIterator) (bool, bool) {
 	if query.StartAfter != nil {
 		_, hasNext := iter.Next()
 		return true, hasNext

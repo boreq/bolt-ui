@@ -66,7 +66,7 @@ func TestAddActivity(t *testing.T) {
 	require.Equal(t, activities.Activities[0].Activity.UUID(), activityUUID)
 	require.NotEmpty(t, activities.Activities[0].User.Username)
 	require.False(t, activities.HasNext)
-	require.False(t, activities.HasPrev)
+	require.False(t, activities.HasPrevious)
 }
 
 func TestListUserActivities(t *testing.T) {
@@ -116,7 +116,7 @@ func TestListUserActivities(t *testing.T) {
 	)
 	require.NoError(t, err)
 	require.Equal(t, page1, toUUIDs(activities.Activities))
-	require.False(t, activities.HasPrev)
+	require.False(t, activities.HasPrevious)
 	require.True(t, activities.HasNext)
 
 	afterUUID := activities.Activities[len(activities.Activities)-1].Activity.UUID()
@@ -130,7 +130,7 @@ func TestListUserActivities(t *testing.T) {
 	)
 	require.NoError(t, err)
 	require.Equal(t, page2, toUUIDs(activities.Activities))
-	require.True(t, activities.HasPrev)
+	require.True(t, activities.HasPrevious)
 	require.True(t, activities.HasNext)
 
 	afterUUID = activities.Activities[len(activities.Activities)-1].Activity.UUID()
@@ -144,7 +144,7 @@ func TestListUserActivities(t *testing.T) {
 	)
 	require.NoError(t, err)
 	require.Equal(t, page3, toUUIDs(activities.Activities))
-	require.True(t, activities.HasPrev)
+	require.True(t, activities.HasPrevious)
 	require.False(t, activities.HasNext)
 
 	beforeUUID := activities.Activities[0].Activity.UUID()
@@ -158,7 +158,7 @@ func TestListUserActivities(t *testing.T) {
 	)
 	require.NoError(t, err)
 	require.Equal(t, page2, toUUIDs(activities.Activities))
-	require.True(t, activities.HasPrev)
+	require.True(t, activities.HasPrevious)
 	require.True(t, activities.HasNext)
 
 	beforeUUID = activities.Activities[0].Activity.UUID()
@@ -172,7 +172,7 @@ func TestListUserActivities(t *testing.T) {
 	)
 	require.NoError(t, err)
 	require.Equal(t, page1, toUUIDs(activities.Activities))
-	require.False(t, activities.HasPrev)
+	require.False(t, activities.HasPrevious)
 	require.True(t, activities.HasNext)
 }
 

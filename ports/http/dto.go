@@ -41,7 +41,9 @@ type Position struct {
 }
 
 type UserActivities struct {
-	Activities []Activity `json:"activities"`
+	Activities  []Activity `json:"activities"`
+	HasPrevious bool       `json:"hasPrevious"`
+	HasNext     bool       `json:"hasNext"`
 }
 
 type User struct {
@@ -89,7 +91,10 @@ func toPoints(points []domain.Point) []Point {
 }
 
 func toUserActivities(v tracker.ListUserActivitiesResult) UserActivities {
-	var result UserActivities
+	result := UserActivities{
+		HasPrevious: v.HasPrevious,
+		HasNext:     v.HasNext,
+	}
 
 	for _, activity := range v.Activities {
 		result.Activities = append(result.Activities, toActivity(activity))

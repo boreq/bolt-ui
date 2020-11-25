@@ -3,7 +3,6 @@ package http
 import (
 	"encoding/json"
 	"net/http"
-	"regexp"
 
 	"github.com/boreq/errors"
 	"github.com/boreq/rest"
@@ -15,8 +14,6 @@ import (
 	"github.com/boreq/velo/ports/http/frontend"
 	"github.com/julienschmidt/httprouter"
 )
-
-var isIdValid = regexp.MustCompile(`^[a-zA-Z0-9]+$`).MatchString
 
 type AuthenticatedUser struct {
 	User  auth.ReadUser
