@@ -289,6 +289,18 @@ func (h *Handler) getUserActivities(r *http.Request) rest.RestResponse {
 	ps := httprouter.ParamsFromContext(r.Context())
 	username := ps.ByName("username")
 
+	before, err := queryParamToActivityUUID(r, "before")
+	if err != nil {
+		h.log.Warn("failed to parse before", "err", err)
+		return rest.ErrInternalServerError
+	}
+
+	after, err := queryParamToActivityUUID(r, "after")
+	if err != nil {
+		h.log.Warn("failed to parse after", "err", err)
+		return rest.ErrInternalServerError
+	}
+
 	user, err := h.app.Auth.GetUser.Execute(auth.GetUser{
 		Username: username,
 	})
@@ -298,7 +310,9 @@ func (h *Handler) getUserActivities(r *http.Request) rest.RestResponse {
 	}
 
 	query := tracker.ListUserActivities{
-		UserUUID: user.UUID,
+		UserUUID:    user.UUID,
+		StartBefore: before,
+		StartAfter:  after,
 	}
 
 	userActivities, err := h.app.Tracker.ListUserActivities.Execute(query)
@@ -308,6 +322,23 @@ func (h *Handler) getUserActivities(r *http.Request) rest.RestResponse {
 	}
 
 	return rest.NewResponse(toUserActivities(userActivities))
+}
+
+// queryParamToActivityUUID retrieves a specific query parameter and creates an
+// activity UUID out of it. If the param is missing or is an empty string nil
+// is returned without an error.
+func queryParamToActivityUUID(r *http.Request, name string) (*domain.ActivityUUID, error) {
+	param := r.URL.Query().Get(name)
+	if param == "" {
+		return nil, nil
+	}
+
+	u, err := domain.NewActivityUUID(param)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to create an activity UUID")
+	}
+
+	return &u, nil
 }
 
 func (h *Handler) getUsers(r *http.Request) rest.RestResponse {
