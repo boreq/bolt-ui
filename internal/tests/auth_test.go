@@ -2,11 +2,11 @@ package tests
 
 import (
 	"errors"
-	"strings"
 	"testing"
 	"time"
 
 	"github.com/boreq/velo/application/auth"
+	authDomain "github.com/boreq/velo/domain/auth"
 	"github.com/boreq/velo/internal/fixture"
 	"github.com/boreq/velo/internal/wire"
 	"github.com/stretchr/testify/require"
@@ -32,7 +32,7 @@ func TestRegisterInitial(t *testing.T) {
 
 				require.Equal(t, 1, len(users))
 				require.NotEmpty(t, users[0].UUID)
-				require.Equal(t, testCase.Username, users[0].Username)
+				require.Equal(t, testCase.Username.String(), users[0].Username)
 				require.Equal(t, true, users[0].Administrator)
 				require.False(t, users[0].Created.IsZero())
 				require.False(t, users[0].LastSeen.IsZero())
@@ -48,8 +48,8 @@ func TestRegisterInitialCanOnlyBePerformedOnce(t *testing.T) {
 	defer cleanup()
 
 	cmd := auth.RegisterInitial{
-		Username: "username",
-		Password: "password",
+		Username: authDomain.MustNewValidatedUsername("username"),
+		Password: authDomain.MustNewValidatedPassword("password"),
 	}
 
 	err := a.RegisterInitial.Execute(cmd)
@@ -68,8 +68,8 @@ func TestLoginInitialUser(t *testing.T) {
 
 	err := a.RegisterInitial.Execute(
 		auth.RegisterInitial{
-			Username: username,
-			Password: password,
+			Username: authDomain.MustNewValidatedUsername(username),
+			Password: authDomain.MustNewValidatedPassword(password),
 		},
 	)
 	require.NoError(t, err)
@@ -110,8 +110,8 @@ func TestCheckAccessToken(t *testing.T) {
 	defer cleanup()
 
 	err := a.RegisterInitial.Execute(auth.RegisterInitial{
-		Username: username,
-		Password: password,
+		Username: authDomain.MustNewValidatedUsername(username),
+		Password: authDomain.MustNewValidatedPassword(password),
 	})
 	require.NoError(t, err)
 
@@ -162,8 +162,8 @@ func TestUpdateLastSeen(t *testing.T) {
 
 	err := a.RegisterInitial.Execute(
 		auth.RegisterInitial{
-			Username: username,
-			Password: password,
+			Username: authDomain.MustNewValidatedUsername(username),
+			Password: authDomain.MustNewValidatedPassword(password),
 		},
 	)
 	require.NoError(t, err)
@@ -209,8 +209,8 @@ func TestLogout(t *testing.T) {
 
 	err := a.RegisterInitial.Execute(
 		auth.RegisterInitial{
-			Username: username,
-			Password: password,
+			Username: authDomain.MustNewValidatedUsername(username),
+			Password: authDomain.MustNewValidatedPassword(password),
 		},
 	)
 	require.NoError(t, err)
@@ -261,8 +261,8 @@ func TestList(t *testing.T) {
 
 	err := a.RegisterInitial.Execute(
 		auth.RegisterInitial{
-			Username: username,
-			Password: password,
+			Username: authDomain.MustNewValidatedUsername(username),
+			Password: authDomain.MustNewValidatedPassword(password),
 		},
 	)
 	require.NoError(t, err)
@@ -295,8 +295,8 @@ func TestRegisterInvalidInvitationToken(t *testing.T) {
 
 	err := a.Register.Execute(
 		auth.Register{
-			Username: username,
-			Password: password,
+			Username: authDomain.MustNewValidatedUsername(username),
+			Password: authDomain.MustNewValidatedPassword(password),
 			Token:    auth.InvitationToken("invalid"),
 		},
 	)
@@ -312,8 +312,8 @@ func TestRegisterTokenCanNotBeReused(t *testing.T) {
 
 	err = a.Register.Execute(
 		auth.Register{
-			Username: "username",
-			Password: "password",
+			Username: authDomain.MustNewValidatedUsername("username"),
+			Password: authDomain.MustNewValidatedPassword("password"),
 			Token:    token,
 		},
 	)
@@ -321,8 +321,8 @@ func TestRegisterTokenCanNotBeReused(t *testing.T) {
 
 	err = a.Register.Execute(
 		auth.Register{
-			Username: "other-username",
-			Password: "other-password",
+			Username: authDomain.MustNewValidatedUsername("other-username"),
+			Password: authDomain.MustNewValidatedPassword("other-password"),
 			Token:    token,
 		},
 	)
@@ -342,8 +342,8 @@ func TestRegisterUsernameCanNotBeTaken(t *testing.T) {
 
 	err = a.Register.Execute(
 		auth.Register{
-			Username: username,
-			Password: password,
+			Username: authDomain.MustNewValidatedUsername(username),
+			Password: authDomain.MustNewValidatedPassword(password),
 			Token:    token,
 		},
 	)
@@ -354,8 +354,8 @@ func TestRegisterUsernameCanNotBeTaken(t *testing.T) {
 
 	err = a.Register.Execute(
 		auth.Register{
-			Username: username,
-			Password: password,
+			Username: authDomain.MustNewValidatedUsername(username),
+			Password: authDomain.MustNewValidatedPassword(password),
 			Token:    token,
 		},
 	)
@@ -386,7 +386,7 @@ func TestRegisterInvalid(t *testing.T) {
 				require.NoError(t, err)
 				require.Equal(t, 1, len(users))
 				require.NotEmpty(t, users[0].UUID)
-				require.Equal(t, testCase.Username, users[0].Username)
+				require.Equal(t, testCase.Username.String(), users[0].Username)
 				require.Equal(t, false, users[0].Administrator)
 				require.False(t, users[0].Created.IsZero())
 				require.False(t, users[0].LastSeen.IsZero())
@@ -409,8 +409,8 @@ func TestLogin(t *testing.T) {
 
 	err = a.Register.Execute(
 		auth.Register{
-			Username: username,
-			Password: password,
+			Username: authDomain.MustNewValidatedUsername(username),
+			Password: authDomain.MustNewValidatedPassword(password),
 			Token:    invitationToken,
 		},
 	)
@@ -454,8 +454,8 @@ func TestRemove(t *testing.T) {
 
 	err = a.Register.Execute(
 		auth.Register{
-			Username: username,
-			Password: password,
+			Username: authDomain.MustNewValidatedUsername(username),
+			Password: authDomain.MustNewValidatedPassword(password),
 			Token:    invitationToken,
 		},
 	)
@@ -513,8 +513,8 @@ func TestSetPassword(t *testing.T) {
 
 	err = a.Register.Execute(
 		auth.Register{
-			Username: username,
-			Password: password,
+			Username: authDomain.MustNewValidatedUsername(username),
+			Password: authDomain.MustNewValidatedPassword(password),
 			Token:    invitationToken,
 		},
 	)
@@ -531,7 +531,7 @@ func TestSetPassword(t *testing.T) {
 	err = a.SetPassword.Execute(
 		auth.SetPassword{
 			Username: username,
-			Password: newPassword,
+			Password: authDomain.MustNewValidatedPassword(newPassword),
 		},
 	)
 	require.NoError(t, err)
@@ -554,8 +554,8 @@ func TestGetUser(t *testing.T) {
 
 	err := a.RegisterInitial.Execute(
 		auth.RegisterInitial{
-			Username: username,
-			Password: password,
+			Username: authDomain.MustNewValidatedUsername(username),
+			Password: authDomain.MustNewValidatedPassword(password),
 		},
 	)
 	require.NoError(t, err)
@@ -598,39 +598,27 @@ func NewAuth(t *testing.T) (*auth.Auth, fixture.CleanupFunc) {
 var registerTestCases = []struct {
 	Name string
 
-	Username string
-	Password string
+	Username authDomain.ValidatedUsername
+	Password authDomain.ValidatedPassword
 
 	ExpectedError error
 }{
 	{
 		Name:          "valid",
-		Username:      "username",
-		Password:      "password",
+		Username:      authDomain.MustNewValidatedUsername("username"),
+		Password:      authDomain.MustNewValidatedPassword("password"),
 		ExpectedError: nil,
 	},
 	{
-		Name:          "empty_username",
-		Username:      "",
-		Password:      "password",
-		ExpectedError: errors.New("invalid parameters: username can't be empty"),
+		Name:          "zero_value_of_username",
+		Username:      authDomain.ValidatedUsername{},
+		Password:      authDomain.MustNewValidatedPassword("password"),
+		ExpectedError: errors.New("zero value of username"),
 	},
 	{
-		Name:          "empty_password",
-		Username:      "username",
-		Password:      "",
-		ExpectedError: errors.New("invalid parameters: password can't be empty"),
-	},
-	{
-		Name:          "username_too_long",
-		Username:      strings.Repeat("a", 101),
-		Password:      "password",
-		ExpectedError: errors.New("invalid parameters: username length can't exceed 100 characters"),
-	},
-	{
-		Name:          "password_too_long",
-		Username:      "username",
-		Password:      strings.Repeat("a", 10001),
-		ExpectedError: errors.New("invalid parameters: password length can't exceed 10000 characters"),
+		Name:          "zero_value_of_password",
+		Username:      authDomain.MustNewValidatedUsername("username"),
+		Password:      authDomain.ValidatedPassword{},
+		ExpectedError: errors.New("zero value of password"),
 	},
 }

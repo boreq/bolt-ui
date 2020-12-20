@@ -8,8 +8,8 @@ import (
 )
 
 type Register struct {
-	Username string
-	Password string
+	Username auth.ValidatedUsername
+	Password auth.ValidatedPassword
 	Token    InvitationToken
 }
 
@@ -32,11 +32,15 @@ func NewRegisterHandler(
 }
 
 func (h *RegisterHandler) Execute(cmd Register) error {
-	if err := validate(cmd.Username, cmd.Password); err != nil {
-		return errors.Wrap(err, "invalid parameters")
+	if cmd.Username.IsZero() {
+		return errors.New("zero value of username")
 	}
 
-	passwordHash, err := h.passwordHasher.Hash(cmd.Password)
+	if cmd.Password.IsZero() {
+		return errors.New("zero value of password")
+	}
+
+	passwordHash, err := h.passwordHasher.Hash(cmd.Password.String())
 	if err != nil {
 		return errors.Wrap(err, "hashing the password failed")
 	}
@@ -53,7 +57,7 @@ func (h *RegisterHandler) Execute(cmd Register) error {
 
 	u := User{
 		UUID:          userUUID,
-		Username:      cmd.Username,
+		Username:      cmd.Username.String(),
 		Password:      passwordHash,
 		Administrator: false,
 		Created:       time.Now(),
@@ -69,7 +73,7 @@ func (h *RegisterHandler) Execute(cmd Register) error {
 			return errors.Wrap(err, "could not remove the invitation")
 		}
 
-		if _, err := r.Users.Get(cmd.Username); err != nil {
+		if _, err := r.Users.Get(cmd.Username.String()); err != nil {
 			if !errors.Is(err, ErrNotFound) {
 				return errors.Wrap(err, "could not get the user")
 			}

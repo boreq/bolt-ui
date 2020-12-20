@@ -1,10 +1,13 @@
 package auth
 
-import "github.com/boreq/errors"
+import (
+	"github.com/boreq/errors"
+	"github.com/boreq/velo/domain/auth"
+)
 
 type SetPassword struct {
 	Username string
-	Password string
+	Password auth.ValidatedPassword
 }
 
 type SetPasswordHandler struct {
@@ -23,11 +26,11 @@ func NewSetPasswordHandler(
 }
 
 func (h *SetPasswordHandler) Execute(cmd SetPassword) error {
-	if err := validate(cmd.Username, cmd.Password); err != nil {
-		return errors.Wrap(err, "invalid parameters")
+	if cmd.Password.IsZero() {
+		return errors.New("zero value of password")
 	}
 
-	passwordHash, err := h.passwordHasher.Hash(cmd.Password)
+	passwordHash, err := h.passwordHasher.Hash(cmd.Password.String())
 	if err != nil {
 		return errors.Wrap(err, "hashing the password failed")
 	}

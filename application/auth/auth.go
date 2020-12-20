@@ -2,7 +2,6 @@ package auth
 
 import (
 	"errors"
-	"fmt"
 	"time"
 
 	"github.com/boreq/velo/domain/auth"
@@ -125,29 +124,6 @@ type Auth struct {
 	Remove           *RemoveHandler
 	SetPassword      *SetPasswordHandler
 	GetUser          *GetUserHandler
-}
-
-const maxUsernameLen = 100
-const maxPasswordLen = 10000
-
-func validate(username, password string) error {
-	if username == "" {
-		return errors.New("username can't be empty")
-	}
-
-	if len(username) > maxUsernameLen {
-		return fmt.Errorf("username length can't exceed %d characters", maxUsernameLen)
-	}
-
-	if password == "" {
-		return errors.New("password can't be empty")
-	}
-
-	if len(password) > maxPasswordLen {
-		return fmt.Errorf("password length can't exceed %d characters", maxPasswordLen)
-	}
-
-	return nil
 }
 
 func toReadUsers(users []User) []ReadUser {

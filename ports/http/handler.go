@@ -2,6 +2,7 @@ package http
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 
 	"github.com/boreq/errors"
@@ -10,6 +11,7 @@ import (
 	"github.com/boreq/velo/application/auth"
 	"github.com/boreq/velo/application/tracker"
 	"github.com/boreq/velo/domain"
+	authDomain "github.com/boreq/velo/domain/auth"
 	"github.com/boreq/velo/logging"
 	"github.com/boreq/velo/ports/http/frontend"
 	"github.com/julienschmidt/httprouter"
@@ -102,9 +104,19 @@ func (h *Handler) registerInitial(r *http.Request) rest.RestResponse {
 		return rest.ErrBadRequest.WithMessage("Malformed input.")
 	}
 
+	username, err := authDomain.NewValidatedUsername(t.Username)
+	if err != nil {
+		return rest.ErrBadRequest.WithMessage(fmt.Sprintf("Invalid username: %s", err))
+	}
+
+	password, err := authDomain.NewValidatedPassword(t.Password)
+	if err != nil {
+		return rest.ErrBadRequest.WithMessage(fmt.Sprintf("Invalid password: %s", err))
+	}
+
 	cmd := auth.RegisterInitial{
-		Username: t.Username,
-		Password: t.Password,
+		Username: username,
+		Password: password,
 	}
 
 	if err := h.app.Auth.RegisterInitial.Execute(cmd); err != nil {
@@ -412,9 +424,19 @@ func (h *Handler) register(r *http.Request) rest.RestResponse {
 		return rest.ErrBadRequest.WithMessage("Malformed input.")
 	}
 
+	username, err := authDomain.NewValidatedUsername(t.Username)
+	if err != nil {
+		return rest.ErrBadRequest.WithMessage(fmt.Sprintf("Invalid username: %s", err))
+	}
+
+	password, err := authDomain.NewValidatedPassword(t.Password)
+	if err != nil {
+		return rest.ErrBadRequest.WithMessage(fmt.Sprintf("Invalid password: %s", err))
+	}
+
 	cmd := auth.Register{
-		Username: t.Username,
-		Password: t.Password,
+		Username: username,
+		Password: password,
 		Token:    auth.InvitationToken(t.Token),
 	}
 

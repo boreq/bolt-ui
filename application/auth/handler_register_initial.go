@@ -8,8 +8,8 @@ import (
 )
 
 type RegisterInitial struct {
-	Username string
-	Password string
+	Username auth.ValidatedUsername
+	Password auth.ValidatedPassword
 }
 
 type RegisterInitialHandler struct {
@@ -31,11 +31,15 @@ func NewRegisterInitialHandler(
 }
 
 func (h *RegisterInitialHandler) Execute(cmd RegisterInitial) error {
-	if err := validate(cmd.Username, cmd.Password); err != nil {
-		return errors.Wrap(err, "invalid parameters")
+	if cmd.Username.IsZero() {
+		return errors.New("zero value of username")
 	}
 
-	passwordHash, err := h.passwordHasher.Hash(cmd.Password)
+	if cmd.Password.IsZero() {
+		return errors.New("zero value of password")
+	}
+
+	passwordHash, err := h.passwordHasher.Hash(cmd.Password.String())
 	if err != nil {
 		return errors.Wrap(err, "hashing the password failed")
 	}
@@ -52,7 +56,7 @@ func (h *RegisterInitialHandler) Execute(cmd RegisterInitial) error {
 
 	u := User{
 		UUID:          userUUID,
-		Username:      cmd.Username,
+		Username:      cmd.Username.String(),
 		Password:      passwordHash,
 		Administrator: true,
 		Created:       time.Now(),

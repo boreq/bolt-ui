@@ -4,11 +4,12 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/boreq/guinea"
 	authAdapters "github.com/boreq/velo/adapters/auth"
 	"github.com/boreq/velo/application/auth"
+	authDomain "github.com/boreq/velo/domain/auth"
 	"github.com/boreq/velo/internal/config"
 	"github.com/boreq/velo/internal/wire"
-	"github.com/boreq/guinea"
 	"github.com/pkg/errors"
 )
 
@@ -96,9 +97,14 @@ func runResetPassword(c guinea.Context) error {
 		return errors.Wrap(err, "failed to generate a secure string")
 	}
 
+	password, err := authDomain.NewValidatedPassword(s)
+	if err != nil {
+		return errors.Wrap(err, "invalid password")
+	}
+
 	cmd := auth.SetPassword{
 		Username: c.Arguments[1],
-		Password: s,
+		Password: password,
 	}
 
 	err = a.SetPassword.Execute(cmd)

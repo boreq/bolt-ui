@@ -10,34 +10,38 @@ const maxUsernameLen = 100
 
 var usernameRegexp = regexp.MustCompile("^[a-zA-Z0-9_-]+$")
 
-type Username struct {
+type ValidatedUsername struct {
 	username string
 }
 
-func NewUsername(username string) (Username, error) {
+func NewValidatedUsername(username string) (ValidatedUsername, error) {
 	if username == "" {
-		return Username{}, errors.New("username can't be empty")
+		return ValidatedUsername{}, errors.New("username can't be empty")
 	}
 
 	if len(username) > maxUsernameLen {
-		return Username{}, fmt.Errorf("username length can't exceed %d characters", maxUsernameLen)
+		return ValidatedUsername{}, fmt.Errorf("username length can't exceed %d characters", maxUsernameLen)
 	}
 
 	if valid := usernameRegexp.MatchString(username); !valid {
-		return Username{}, fmt.Errorf("username must conform to the following regexp: %s", usernameRegexp.String())
+		return ValidatedUsername{}, fmt.Errorf("username must conform to the following regexp: %s", usernameRegexp.String())
 	}
 
-	return Username{username}, nil
+	return ValidatedUsername{username}, nil
 }
 
-func MustNewUsername(username string) Username {
-	v, err := NewUsername(username)
+func MustNewValidatedUsername(username string) ValidatedUsername {
+	v, err := NewValidatedUsername(username)
 	if err != nil {
 		panic(err)
 	}
 	return v
 }
 
-func (u Username) String() string {
+func (u ValidatedUsername) String() string {
 	return u.username
+}
+
+func (u ValidatedUsername) IsZero() bool {
+	return u == ValidatedUsername{}
 }

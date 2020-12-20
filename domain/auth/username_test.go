@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestUsername(t *testing.T) {
+func TestValidatedUsername(t *testing.T) {
 	testCases := []struct {
 		Username      string
 		ExpectedError error
@@ -33,7 +33,7 @@ func TestUsername(t *testing.T) {
 
 	for _, testCase := range testCases {
 		t.Run(testCase.Username, func(t *testing.T) {
-			_, err := NewUsername(testCase.Username)
+			_, err := NewValidatedUsername(testCase.Username)
 			if testCase.ExpectedError == nil {
 				require.NoError(t, err)
 			} else {

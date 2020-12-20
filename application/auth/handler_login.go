@@ -30,10 +30,6 @@ func NewLoginHandler(
 }
 
 func (h *LoginHandler) Execute(cmd Login) (AccessToken, error) {
-	if err := validate(cmd.Username, cmd.Password); err != nil {
-		return "", errors.Wrap(ErrUnauthorized, "invalid parameters")
-	}
-
 	var token AccessToken
 
 	if err := h.transactionProvider.Write(func(r *TransactableRepositories) error {
