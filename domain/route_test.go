@@ -74,6 +74,45 @@ func TestNormaliseRoutePoints(t *testing.T) {
 	}
 }
 
+func TestRouteDistance(t *testing.T) {
+	p1, err := domain.NewPoint(
+		time.Date(2021, 01, 16, 11, 12, 13, 0, time.UTC),
+		domain.NewPosition(
+			domain.MustNewLatitude(10),
+			domain.MustNewLongitude(10),
+		),
+		domain.NewAltitude(10),
+	)
+
+	p2, err := domain.NewPoint(
+		time.Date(2021, 01, 16, 11, 12, 14, 0, time.UTC),
+		domain.NewPosition(
+			domain.MustNewLatitude(20),
+			domain.MustNewLongitude(20),
+		),
+		domain.NewAltitude(10),
+	)
+
+	p3, err := domain.NewPoint(
+		time.Date(2021, 01, 16, 11, 12, 15, 0, time.UTC),
+		domain.NewPosition(
+			domain.MustNewLatitude(30),
+			domain.MustNewLongitude(30),
+		),
+		domain.NewAltitude(10),
+	)
+
+	route, err := domain.NewRoute(
+		domain.MustNewRouteUUID("route-uuid"),
+		[]domain.Point{p1, p2, p3},
+	)
+	require.NoError(t, err)
+
+	expectedDistance := p1.Position().Distance(p2.Position()) +
+		p2.Position().Distance(p3.Position())
+	require.InEpsilon(t, expectedDistance, route.Distance(), 0.01)
+}
+
 func somePoints() []domain.Point {
 	date := time.Date(1954, time.June, 7, 12, 0, 0, 0, time.UTC)
 

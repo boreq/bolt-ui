@@ -31,7 +31,6 @@ func NewRoute(uuid RouteUUID, points []Point) (*Route, error) {
 		return nil, errors.New(" a route has to have at least 2 points")
 	}
 
-	// todo use eventsourcing
 	route := &Route{}
 
 	if err := route.update(
@@ -90,6 +89,18 @@ func (r Route) IsZero() bool {
 
 func (r *Route) PopChanges() eventsourcing.EventSourcingEvents {
 	return r.es.PopChanges()
+}
+
+func (r *Route) TimeMoving() time.Duration {
+	return r.TimeEnded().Sub(r.TimeStarted())
+}
+
+func (r *Route) Distance() float64 {
+	var distance float64
+	for i := 0; i < len(r.points)-1; i++ {
+		distance += r.points[i].Position().Distance(r.points[i+1].Position())
+	}
+	return distance
 }
 
 func (r *Route) update(event eventsourcing.Event) error {

@@ -1,6 +1,10 @@
 package domain
 
-import "github.com/boreq/errors"
+import (
+	"math"
+
+	"github.com/boreq/errors"
+)
 
 type Position struct {
 	latitude  Latitude
@@ -20,6 +24,17 @@ func (p Position) Latitude() Latitude {
 
 func (p Position) Longitude() Longitude {
 	return p.longitude
+}
+
+func (p Position) Distance(o Position) float64 {
+	var la1, lo1, la2, lo2, r float64
+	la1 = p.latitude.Float64() * math.Pi / 180
+	lo1 = p.longitude.Float64() * math.Pi / 180
+	la2 = o.latitude.Float64() * math.Pi / 180
+	lo2 = o.longitude.Float64() * math.Pi / 180
+	r = 6378100 // Earth radius in meters
+	h := hsin(la2-la1) + math.Cos(la1)*math.Cos(la2)*hsin(lo2-lo1)
+	return 2 * r * math.Asin(math.Sqrt(h))
 }
 
 type Longitude struct {
@@ -72,4 +87,8 @@ func MustNewLatitude(latitude float64) Latitude {
 
 func (l Latitude) Float64() float64 {
 	return l.latitude
+}
+
+func hsin(theta float64) float64 {
+	return math.Pow(math.Sin(theta/2), 2)
 }

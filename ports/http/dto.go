@@ -26,8 +26,10 @@ type Activity struct {
 }
 
 type Route struct {
-	UUID   string  `json:"uuid"`
-	Points []Point `json:"points"`
+	UUID       string  `json:"uuid"`
+	Points     []Point `json:"points"`
+	TimeMoving float64 `json:"timeMoving"`
+	Distance   float64 `json:"distance"`
 }
 
 type Point struct {
@@ -72,8 +74,10 @@ func toUser(user *tracker.User) User {
 
 func toRoute(route *domain.Route) Route {
 	return Route{
-		UUID:   route.UUID().String(),
-		Points: toPoints(route.Points()),
+		UUID:       route.UUID().String(),
+		Points:     toPoints(route.Points()),
+		Distance:   route.Distance(),
+		TimeMoving: route.TimeMoving().Seconds(),
 	}
 }
 
