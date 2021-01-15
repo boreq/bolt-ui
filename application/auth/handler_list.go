@@ -1,6 +1,9 @@
 package auth
 
-import "github.com/boreq/errors"
+import (
+	"github.com/boreq/errors"
+	"github.com/boreq/velo/domain/auth"
+)
 
 type ListHandler struct {
 	transactionProvider TransactionProvider
@@ -12,7 +15,7 @@ func NewListHandler(transactionProvider TransactionProvider) *ListHandler {
 	}
 }
 
-func (h *ListHandler) Execute() ([]ReadUser, error) {
+func (h *ListHandler) Execute() ([]auth.ReadUser, error) {
 	var users []User
 	if err := h.transactionProvider.Read(func(r *TransactableRepositories) error {
 		u, err := r.Users.List()

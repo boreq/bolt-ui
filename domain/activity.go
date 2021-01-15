@@ -9,14 +9,15 @@ import (
 )
 
 type Activity struct {
-	uuid      ActivityUUID
-	userUUID  auth.UserUUID
-	routeUUID RouteUUID
+	uuid       ActivityUUID
+	userUUID   auth.UserUUID
+	routeUUID  RouteUUID
+	visibility ActivityVisibility
 
 	es eventsourcing.EventSourcing
 }
 
-func NewActivity(uuid ActivityUUID, userUUID auth.UserUUID, routeUUID RouteUUID) (*Activity, error) {
+func NewActivity(uuid ActivityUUID, userUUID auth.UserUUID, routeUUID RouteUUID, visibility ActivityVisibility) (*Activity, error) {
 	if uuid.IsZero() {
 		return nil, errors.New("zero value of uuid")
 	}
@@ -29,13 +30,18 @@ func NewActivity(uuid ActivityUUID, userUUID auth.UserUUID, routeUUID RouteUUID)
 		return nil, errors.New("zero value of route uuid")
 	}
 
+	if visibility.IsZero() {
+		return nil, errors.New("zero value of visibility")
+	}
+
 	activity := &Activity{}
 
 	if err := activity.update(
 		ActivityCreated{
-			UUID:      uuid,
-			UserUUID:  userUUID,
-			RouteUUID: routeUUID,
+			UUID:       uuid,
+			UserUUID:   userUUID,
+			RouteUUID:  routeUUID,
+			Visibility: visibility,
 		},
 	); err != nil {
 		return nil, errors.Wrap(err, "could not consume the initial event")
@@ -72,6 +78,10 @@ func (a Activity) UserUUID() auth.UserUUID {
 	return a.userUUID
 }
 
+func (a Activity) Visibility() ActivityVisibility {
+	return a.visibility
+}
+
 func (a *Activity) PopChanges() eventsourcing.EventSourcingEvents {
 	return a.es.PopChanges()
 }
@@ -91,12 +101,14 @@ func (a *Activity) handleActivityCreated(event ActivityCreated) {
 	a.uuid = event.UUID
 	a.userUUID = event.UserUUID
 	a.routeUUID = event.RouteUUID
+	a.visibility = event.Visibility
 }
 
 type ActivityCreated struct {
-	UUID      ActivityUUID
-	UserUUID  auth.UserUUID
-	RouteUUID RouteUUID
+	UUID       ActivityUUID
+	UserUUID   auth.UserUUID
+	RouteUUID  RouteUUID
+	Visibility ActivityVisibility
 }
 
 func (e ActivityCreated) EventType() eventsourcing.EventType {

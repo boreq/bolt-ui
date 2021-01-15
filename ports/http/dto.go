@@ -22,6 +22,7 @@ type Activity struct {
 	TimeEnded   time.Time `json:"timeEnded"`
 	Route       Route     `json:"route"`
 	User        User      `json:"user"`
+	Visibility  string    `json:"visibility"`
 }
 
 type Route struct {
@@ -58,6 +59,7 @@ func toActivity(activity tracker.Activity) Activity {
 		TimeEnded:   activity.Route.TimeEnded(),
 		Route:       toRoute(activity.Route),
 		User:        toUser(activity.User),
+		Visibility:  activity.Activity.Visibility().String(),
 	}
 }
 

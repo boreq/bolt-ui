@@ -18,8 +18,15 @@ import (
 )
 
 type AuthenticatedUser struct {
-	User  auth.ReadUser
+	User  authDomain.ReadUser
 	Token auth.AccessToken
+}
+
+func (a *AuthenticatedUser) UserPointer() *authDomain.ReadUser {
+	if a == nil {
+		return nil
+	}
+	return &a.User
 }
 
 type AuthProvider interface {
@@ -150,9 +157,16 @@ func (h *Handler) postActivity(r *http.Request) rest.RestResponse {
 		return rest.ErrBadRequest.WithMessage("Activity file too large.")
 	}
 
+	visibility, err := domain.NewActivityVisibility(r.FormValue("visibility"))
+	if err != nil {
+		h.log.Warn("invalid visiblity", "err", err)
+		return rest.ErrBadRequest.WithMessage("Invalid visiblity.")
+	}
+
 	cmd := tracker.AddActivity{
-		UserUUID:  u.User.UUID,
-		RouteFile: file,
+		UserUUID:   u.User.UUID,
+		RouteFile:  file,
+		Visibility: visibility,
 	}
 
 	activityUUID, err := h.app.Tracker.AddActivity.Execute(cmd)
@@ -177,12 +191,27 @@ func (h *Handler) getActivity(r *http.Request) rest.RestResponse {
 		return rest.ErrBadRequest.WithMessage("Invalid activity UUID.")
 	}
 
+	u, err := h.authProvider.Get(r)
+	if err != nil {
+		h.log.Error("auth provider get failed", "err", err)
+		return rest.ErrInternalServerError
+	}
+
 	query := tracker.GetActivity{
 		ActivityUUID: activityUUID,
+		AsUser:       u.UserPointer(),
 	}
 
 	result, err := h.app.Tracker.GetActivity.Execute(query)
 	if err != nil {
+		if errors.Is(err, tracker.ErrGettingActivityForbidden) {
+			return rest.ErrForbidden.WithMessage("You do not have permissions to access this activity.")
+		}
+
+		if errors.Is(err, tracker.ErrActivityNotFound) {
+			return rest.ErrNotFound.WithMessage("Activity not found.")
+		}
+
 		h.log.Error("get activity query failed", "err", err)
 		return rest.ErrInternalServerError
 	}

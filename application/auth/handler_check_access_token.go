@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/boreq/errors"
+	"github.com/boreq/velo/domain/auth"
 )
 
 type CheckAccessToken struct {
@@ -25,7 +26,7 @@ func NewCheckAccessTokenHandler(
 	}
 }
 
-func (h *CheckAccessTokenHandler) Execute(cmd CheckAccessToken) (*ReadUser, error) {
+func (h *CheckAccessTokenHandler) Execute(cmd CheckAccessToken) (*auth.ReadUser, error) {
 	username, err := h.accessTokenGenerator.GetUsername(cmd.Token)
 	if err != nil {
 		return nil, errors.Wrap(ErrUnauthorized, "could not get the username")

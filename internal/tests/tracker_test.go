@@ -1,6 +1,7 @@
 package tests
 
 import (
+	"errors"
 	"sort"
 	"testing"
 
@@ -29,8 +30,9 @@ func TestAddActivity(t *testing.T) {
 	}
 
 	cmd := tracker.AddActivity{
-		RouteFile: gpxFile,
-		UserUUID:  userUUID,
+		RouteFile:  gpxFile,
+		UserUUID:   userUUID,
+		Visibility: domain.PublicActivityVisibility,
 	}
 
 	activityUUID, err := tr.AddActivity.Execute(cmd)
@@ -88,8 +90,9 @@ func TestListUserActivities(t *testing.T) {
 		defer cleanupFile()
 
 		cmd := tracker.AddActivity{
-			RouteFile: gpxFile,
-			UserUUID:  userUUID,
+			RouteFile:  gpxFile,
+			UserUUID:   userUUID,
+			Visibility: domain.PublicActivityVisibility,
 		}
 
 		activityUUID, err := tr.AddActivity.Execute(cmd)
@@ -174,6 +177,181 @@ func TestListUserActivities(t *testing.T) {
 	require.Equal(t, page1, toUUIDs(activities.Activities))
 	require.False(t, activities.HasPrevious)
 	require.True(t, activities.HasNext)
+}
+
+func TestPermissions(t *testing.T) {
+	testCases := []struct {
+		Visibility domain.ActivityVisibility
+
+		UnauthorisedCanView bool
+		OtherCanView        bool
+		OwnerCanView        bool
+
+		UnauthorisedCanList bool
+		OtherCanList        bool
+		OwnerCanList        bool
+	}{
+		{
+			Visibility: domain.PublicActivityVisibility,
+
+			UnauthorisedCanView: true,
+			OtherCanView:        true,
+			OwnerCanView:        true,
+
+			UnauthorisedCanList: true,
+			OtherCanList:        true,
+			OwnerCanList:        true,
+		},
+		{
+			Visibility: domain.UnlistedActivityVisibility,
+
+			UnauthorisedCanView: true,
+			OtherCanView:        true,
+			OwnerCanView:        true,
+
+			UnauthorisedCanList: false,
+			OtherCanList:        false,
+			OwnerCanList:        true,
+		},
+		{
+			Visibility: domain.PrivateActivityVisibility,
+
+			UnauthorisedCanView: false,
+			OtherCanView:        false,
+			OwnerCanView:        true,
+
+			UnauthorisedCanList: false,
+			OtherCanList:        false,
+			OwnerCanList:        true,
+		},
+	}
+
+	for _, testCase := range testCases {
+		t.Run(testCase.Visibility.String(), func(t *testing.T) {
+			testTracker, cleanupTracker := NewTracker(t)
+			defer cleanupTracker()
+
+			tr := testTracker.Tracker
+
+			gpxFile, cleanupFile := fixture.TestDataFile(t, "data/strava_export.gpx")
+			defer cleanupFile()
+
+			user := auth.ReadUser{
+				UUID: auth.MustNewUserUUID("user-uuid"),
+			}
+
+			otherUser := auth.ReadUser{
+				UUID: auth.MustNewUserUUID("other-user-uuid"),
+			}
+
+			testTracker.UserRepository.Users[user.UUID] = appAuth.User{
+				Username: "username",
+			}
+
+			cmd := tracker.AddActivity{
+				RouteFile:  gpxFile,
+				UserUUID:   user.UUID,
+				Visibility: testCase.Visibility,
+			}
+
+			activityUUID, err := tr.AddActivity.Execute(cmd)
+			require.NoError(t, err)
+
+			t.Run("get unauthorised", func(t *testing.T) {
+				_, err = tr.GetActivity.Execute(
+					tracker.GetActivity{
+						ActivityUUID: activityUUID,
+						AsUser:       nil,
+					},
+				)
+
+				if testCase.UnauthorisedCanView {
+					require.NoError(t, err)
+				} else {
+					require.True(t, errors.Is(err, tracker.ErrGettingActivityForbidden))
+				}
+			})
+
+			t.Run("get other", func(t *testing.T) {
+				_, err = tr.GetActivity.Execute(
+					tracker.GetActivity{
+						ActivityUUID: activityUUID,
+						AsUser:       &otherUser,
+					},
+				)
+
+				if testCase.OtherCanView {
+					require.NoError(t, err)
+				} else {
+					require.True(t, errors.Is(err, tracker.ErrGettingActivityForbidden))
+				}
+			})
+
+			t.Run("get owner", func(t *testing.T) {
+				_, err = tr.GetActivity.Execute(
+					tracker.GetActivity{
+						ActivityUUID: activityUUID,
+						AsUser:       &user,
+					},
+				)
+
+				if testCase.OwnerCanView {
+					require.NoError(t, err)
+				} else {
+					require.True(t, errors.Is(err, tracker.ErrGettingActivityForbidden))
+				}
+			})
+
+			t.Run("list unauthorised", func(t *testing.T) {
+				result, err := tr.ListUserActivities.Execute(
+					tracker.ListUserActivities{
+						UserUUID: user.UUID,
+						AsUser:   nil,
+					},
+				)
+				require.NoError(t, err)
+
+				if testCase.UnauthorisedCanList {
+					require.NotEmpty(t, result.Activities)
+				} else {
+					require.Empty(t, result.Activities)
+				}
+			})
+
+			t.Run("list other", func(t *testing.T) {
+				result, err := tr.ListUserActivities.Execute(
+					tracker.ListUserActivities{
+						UserUUID: user.UUID,
+						AsUser:   &otherUser,
+					},
+				)
+				require.NoError(t, err)
+
+				if testCase.OtherCanList {
+					require.NotEmpty(t, result.Activities)
+				} else {
+					require.Empty(t, result.Activities)
+				}
+			})
+
+			t.Run("list owner", func(t *testing.T) {
+				result, err := tr.ListUserActivities.Execute(
+					tracker.ListUserActivities{
+						UserUUID: user.UUID,
+						AsUser:   &user,
+					},
+				)
+				require.NoError(t, err)
+
+				if testCase.OwnerCanList {
+					require.NotEmpty(t, result.Activities)
+				} else {
+					require.Empty(t, result.Activities)
+				}
+			})
+		})
+	}
+
 }
 
 func NewTracker(t *testing.T) (wire.TestTracker, fixture.CleanupFunc) {

@@ -83,19 +83,6 @@ type Session struct {
 	LastSeen time.Time   `json:"lastSeen"`
 }
 
-type ReadUser struct {
-	UUID          auth.UserUUID `json:"-"`
-	Username      string        `json:"username"`
-	Administrator bool          `json:"administrator"`
-	Created       time.Time     `json:"created"`
-	LastSeen      time.Time     `json:"lastSeen"`
-	Sessions      []ReadSession `json:"sessions"`
-}
-
-type ReadSession struct {
-	LastSeen time.Time `json:"lastSeen"`
-}
-
 type Invitation struct {
 	Token   InvitationToken `json:"invitation"`
 	Created time.Time       `json:"created"`
@@ -126,16 +113,16 @@ type Auth struct {
 	GetUser          *GetUserHandler
 }
 
-func toReadUsers(users []User) []ReadUser {
-	var rv []ReadUser
+func toReadUsers(users []User) []auth.ReadUser {
+	var rv []auth.ReadUser
 	for _, user := range users {
 		rv = append(rv, toReadUser(user))
 	}
 	return rv
 }
 
-func toReadUser(user User) ReadUser {
-	rv := ReadUser{
+func toReadUser(user User) auth.ReadUser {
+	rv := auth.ReadUser{
 		UUID:          user.UUID,
 		Username:      user.Username,
 		Administrator: user.Administrator,
@@ -143,7 +130,7 @@ func toReadUser(user User) ReadUser {
 		LastSeen:      user.LastSeen,
 	}
 	for _, session := range user.Sessions {
-		rv.Sessions = append(rv.Sessions, ReadSession{
+		rv.Sessions = append(rv.Sessions, auth.ReadSession{
 			LastSeen: session.LastSeen,
 		})
 	}

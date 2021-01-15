@@ -20,6 +20,7 @@ type RouteRepository interface {
 }
 
 var ErrActivityNotFound = errors.New("activity not found")
+var ErrGettingActivityForbidden = errors.New("this user can not view this activity")
 
 type ActivityRepository interface {
 	Save(activity *domain.Activity) error

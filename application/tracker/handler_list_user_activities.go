@@ -6,6 +6,7 @@ import (
 	"github.com/boreq/errors"
 	"github.com/boreq/velo/domain"
 	"github.com/boreq/velo/domain/auth"
+	"github.com/boreq/velo/domain/permissions"
 )
 
 const activitiesPerPage = 10
@@ -20,6 +21,7 @@ type ListUserActivities struct {
 	UserUUID    auth.UserUUID
 	StartAfter  *domain.ActivityUUID
 	StartBefore *domain.ActivityUUID
+	AsUser      *auth.ReadUser
 }
 
 type ListUserActivitiesHandler struct {
@@ -51,10 +53,21 @@ func (h *ListUserActivitiesHandler) Execute(query ListUserActivities) (ListUserA
 			return errors.Wrap(err, "could not get the iterator")
 		}
 
-		for i := 0; i < activitiesPerPage; i++ {
+		activitiesRetrieved := 0
+
+		for {
 			activity, ok := iter.Next()
 			if !ok {
 				break
+			}
+
+			ok, err := permissions.CanListActivity(activity, query.AsUser)
+			if err != nil {
+				return errors.Wrap(err, "permission check failed")
+			}
+
+			if !ok {
+				continue
 			}
 
 			route, err := adapters.Route.Get(activity.RouteUUID())
@@ -67,6 +80,12 @@ func (h *ListUserActivitiesHandler) Execute(query ListUserActivities) (ListUserA
 				Route:    route,
 				User:     toUser(user),
 			})
+
+			activitiesRetrieved++
+
+			if activitiesRetrieved >= activitiesPerPage {
+				break
+			}
 		}
 
 		result.HasPrevious, result.HasNext = h.getPreviousNext(query, iter)

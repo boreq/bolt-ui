@@ -3,10 +3,13 @@ package tracker
 import (
 	"github.com/boreq/errors"
 	"github.com/boreq/velo/domain"
+	"github.com/boreq/velo/domain/auth"
+	"github.com/boreq/velo/domain/permissions"
 )
 
 type GetActivity struct {
 	ActivityUUID domain.ActivityUUID
+	AsUser       *auth.ReadUser
 }
 
 type GetActivityHandler struct {
@@ -26,6 +29,15 @@ func (h *GetActivityHandler) Execute(query GetActivity) (Activity, error) {
 		activity, err := repositories.Activity.Get(query.ActivityUUID)
 		if err != nil {
 			return errors.Wrap(err, "could not get an activity")
+		}
+
+		ok, err := permissions.CanViewActivity(activity, query.AsUser)
+		if err != nil {
+			return errors.Wrap(err, "permission check failed")
+		}
+
+		if !ok {
+			return ErrGettingActivityForbidden
 		}
 
 		route, err := repositories.Route.Get(activity.RouteUUID())

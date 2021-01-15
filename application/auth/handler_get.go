@@ -1,6 +1,9 @@
 package auth
 
-import "github.com/boreq/errors"
+import (
+	"github.com/boreq/errors"
+	"github.com/boreq/velo/domain/auth"
+)
 
 type GetUser struct {
 	Username string
@@ -16,7 +19,7 @@ func NewGetUserHandler(transactionProvider TransactionProvider) *GetUserHandler 
 	}
 }
 
-func (h *GetUserHandler) Execute(query GetUser) (ReadUser, error) {
+func (h *GetUserHandler) Execute(query GetUser) (auth.ReadUser, error) {
 	var user User
 	if err := h.transactionProvider.Read(func(r *TransactableRepositories) error {
 		u, err := r.Users.Get(query.Username)
@@ -26,7 +29,7 @@ func (h *GetUserHandler) Execute(query GetUser) (ReadUser, error) {
 		user = *u
 		return nil
 	}); err != nil {
-		return ReadUser{}, errors.Wrap(err, "transaction failed")
+		return auth.ReadUser{}, errors.Wrap(err, "transaction failed")
 	}
 	return toReadUser(user), nil
 }

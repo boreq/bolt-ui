@@ -15,9 +15,10 @@ var activityEventMapping = eventsourcing.Mapping{
 			e := event.(domain.ActivityCreated)
 
 			transportEvent := activityCreated{
-				UUID:      e.UUID.String(),
-				UserUUID:  e.UserUUID.String(),
-				RouteUUID: e.RouteUUID.String(),
+				UUID:       e.UUID.String(),
+				UserUUID:   e.UserUUID.String(),
+				RouteUUID:  e.RouteUUID.String(),
+				Visibility: e.Visibility.String(),
 			}
 
 			return json.Marshal(transportEvent)
@@ -44,17 +45,24 @@ var activityEventMapping = eventsourcing.Mapping{
 				return nil, errors.Wrap(err, "could not create a route uuid")
 			}
 
+			visibility, err := domain.NewActivityVisibility(transportEvent.Visibility)
+			if err != nil {
+				return nil, errors.Wrap(err, "could not create activity visibility")
+			}
+
 			return domain.ActivityCreated{
-				UUID:      uuid,
-				UserUUID:  userUUID,
-				RouteUUID: routeUUID,
+				UUID:       uuid,
+				UserUUID:   userUUID,
+				RouteUUID:  routeUUID,
+				Visibility: visibility,
 			}, nil
 		},
 	},
 }
 
 type activityCreated struct {
-	UUID      string `json:"uuid"`
-	UserUUID  string `json:"userUUID"`
-	RouteUUID string `json:"routeUUID"`
+	UUID       string `json:"uuid"`
+	UserUUID   string `json:"userUUID"`
+	RouteUUID  string `json:"routeUUID"`
+	Visibility string `json:"visibility"`
 }
