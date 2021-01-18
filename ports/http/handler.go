@@ -163,10 +163,17 @@ func (h *Handler) postActivity(r *http.Request) rest.RestResponse {
 		return rest.ErrBadRequest.WithMessage("Invalid visiblity.")
 	}
 
+	title, err := domain.NewActivityTitle(r.FormValue("title"))
+	if err != nil {
+		h.log.Warn("invalid title", "err", err)
+		return rest.ErrBadRequest.WithMessage("Invalid title.")
+	}
+
 	cmd := tracker.AddActivity{
 		UserUUID:   u.User.UUID,
 		RouteFile:  file,
 		Visibility: visibility,
+		Title:      title,
 	}
 
 	activityUUID, err := h.app.Tracker.AddActivity.Execute(cmd)

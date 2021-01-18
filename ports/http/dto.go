@@ -23,6 +23,7 @@ type Activity struct {
 	Route       Route     `json:"route"`
 	User        User      `json:"user"`
 	Visibility  string    `json:"visibility"`
+	Title       string    `json:"title"`
 }
 
 type Route struct {
@@ -62,6 +63,7 @@ func toActivity(activity tracker.Activity) Activity {
 		Route:       toRoute(activity.Route),
 		User:        toUser(activity.User),
 		Visibility:  activity.Activity.Visibility().String(),
+		Title:       activity.Activity.Title().String(),
 	}
 }
 

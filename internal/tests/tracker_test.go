@@ -24,6 +24,8 @@ func TestAddActivity(t *testing.T) {
 	defer cleanupFile()
 
 	userUUID := auth.MustNewUserUUID("user-uuid")
+	visibility := domain.PublicActivityVisibility
+	title := domain.MustNewActivityTitle("title")
 
 	testTracker.UserRepository.Users[userUUID] = appAuth.User{
 		Username: "username",
@@ -32,7 +34,8 @@ func TestAddActivity(t *testing.T) {
 	cmd := tracker.AddActivity{
 		RouteFile:  gpxFile,
 		UserUUID:   userUUID,
-		Visibility: domain.PublicActivityVisibility,
+		Visibility: visibility,
+		Title:      title,
 	}
 
 	activityUUID, err := tr.AddActivity.Execute(cmd)
@@ -50,7 +53,9 @@ func TestAddActivity(t *testing.T) {
 
 	require.False(t, result.Activity.UUID().IsZero())
 	require.False(t, result.Activity.RouteUUID().IsZero())
-	require.False(t, result.Activity.UserUUID().IsZero())
+	require.Equal(t, userUUID, result.Activity.UserUUID())
+	require.Equal(t, visibility, result.Activity.Visibility())
+	require.Equal(t, title, result.Activity.Title())
 
 	require.False(t, result.Route.UUID().IsZero())
 	require.NotEmpty(t, result.Route.Points())

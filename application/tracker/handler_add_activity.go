@@ -16,6 +16,7 @@ type AddActivity struct {
 	RouteFile  io.Reader
 	UserUUID   auth.UserUUID
 	Visibility domain.ActivityVisibility
+	Title      domain.ActivityTitle
 }
 
 type AddActivityHandler struct {
@@ -43,7 +44,7 @@ func (h *AddActivityHandler) Execute(cmd AddActivity) (domain.ActivityUUID, erro
 		return domain.ActivityUUID{}, errors.Wrap(err, "could not create a route")
 	}
 
-	activity, err := h.createActivity(route, cmd.UserUUID, cmd.Visibility)
+	activity, err := h.createActivity(route, cmd.UserUUID, cmd.Visibility, cmd.Title)
 	if err != nil {
 		return domain.ActivityUUID{}, errors.Wrap(err, "could not create an activity")
 	}
@@ -83,7 +84,7 @@ func (h *AddActivityHandler) createRoute(points []domain.Point) (*domain.Route, 
 	return domain.NewRoute(routeUUID, points)
 }
 
-func (h *AddActivityHandler) createActivity(route *domain.Route, userUUID auth.UserUUID, visibility domain.ActivityVisibility) (*domain.Activity, error) {
+func (h *AddActivityHandler) createActivity(route *domain.Route, userUUID auth.UserUUID, visibility domain.ActivityVisibility, title domain.ActivityTitle) (*domain.Activity, error) {
 	uuid, err := h.uuidGenerator.Generate()
 	if err != nil {
 		return nil, errors.Wrap(err, "could not generate a uuid")
@@ -94,5 +95,5 @@ func (h *AddActivityHandler) createActivity(route *domain.Route, userUUID auth.U
 		return nil, errors.Wrap(err, "could not create an activity uuid")
 	}
 
-	return domain.NewActivity(activityUUID, userUUID, route.UUID(), visibility)
+	return domain.NewActivity(activityUUID, userUUID, route.UUID(), visibility, title)
 }
