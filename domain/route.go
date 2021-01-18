@@ -66,12 +66,8 @@ func (r Route) UUID() RouteUUID {
 }
 
 func (r Route) Points() []Point {
-	var points []Point
-
-	for _, point := range r.points {
-		points = append(points, point)
-	}
-
+	points := make([]Point, len(r.points))
+	copy(points, r.points)
 	return points
 }
 
@@ -155,8 +151,6 @@ func NormaliseRoutePoints(points []Point) []Point {
 }
 
 func shouldAdd(previous Point, next Point) bool {
-	if next.Time().Before(previous.Time().Add(intervalBetweenPoints)) {
-		return false
-	}
-	return true
+	mustBeAfter := previous.Time().Add(intervalBetweenPoints)
+	return !next.Time().Before(mustBeAfter)
 }
