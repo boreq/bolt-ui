@@ -83,6 +83,7 @@ func TestRouteDistance(t *testing.T) {
 		),
 		domain.NewAltitude(10),
 	)
+	require.NoError(t, err)
 
 	p2, err := domain.NewPoint(
 		time.Date(2021, 01, 16, 11, 12, 14, 0, time.UTC),
@@ -92,6 +93,7 @@ func TestRouteDistance(t *testing.T) {
 		),
 		domain.NewAltitude(10),
 	)
+	require.NoError(t, err)
 
 	p3, err := domain.NewPoint(
 		time.Date(2021, 01, 16, 11, 12, 15, 0, time.UTC),
@@ -101,6 +103,7 @@ func TestRouteDistance(t *testing.T) {
 		),
 		domain.NewAltitude(10),
 	)
+	require.NoError(t, err)
 
 	route, err := domain.NewRoute(
 		domain.MustNewRouteUUID("route-uuid"),

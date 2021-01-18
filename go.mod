@@ -4,13 +4,14 @@ require (
 	github.com/NYTimes/gziphandler v1.1.0
 	github.com/boreq/errors v0.1.0
 	github.com/boreq/guinea v0.0.0-20190218203212-75c10cec45e9
-	github.com/boreq/hydro v0.0.0-20200404183217-bd7409f349d0
 	github.com/boreq/rest v0.1.0
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/go-stack/stack v1.8.0 // indirect
-	github.com/google/wire v0.3.0
+	github.com/google/wire v0.4.0
 	github.com/inconshreveable/log15 v0.0.0-20180818164646-67afb5ed74ec
 	github.com/julienschmidt/httprouter v1.2.0
+	github.com/kr/pretty v0.1.0 // indirect
+	github.com/mattn/go-colorable v0.1.2 // indirect
 	github.com/oklog/ulid v1.3.1
 	github.com/oklog/ulid/v2 v2.0.2
 	github.com/pkg/errors v0.8.1
@@ -19,7 +20,9 @@ require (
 	github.com/stretchr/testify v1.4.0
 	github.com/tkrajina/gpxgo v1.0.1
 	go.etcd.io/bbolt v1.3.3
-	golang.org/x/crypto v0.0.0-20190510104115-cbcb75029529
+	golang.org/x/crypto v0.0.0-20200622213623-75b288015ac9
+	golang.org/x/sys v0.0.0-20200930185726-fdedc70b468f // indirect
+	gopkg.in/check.v1 v1.0.0-20180628173108-788fd7840127 // indirect
 )
 
 go 1.13
