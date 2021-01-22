@@ -62,6 +62,7 @@ func NewHandler(app *application.Application, authProvider AuthProvider) (*Handl
 
 	h.router.HandlerFunc(http.MethodPost, "/api/activities", rest.Wrap(h.postActivity))
 	h.router.HandlerFunc(http.MethodGet, "/api/activities/:uuid", rest.Wrap(h.getActivity))
+	h.router.HandlerFunc(http.MethodPut, "/api/activities/:uuid", rest.Wrap(h.putActivity))
 
 	h.router.HandlerFunc(http.MethodGet, "/api/users/:username", rest.Wrap(h.getUser))
 	h.router.HandlerFunc(http.MethodGet, "/api/users/:username/activities", rest.Wrap(h.getUserActivities))
@@ -226,6 +227,69 @@ func (h *Handler) getActivity(r *http.Request) rest.RestResponse {
 	return rest.NewResponse(
 		toActivity(result),
 	)
+}
+
+type putActivityInput struct {
+	Title      string `json:"title"`
+	Visibility string `json:"visibility"`
+}
+
+func (h *Handler) putActivity(r *http.Request) rest.RestResponse {
+	ps := httprouter.ParamsFromContext(r.Context())
+	uuid := ps.ByName("uuid")
+
+	u, err := h.authProvider.Get(r)
+	if err != nil {
+		h.log.Error("auth provider get failed", "err", err)
+		return rest.ErrInternalServerError
+	}
+
+	if u == nil {
+		return rest.ErrUnauthorized
+	}
+
+	var t putActivityInput
+	if err := json.NewDecoder(r.Body).Decode(&t); err != nil {
+		h.log.Warn("put activity decoding failed", "err", err)
+		return rest.ErrBadRequest.WithMessage("Malformed input.")
+	}
+
+	activityUUID, err := domain.NewActivityUUID(uuid)
+	if err != nil {
+		return rest.ErrBadRequest.WithMessage("Invalid activity UUID.")
+	}
+
+	title, err := domain.NewActivityTitle(t.Title)
+	if err != nil {
+		return rest.ErrBadRequest.WithMessage("Invalid activity title.")
+	}
+
+	visibility, err := domain.NewActivityVisibility(t.Visibility)
+	if err != nil {
+		return rest.ErrBadRequest.WithMessage("Invalid activity visibility.")
+	}
+
+	cmd := tracker.EditActivity{
+		ActivityUUID: activityUUID,
+		AsUser:       &u.User,
+		Title:        title,
+		Visibility:   visibility,
+	}
+
+	if err := h.app.Tracker.EditActivity.Execute(cmd); err != nil {
+		if errors.Is(err, tracker.ErrEditingActivityForbidden) {
+			return rest.ErrForbidden.WithMessage("You do not have permissions to edit this activity.")
+		}
+
+		if errors.Is(err, tracker.ErrActivityNotFound) {
+			return rest.ErrNotFound.WithMessage("Activity not found.")
+		}
+
+		h.log.Error("edit activity command failed", "err", err)
+		return rest.ErrInternalServerError
+	}
+
+	return rest.NewResponse(nil)
 }
 
 type loginInput struct {

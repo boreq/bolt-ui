@@ -21,6 +21,7 @@ type RouteRepository interface {
 
 var ErrActivityNotFound = errors.New("activity not found")
 var ErrGettingActivityForbidden = errors.New("this user can not view this activity")
+var ErrEditingActivityForbidden = errors.New("this user can not edit this activity")
 
 type ActivityRepository interface {
 	Save(activity *domain.Activity) error
@@ -61,6 +62,7 @@ type ActivityIterator interface {
 type Tracker struct {
 	AddActivity        *AddActivityHandler
 	GetActivity        *GetActivityHandler
+	EditActivity       *EditActivityHandler
 	ListUserActivities *ListUserActivitiesHandler
 }
 

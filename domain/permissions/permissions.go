@@ -32,3 +32,7 @@ func CanViewActivity(activity *domain.Activity, user *auth.ReadUser) (bool, erro
 		return false, fmt.Errorf("unsupported visibility '%s'", activity.Visibility())
 	}
 }
+
+func CanEditActivity(activity *domain.Activity, user *auth.ReadUser) (bool, error) {
+	return user != nil && activity.UserUUID() == user.UUID, nil
+}

@@ -14,13 +14,15 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+const testRouteFile = "data/strava_export.gpx"
+
 func TestAddActivity(t *testing.T) {
 	testTracker, cleanupTracker := NewTracker(t)
 	defer cleanupTracker()
 
 	tr := testTracker.Tracker
 
-	gpxFile, cleanupFile := fixture.TestDataFile(t, "data/strava_export.gpx")
+	gpxFile, cleanupFile := fixture.TestDataFile(t, testRouteFile)
 	defer cleanupFile()
 
 	userUUID := auth.MustNewUserUUID("user-uuid")
@@ -91,7 +93,7 @@ func TestListUserActivities(t *testing.T) {
 	var activityUUIDs []domain.ActivityUUID
 
 	for i := 0; i < 30; i++ {
-		gpxFile, cleanupFile := fixture.TestDataFile(t, "data/strava_export.gpx")
+		gpxFile, cleanupFile := fixture.TestDataFile(t, testRouteFile)
 		defer cleanupFile()
 
 		cmd := tracker.AddActivity{
@@ -238,7 +240,7 @@ func TestPermissions(t *testing.T) {
 
 			tr := testTracker.Tracker
 
-			gpxFile, cleanupFile := fixture.TestDataFile(t, "data/strava_export.gpx")
+			gpxFile, cleanupFile := fixture.TestDataFile(t, testRouteFile)
 			defer cleanupFile()
 
 			user := auth.ReadUser{
@@ -357,6 +359,189 @@ func TestPermissions(t *testing.T) {
 		})
 	}
 
+}
+
+func TestEditActivityPermissions(t *testing.T) {
+	user := auth.ReadUser{
+		UUID: auth.MustNewUserUUID("user-uuid"),
+	}
+
+	otherUser := auth.ReadUser{
+		UUID: auth.MustNewUserUUID("other-user-uuid"),
+	}
+
+	testCases := []struct {
+		Name    string
+		User    *auth.ReadUser
+		CanEdit bool
+	}{
+		{
+			Name:    "unauthorized_user",
+			User:    nil,
+			CanEdit: false,
+		},
+		{
+			Name:    "other_user",
+			User:    &otherUser,
+			CanEdit: false,
+		},
+		{
+			Name:    "user",
+			User:    &user,
+			CanEdit: true,
+		},
+	}
+
+	for _, testCase := range testCases {
+		t.Run(testCase.Name, func(t *testing.T) {
+			testTracker, cleanupTracker := NewTracker(t)
+			defer cleanupTracker()
+
+			tr := testTracker.Tracker
+
+			gpxFile, cleanupFile := fixture.TestDataFile(t, testRouteFile)
+			defer cleanupFile()
+
+			testTracker.UserRepository.Users[user.UUID] = appAuth.User{
+				Username: "username",
+			}
+
+			cmd := tracker.AddActivity{
+				RouteFile:  gpxFile,
+				UserUUID:   user.UUID,
+				Title:      domain.MustNewActivityTitle("title"),
+				Visibility: domain.PublicActivityVisibility,
+			}
+
+			activityUUID, err := tr.AddActivity.Execute(cmd)
+			require.NoError(t, err)
+
+			err = tr.EditActivity.Execute(
+				tracker.EditActivity{
+					ActivityUUID: activityUUID,
+					AsUser:       testCase.User,
+					Title:        domain.MustNewActivityTitle("new-title"),
+					Visibility:   domain.PrivateActivityVisibility,
+				},
+			)
+
+			if testCase.CanEdit {
+				require.NoError(t, err)
+			} else {
+				require.True(t, errors.Is(err, tracker.ErrEditingActivityForbidden))
+			}
+		})
+	}
+}
+
+func TestEditActivity(t *testing.T) {
+	user := auth.ReadUser{
+		UUID: auth.MustNewUserUUID("user-uuid"),
+	}
+
+	testTracker, cleanupTracker := NewTracker(t)
+	defer cleanupTracker()
+
+	tr := testTracker.Tracker
+
+	gpxFile, cleanupFile := fixture.TestDataFile(t, testRouteFile)
+	defer cleanupFile()
+
+	testTracker.UserRepository.Users[user.UUID] = appAuth.User{
+		Username: "username",
+	}
+
+	initialTitle := domain.MustNewActivityTitle("title")
+	initialVisibility := domain.PublicActivityVisibility
+
+	cmd := tracker.AddActivity{
+		RouteFile:  gpxFile,
+		UserUUID:   user.UUID,
+		Title:      initialTitle,
+		Visibility: initialVisibility,
+	}
+
+	activityUUID, err := tr.AddActivity.Execute(cmd)
+	require.NoError(t, err)
+
+	activity, err := tr.GetActivity.Execute(
+		tracker.GetActivity{
+			ActivityUUID: activityUUID,
+			AsUser:       &user,
+		},
+	)
+	require.NoError(t, err)
+
+	require.Equal(t, initialTitle, activity.Activity.Title())
+	require.Equal(t, initialVisibility, activity.Activity.Visibility())
+
+	newTitle := domain.MustNewActivityTitle("new-title")
+	newVisibility := domain.PrivateActivityVisibility
+
+	require.NotEqual(t, initialTitle, newTitle)
+	require.NotEqual(t, initialVisibility, newVisibility)
+
+	err = tr.EditActivity.Execute(
+		tracker.EditActivity{
+			ActivityUUID: activityUUID,
+			AsUser:       &user,
+			Title:        newTitle,
+			Visibility:   newVisibility,
+		},
+	)
+	require.NoError(t, err)
+
+	activity, err = tr.GetActivity.Execute(
+		tracker.GetActivity{
+			ActivityUUID: activityUUID,
+			AsUser:       &user,
+		},
+	)
+	require.NoError(t, err)
+
+	require.Equal(t, newTitle, activity.Activity.Title())
+	require.Equal(t, newVisibility, activity.Activity.Visibility())
+}
+
+func TestEditActivityWithoutChangesShouldNotReturnAnError(t *testing.T) {
+	user := auth.ReadUser{
+		UUID: auth.MustNewUserUUID("user-uuid"),
+	}
+
+	testTracker, cleanupTracker := NewTracker(t)
+	defer cleanupTracker()
+
+	tr := testTracker.Tracker
+
+	gpxFile, cleanupFile := fixture.TestDataFile(t, testRouteFile)
+	defer cleanupFile()
+
+	testTracker.UserRepository.Users[user.UUID] = appAuth.User{
+		Username: "username",
+	}
+
+	initialTitle := domain.MustNewActivityTitle("title")
+	initialVisibility := domain.PublicActivityVisibility
+
+	cmd := tracker.AddActivity{
+		RouteFile:  gpxFile,
+		UserUUID:   user.UUID,
+		Title:      initialTitle,
+		Visibility: initialVisibility,
+	}
+
+	activityUUID, err := tr.AddActivity.Execute(cmd)
+	require.NoError(t, err)
+
+	err = tr.EditActivity.Execute(
+		tracker.EditActivity{
+			ActivityUUID: activityUUID,
+			AsUser:       &user,
+			Title:        initialTitle,
+			Visibility:   initialVisibility,
+		},
+	)
+	require.NoError(t, err)
 }
 
 func NewTracker(t *testing.T) (wire.TestTracker, fixture.CleanupFunc) {

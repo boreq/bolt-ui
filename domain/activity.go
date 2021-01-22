@@ -68,6 +68,34 @@ func NewActivityFromHistory(events eventsourcing.EventSourcingEvents) (*Activity
 	return activity, nil
 }
 
+func (a *Activity) ChangeTitle(title ActivityTitle) error {
+	if title == a.title {
+		return nil
+	}
+
+	return a.update(
+		TitleChanged{
+			Title: title,
+		},
+	)
+}
+
+func (a *Activity) ChangeVisibility(visibility ActivityVisibility) error {
+	if visibility == a.visibility {
+		return nil
+	}
+
+	if visibility.IsZero() {
+		return errors.New("zero value of visibility")
+	}
+
+	return a.update(
+		VisibilityChanged{
+			Visibility: visibility,
+		},
+	)
+}
+
 func (a Activity) UUID() ActivityUUID {
 	return a.uuid
 }
@@ -92,10 +120,18 @@ func (a *Activity) PopChanges() eventsourcing.EventSourcingEvents {
 	return a.es.PopChanges()
 }
 
+func (a *Activity) HasChanges() bool {
+	return a.es.HasChanges()
+}
+
 func (a *Activity) update(event eventsourcing.Event) error {
 	switch e := event.(type) {
 	case ActivityCreated:
 		a.handleActivityCreated(e)
+	case TitleChanged:
+		a.handleTitleChanged(e)
+	case VisibilityChanged:
+		a.handleVisibilityChanged(e)
 	default:
 		return fmt.Errorf("unknown event type '%T'", event)
 	}
@@ -111,6 +147,14 @@ func (a *Activity) handleActivityCreated(event ActivityCreated) {
 	a.title = event.Title
 }
 
+func (a *Activity) handleTitleChanged(event TitleChanged) {
+	a.title = event.Title
+}
+
+func (a *Activity) handleVisibilityChanged(event VisibilityChanged) {
+	a.visibility = event.Visibility
+}
+
 type ActivityCreated struct {
 	UUID       ActivityUUID
 	UserUUID   auth.UserUUID
@@ -121,4 +165,20 @@ type ActivityCreated struct {
 
 func (e ActivityCreated) EventType() eventsourcing.EventType {
 	return "ActivityCreated_v1"
+}
+
+type TitleChanged struct {
+	Title ActivityTitle
+}
+
+func (e TitleChanged) EventType() eventsourcing.EventType {
+	return "TitleChanged_v1"
+}
+
+type VisibilityChanged struct {
+	Visibility ActivityVisibility
+}
+
+func (e VisibilityChanged) EventType() eventsourcing.EventType {
+	return "VisibilityChanged_v1"
 }

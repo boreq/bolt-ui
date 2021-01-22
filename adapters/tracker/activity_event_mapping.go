@@ -65,6 +65,60 @@ var activityEventMapping = eventsourcing.Mapping{
 			}, nil
 		},
 	},
+	"TitleChanged_v1": eventsourcing.EventMapping{
+		Marshal: func(event eventsourcing.Event) ([]byte, error) {
+			e := event.(domain.TitleChanged)
+
+			transportEvent := titleChanged{
+				Title: e.Title.String(),
+			}
+
+			return json.Marshal(transportEvent)
+		},
+		Unmarshal: func(bytes []byte) (eventsourcing.Event, error) {
+			var transportEvent titleChanged
+
+			if err := json.Unmarshal(bytes, &transportEvent); err != nil {
+				return nil, errors.Wrap(err, "could not unmarshal json")
+			}
+
+			title, err := domain.NewActivityTitle(transportEvent.Title)
+			if err != nil {
+				return nil, errors.Wrap(err, "could not create activity title")
+			}
+
+			return domain.TitleChanged{
+				Title: title,
+			}, nil
+		},
+	},
+	"VisibilityChanged_v1": eventsourcing.EventMapping{
+		Marshal: func(event eventsourcing.Event) ([]byte, error) {
+			e := event.(domain.VisibilityChanged)
+
+			transportEvent := visibilityChanged{
+				Visibility: e.Visibility.String(),
+			}
+
+			return json.Marshal(transportEvent)
+		},
+		Unmarshal: func(bytes []byte) (eventsourcing.Event, error) {
+			var transportEvent visibilityChanged
+
+			if err := json.Unmarshal(bytes, &transportEvent); err != nil {
+				return nil, errors.Wrap(err, "could not unmarshal json")
+			}
+
+			visibility, err := domain.NewActivityVisibility(transportEvent.Visibility)
+			if err != nil {
+				return nil, errors.Wrap(err, "could not create activity visibility")
+			}
+
+			return domain.VisibilityChanged{
+				Visibility: visibility,
+			}, nil
+		},
+	},
 }
 
 type activityCreated struct {
@@ -73,4 +127,12 @@ type activityCreated struct {
 	RouteUUID  string `json:"routeUUID"`
 	Visibility string `json:"visibility"`
 	Title      string `json:"title"`
+}
+
+type titleChanged struct {
+	Title string `json:"title"`
+}
+
+type visibilityChanged struct {
+	Visibility string `json:"visibility"`
 }

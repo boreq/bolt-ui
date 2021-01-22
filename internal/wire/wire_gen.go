@@ -105,10 +105,12 @@ func BuildTrackerForTest(db *bbolt.DB) (TestTracker, error) {
 	uuidGenerator := adapters.NewUUIDGenerator()
 	addActivityHandler := tracker.NewAddActivityHandler(trackerTransactionProvider, routeFileParser, uuidGenerator)
 	getActivityHandler := tracker.NewGetActivityHandler(trackerTransactionProvider)
+	editActivityHandler := tracker.NewEditActivityHandler(trackerTransactionProvider)
 	listUserActivitiesHandler := tracker.NewListUserActivitiesHandler(trackerTransactionProvider)
 	trackerTracker := &tracker.Tracker{
 		AddActivity:        addActivityHandler,
 		GetActivity:        getActivityHandler,
+		EditActivity:       editActivityHandler,
 		ListUserActivities: listUserActivitiesHandler,
 	}
 	testTracker := TestTracker{
@@ -224,10 +226,12 @@ func BuildService(conf *config.Config) (*service.Service, error) {
 	routeFileParser := tracker2.NewRouteFileParser()
 	addActivityHandler := tracker.NewAddActivityHandler(trackerTransactionProvider, routeFileParser, uuidGenerator)
 	getActivityHandler := tracker.NewGetActivityHandler(trackerTransactionProvider)
+	editActivityHandler := tracker.NewEditActivityHandler(trackerTransactionProvider)
 	listUserActivitiesHandler := tracker.NewListUserActivitiesHandler(trackerTransactionProvider)
 	trackerTracker := tracker.Tracker{
 		AddActivity:        addActivityHandler,
 		GetActivity:        getActivityHandler,
+		EditActivity:       editActivityHandler,
 		ListUserActivities: listUserActivitiesHandler,
 	}
 	applicationApplication := &application.Application{
