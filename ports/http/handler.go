@@ -406,6 +406,12 @@ func (h *Handler) getUserActivities(r *http.Request) rest.RestResponse {
 		return rest.ErrInternalServerError
 	}
 
+	currentUser, err := h.authProvider.Get(r)
+	if err != nil {
+		h.log.Error("auth provider get failed", "err", err)
+		return rest.ErrInternalServerError
+	}
+
 	user, err := h.app.Auth.GetUser.Execute(auth.GetUser{
 		Username: username,
 	})
@@ -418,6 +424,7 @@ func (h *Handler) getUserActivities(r *http.Request) rest.RestResponse {
 		UserUUID:    user.UUID,
 		StartBefore: before,
 		StartAfter:  after,
+		AsUser:      currentUser.UserPointer(),
 	}
 
 	userActivities, err := h.app.Tracker.ListUserActivities.Execute(query)
