@@ -5,14 +5,14 @@ import (
 )
 
 type ReadUser struct {
-	UUID          UserUUID      `json:"-"`
-	Username      string        `json:"username"`
-	Administrator bool          `json:"administrator"`
-	Created       time.Time     `json:"created"`
-	LastSeen      time.Time     `json:"lastSeen"`
-	Sessions      []ReadSession `json:"sessions"`
+	UUID          UserUUID
+	Username      string
+	Administrator bool
+	Created       time.Time
+	LastSeen      time.Time
+	Sessions      []ReadSession
 }
 
 type ReadSession struct {
-	LastSeen time.Time `json:"lastSeen"`
+	LastSeen time.Time
 }

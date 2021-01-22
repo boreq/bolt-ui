@@ -5,6 +5,7 @@ import (
 
 	"github.com/boreq/velo/application/tracker"
 	"github.com/boreq/velo/domain"
+	"github.com/boreq/velo/domain/auth"
 )
 
 type UserProfile struct {
@@ -53,6 +54,53 @@ type UserActivities struct {
 type User struct {
 	Username    string `json:"username"`
 	DisplayName string `json:"displayName"`
+}
+
+type CurrentUser struct {
+	Username      string    `json:"username"`
+	DisplayName   string    `json:"displayName"`
+	Administrator bool      `json:"administrator"`
+	Created       time.Time `json:"created"`
+	LastSeen      time.Time `json:"lastSeen"`
+	Sessions      []Session `json:"sessions"`
+}
+
+type Session struct {
+	LastSeen time.Time `json:"lastSeen"`
+}
+
+func toUserProfile(user auth.ReadUser) UserProfile {
+	return UserProfile{
+		Username:    user.Username,
+		DisplayName: user.Username,
+	}
+}
+
+func toCurrentUser(user auth.ReadUser) CurrentUser {
+	return CurrentUser{
+		Username:      user.Username,
+		DisplayName:   user.Username,
+		Administrator: user.Administrator,
+		Created:       user.Created,
+		LastSeen:      user.LastSeen,
+		Sessions:      toSessions(user.Sessions),
+	}
+}
+
+func toSessions(sessions []auth.ReadSession) []Session {
+	var result []Session
+
+	for _, session := range sessions {
+		result = append(result, toSession(session))
+	}
+
+	return result
+}
+
+func toSession(session auth.ReadSession) Session {
+	return Session{
+		LastSeen: session.LastSeen,
+	}
 }
 
 func toActivity(activity tracker.Activity) Activity {

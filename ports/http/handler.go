@@ -224,9 +224,7 @@ func (h *Handler) getActivity(r *http.Request) rest.RestResponse {
 		return rest.ErrInternalServerError
 	}
 
-	return rest.NewResponse(
-		toActivity(result),
-	)
+	return rest.NewResponse(toActivity(result))
 }
 
 type putActivityInput struct {
@@ -372,7 +370,7 @@ func (h *Handler) getCurrentUser(r *http.Request) rest.RestResponse {
 		return rest.ErrUnauthorized
 	}
 
-	return rest.NewResponse(u.User)
+	return rest.NewResponse(toCurrentUser(u.User))
 }
 
 func (h *Handler) getUser(r *http.Request) rest.RestResponse {
@@ -389,12 +387,7 @@ func (h *Handler) getUser(r *http.Request) rest.RestResponse {
 		return rest.ErrInternalServerError
 	}
 
-	profile := UserProfile{
-		Username:    user.Username,
-		DisplayName: user.Username,
-	}
-
-	return rest.NewResponse(profile)
+	return rest.NewResponse(toUserProfile(user))
 }
 
 func (h *Handler) getUserActivities(r *http.Request) rest.RestResponse {
