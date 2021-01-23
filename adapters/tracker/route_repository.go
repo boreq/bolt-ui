@@ -51,6 +51,15 @@ func (c *RouteRepository) Get(uuid domain.RouteUUID) (*domain.Route, error) {
 	return domain.NewRouteFromHistory(events)
 }
 
+func (c *RouteRepository) Delete(uuid domain.RouteUUID) error {
+	b := c.tx.Bucket([]byte(routeBucket))
+	if b == nil {
+		return nil
+	}
+
+	return b.DeleteBucket([]byte(uuid.String()))
+}
+
 func (c *RouteRepository) convertUUID(uuid domain.RouteUUID) eventsourcing.AggregateUUID {
 	return eventsourcing.AggregateUUID(uuid.String())
 }

@@ -44,6 +44,15 @@ func (r *UserToActivityRepository) Assign(userUUID auth.UserUUID, activityUUID d
 	return b.Put(activityKey(activityUUID), nil)
 }
 
+func (r *UserToActivityRepository) Unassign(userUUID auth.UserUUID, activityUUID domain.ActivityUUID) error {
+	b, err := r.getOrCreateUserBucket(userUUID)
+	if err != nil {
+		return errors.Wrap(err, "could not get a bucket")
+	}
+
+	return b.Delete(activityKey(activityUUID))
+}
+
 func (r *UserToActivityRepository) List(userUUID auth.UserUUID) (tracker.ActivityIterator, error) {
 	b := r.getUserBucket(userUUID)
 	if b == nil {

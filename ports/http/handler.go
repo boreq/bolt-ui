@@ -63,6 +63,7 @@ func NewHandler(app *application.Application, authProvider AuthProvider) (*Handl
 	h.router.HandlerFunc(http.MethodPost, "/api/activities", rest.Wrap(h.postActivity))
 	h.router.HandlerFunc(http.MethodGet, "/api/activities/:uuid", rest.Wrap(h.getActivity))
 	h.router.HandlerFunc(http.MethodPut, "/api/activities/:uuid", rest.Wrap(h.putActivity))
+	h.router.HandlerFunc(http.MethodDelete, "/api/activities/:uuid", rest.Wrap(h.deleteActivity))
 
 	h.router.HandlerFunc(http.MethodGet, "/api/users/:username", rest.Wrap(h.getUser))
 	h.router.HandlerFunc(http.MethodGet, "/api/users/:username/activities", rest.Wrap(h.getUserActivities))
@@ -284,6 +285,46 @@ func (h *Handler) putActivity(r *http.Request) rest.RestResponse {
 		}
 
 		h.log.Error("edit activity command failed", "err", err)
+		return rest.ErrInternalServerError
+	}
+
+	return rest.NewResponse(nil)
+}
+
+func (h *Handler) deleteActivity(r *http.Request) rest.RestResponse {
+	ps := httprouter.ParamsFromContext(r.Context())
+	uuid := ps.ByName("uuid")
+
+	u, err := h.authProvider.Get(r)
+	if err != nil {
+		h.log.Error("auth provider get failed", "err", err)
+		return rest.ErrInternalServerError
+	}
+
+	if u == nil {
+		return rest.ErrUnauthorized
+	}
+
+	activityUUID, err := domain.NewActivityUUID(uuid)
+	if err != nil {
+		return rest.ErrBadRequest.WithMessage("Invalid activity UUID.")
+	}
+
+	cmd := tracker.DeleteActivity{
+		ActivityUUID: activityUUID,
+		AsUser:       &u.User,
+	}
+
+	if err := h.app.Tracker.DeleteActivity.Execute(cmd); err != nil {
+		if errors.Is(err, tracker.ErrDeletingActivityForbidden) {
+			return rest.ErrForbidden.WithMessage("You do not have permissions to delete this activity.")
+		}
+
+		if errors.Is(err, tracker.ErrActivityNotFound) {
+			return rest.ErrNotFound.WithMessage("Activity not found.")
+		}
+
+		h.log.Error("delete activity command failed", "err", err)
 		return rest.ErrInternalServerError
 	}
 

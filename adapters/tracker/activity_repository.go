@@ -51,6 +51,15 @@ func (c *ActivityRepository) Get(uuid domain.ActivityUUID) (*domain.Activity, er
 	return domain.NewActivityFromHistory(events)
 }
 
+func (c *ActivityRepository) Delete(uuid domain.ActivityUUID) error {
+	b := c.tx.Bucket([]byte(activityBucket))
+	if b == nil {
+		return nil
+	}
+
+	return b.DeleteBucket([]byte(uuid.String()))
+}
+
 func (c *ActivityRepository) convertUUID(uuid domain.ActivityUUID) eventsourcing.AggregateUUID {
 	return eventsourcing.AggregateUUID(uuid.String())
 }

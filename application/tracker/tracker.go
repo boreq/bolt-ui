@@ -17,19 +17,23 @@ var ErrRouteNotFound = errors.New("route not found")
 type RouteRepository interface {
 	Save(route *domain.Route) error
 	Get(uuid domain.RouteUUID) (*domain.Route, error)
+	Delete(uuid domain.RouteUUID) error
 }
 
 var ErrActivityNotFound = errors.New("activity not found")
 var ErrGettingActivityForbidden = errors.New("this user can not view this activity")
 var ErrEditingActivityForbidden = errors.New("this user can not edit this activity")
+var ErrDeletingActivityForbidden = errors.New("this user can not delete this activity")
 
 type ActivityRepository interface {
 	Save(activity *domain.Activity) error
 	Get(uuid domain.ActivityUUID) (*domain.Activity, error)
+	Delete(uuid domain.ActivityUUID) error
 }
 
 type UserToActivityRepository interface {
 	Assign(userUUID auth.UserUUID, activityUUID domain.ActivityUUID) error
+	Unassign(userUUID auth.UserUUID, activityUUID domain.ActivityUUID) error
 	List(userUUID auth.UserUUID) (ActivityIterator, error)
 	ListAfter(userUUID auth.UserUUID, startAfter domain.ActivityUUID) (ActivityIterator, error)
 	ListBefore(userUUID auth.UserUUID, startBefore domain.ActivityUUID) (ActivityIterator, error)
@@ -63,6 +67,7 @@ type Tracker struct {
 	AddActivity        *AddActivityHandler
 	GetActivity        *GetActivityHandler
 	EditActivity       *EditActivityHandler
+	DeleteActivity     *DeleteActivityHandler
 	ListUserActivities *ListUserActivitiesHandler
 }
 

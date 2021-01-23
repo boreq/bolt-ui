@@ -1,7 +1,6 @@
 package tests
 
 import (
-	"errors"
 	"sort"
 	"testing"
 
@@ -275,7 +274,7 @@ func TestPermissions(t *testing.T) {
 				if testCase.UnauthorisedCanView {
 					require.NoError(t, err)
 				} else {
-					require.True(t, errors.Is(err, tracker.ErrGettingActivityForbidden))
+					require.ErrorIs(t, err, tracker.ErrGettingActivityForbidden)
 				}
 			})
 
@@ -290,7 +289,7 @@ func TestPermissions(t *testing.T) {
 				if testCase.OtherCanView {
 					require.NoError(t, err)
 				} else {
-					require.True(t, errors.Is(err, tracker.ErrGettingActivityForbidden))
+					require.ErrorIs(t, err, tracker.ErrGettingActivityForbidden)
 				}
 			})
 
@@ -305,7 +304,7 @@ func TestPermissions(t *testing.T) {
 				if testCase.OwnerCanView {
 					require.NoError(t, err)
 				} else {
-					require.True(t, errors.Is(err, tracker.ErrGettingActivityForbidden))
+					require.ErrorIs(t, err, tracker.ErrGettingActivityForbidden)
 				}
 			})
 
@@ -428,7 +427,7 @@ func TestEditActivityPermissions(t *testing.T) {
 			if testCase.CanEdit {
 				require.NoError(t, err)
 			} else {
-				require.True(t, errors.Is(err, tracker.ErrEditingActivityForbidden))
+				require.ErrorIs(t, err, tracker.ErrEditingActivityForbidden)
 			}
 		})
 	}
@@ -542,6 +541,164 @@ func TestEditActivityWithoutChangesShouldNotReturnAnError(t *testing.T) {
 		},
 	)
 	require.NoError(t, err)
+}
+
+func TestDeleteActivityPermissions(t *testing.T) {
+	user := auth.ReadUser{
+		UUID: auth.MustNewUserUUID("user-uuid"),
+	}
+
+	otherUser := auth.ReadUser{
+		UUID: auth.MustNewUserUUID("other-user-uuid"),
+	}
+
+	testCases := []struct {
+		Name    string
+		User    *auth.ReadUser
+		CanEdit bool
+	}{
+		{
+			Name:    "unauthorized_user",
+			User:    nil,
+			CanEdit: false,
+		},
+		{
+			Name:    "other_user",
+			User:    &otherUser,
+			CanEdit: false,
+		},
+		{
+			Name:    "user",
+			User:    &user,
+			CanEdit: true,
+		},
+	}
+
+	for _, testCase := range testCases {
+		t.Run(testCase.Name, func(t *testing.T) {
+			testTracker, cleanupTracker := NewTracker(t)
+			defer cleanupTracker()
+
+			tr := testTracker.Tracker
+
+			gpxFile, cleanupFile := fixture.TestDataFile(t, testRouteFile)
+			defer cleanupFile()
+
+			testTracker.UserRepository.Users[user.UUID] = appAuth.User{
+				Username: "username",
+			}
+
+			cmd := tracker.AddActivity{
+				RouteFile:  gpxFile,
+				UserUUID:   user.UUID,
+				Title:      domain.MustNewActivityTitle("title"),
+				Visibility: domain.PublicActivityVisibility,
+			}
+
+			activityUUID, err := tr.AddActivity.Execute(cmd)
+			require.NoError(t, err)
+
+			err = tr.DeleteActivity.Execute(
+				tracker.DeleteActivity{
+					ActivityUUID: activityUUID,
+					AsUser:       testCase.User,
+				},
+			)
+
+			if testCase.CanEdit {
+				require.NoError(t, err)
+			} else {
+				require.ErrorIs(t, err, tracker.ErrDeletingActivityForbidden)
+			}
+		})
+	}
+}
+
+func TestDeleteActivity(t *testing.T) {
+	user := auth.ReadUser{
+		UUID: auth.MustNewUserUUID("user-uuid"),
+	}
+
+	testTracker, cleanupTracker := NewTracker(t)
+	defer cleanupTracker()
+
+	tr := testTracker.Tracker
+
+	gpxFile, cleanupFile := fixture.TestDataFile(t, testRouteFile)
+	defer cleanupFile()
+
+	testTracker.UserRepository.Users[user.UUID] = appAuth.User{
+		Username: "username",
+	}
+
+	cmd := tracker.AddActivity{
+		RouteFile:  gpxFile,
+		UserUUID:   user.UUID,
+		Title:      domain.MustNewActivityTitle("title"),
+		Visibility: domain.PublicActivityVisibility,
+	}
+
+	activityUUID, err := tr.AddActivity.Execute(cmd)
+	require.NoError(t, err)
+
+	_, err = tr.GetActivity.Execute(
+		tracker.GetActivity{
+			ActivityUUID: activityUUID,
+			AsUser:       &user,
+		},
+	)
+	require.NoError(t, err)
+
+	activities, err := tr.ListUserActivities.Execute(
+		tracker.ListUserActivities{
+			UserUUID: user.UUID,
+		},
+	)
+	require.NoError(t, err)
+	require.Len(t, activities.Activities, 1)
+
+	err = tr.DeleteActivity.Execute(
+		tracker.DeleteActivity{
+			ActivityUUID: activityUUID,
+			AsUser:       &user,
+		},
+	)
+	require.NoError(t, err)
+
+	_, err = tr.GetActivity.Execute(
+		tracker.GetActivity{
+			ActivityUUID: activityUUID,
+			AsUser:       &user,
+		},
+	)
+	require.ErrorIs(t, err, tracker.ErrActivityNotFound)
+
+	activities, err = tr.ListUserActivities.Execute(
+		tracker.ListUserActivities{
+			UserUUID: user.UUID,
+		},
+	)
+	require.NoError(t, err)
+	require.Len(t, activities.Activities, 0)
+}
+
+func TestDeleteActivityThatDoesNotExist(t *testing.T) {
+	user := auth.ReadUser{
+		UUID: auth.MustNewUserUUID("user-uuid"),
+	}
+
+	testTracker, cleanupTracker := NewTracker(t)
+	defer cleanupTracker()
+
+	tr := testTracker.Tracker
+
+	err := tr.DeleteActivity.Execute(
+		tracker.DeleteActivity{
+			ActivityUUID: domain.MustNewActivityUUID("activity-uuid"),
+			AsUser:       &user,
+		},
+	)
+	require.ErrorIs(t, err, tracker.ErrActivityNotFound)
 }
 
 func NewTracker(t *testing.T) (wire.TestTracker, fixture.CleanupFunc) {
