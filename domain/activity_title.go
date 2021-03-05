@@ -9,7 +9,7 @@ type ActivityTitle struct {
 }
 
 func NewActivityTitle(s string) (ActivityTitle, error) {
-	if len(s) > 50 {
+	if len(s) > maxActivityTitleLength {
 		return ActivityTitle{}, errors.Errorf("length of activity title can not exceed %d characters", maxActivityTitleLength)
 	}
 
