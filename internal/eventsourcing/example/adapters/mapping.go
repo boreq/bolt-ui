@@ -3,9 +3,9 @@ package adapters
 import (
 	"encoding/json"
 
+	"github.com/boreq/errors"
 	"github.com/boreq/velo/internal/eventsourcing"
 	"github.com/boreq/velo/internal/eventsourcing/example/domain"
-	"github.com/boreq/errors"
 )
 
 var mapping = eventsourcing.Mapping{

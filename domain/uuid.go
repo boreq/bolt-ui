@@ -61,3 +61,23 @@ func MustNewRouteUUID(u string) RouteUUID {
 	}
 	return v
 }
+
+type PrivacyZoneUUID struct {
+	uuid
+}
+
+func NewPrivacyZoneUUID(u string) (PrivacyZoneUUID, error) {
+	uuid, err := newUUID(u)
+	if err != nil {
+		return PrivacyZoneUUID{}, errors.New("could not create a privacy zone UUID")
+	}
+	return PrivacyZoneUUID{uuid}, nil
+}
+
+func MustNewPrivacyZoneUUID(u string) PrivacyZoneUUID {
+	v, err := NewPrivacyZoneUUID(u)
+	if err != nil {
+		panic(err)
+	}
+	return v
+}

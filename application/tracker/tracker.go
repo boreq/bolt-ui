@@ -39,6 +39,20 @@ type UserToActivityRepository interface {
 	ListBefore(userUUID auth.UserUUID, startBefore domain.ActivityUUID) (ActivityIterator, error)
 }
 
+var ErrPrivacyZoneNotFound = errors.New("privacy zone not found")
+var ErrGettingPrivacyZoneForbidden = errors.New("this user can not view this privacy zone")
+
+type PrivacyZoneRepository interface {
+	Save(privacyZone *domain.PrivacyZone) error
+	Get(uuid domain.PrivacyZoneUUID) (*domain.PrivacyZone, error)
+}
+
+type UserToPrivacyZoneRepository interface {
+	Assign(userUUID auth.UserUUID, privacyZoneUUID domain.PrivacyZoneUUID) error
+	Unassign(userUUID auth.UserUUID, privacyZoneUUID domain.PrivacyZoneUUID) error
+	List(userUUID auth.UserUUID) ([]*domain.PrivacyZone, error)
+}
+
 type UserRepository interface {
 	GetByUUID(uuid auth.UserUUID) (*appAuth.User, error)
 }
@@ -69,6 +83,8 @@ type Tracker struct {
 	EditActivity       *EditActivityHandler
 	DeleteActivity     *DeleteActivityHandler
 	ListUserActivities *ListUserActivitiesHandler
+	AddPrivacyZone     *AddPrivacyZoneHandler
+	GetPrivacyZone     *GetPrivacyZoneHandler
 }
 
 type TransactionProvider interface {
@@ -79,10 +95,12 @@ type TransactionProvider interface {
 type TransactionHandler func(repositories *TransactableRepositories) error
 
 type TransactableRepositories struct {
-	Route          RouteRepository
-	Activity       ActivityRepository
-	UserToActivity UserToActivityRepository
-	User           UserRepository
+	Route             RouteRepository
+	Activity          ActivityRepository
+	PrivacyZone       PrivacyZoneRepository
+	UserToActivity    UserToActivityRepository
+	UserToPrivacyZone UserToPrivacyZoneRepository
+	User              UserRepository
 }
 
 func toUser(user *appAuth.User) *User {

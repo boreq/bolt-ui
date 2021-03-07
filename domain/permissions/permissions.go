@@ -40,3 +40,7 @@ func CanEditActivity(activity *domain.Activity, user *auth.ReadUser) (bool, erro
 func CanDeleteActivity(activity *domain.Activity, user *auth.ReadUser) (bool, error) {
 	return user != nil && activity.UserUUID() == user.UUID, nil
 }
+
+func CanViewPrivacyZone(privacyZone *domain.PrivacyZone, user *auth.ReadUser) (bool, error) {
+	return user != nil && privacyZone.UserUUID() == user.UUID, nil
+}

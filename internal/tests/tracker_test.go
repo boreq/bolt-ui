@@ -701,6 +701,57 @@ func TestDeleteActivityThatDoesNotExist(t *testing.T) {
 	require.ErrorIs(t, err, tracker.ErrActivityNotFound)
 }
 
+func TestAddPrivacyZone(t *testing.T) {
+	testTracker, cleanupTracker := NewTracker(t)
+	defer cleanupTracker()
+
+	tr := testTracker.Tracker
+
+	userUUID := auth.MustNewUserUUID("user-uuid")
+
+	position := domain.NewPosition(
+		domain.MustNewLatitude(48.20952),
+		domain.MustNewLongitude(16.35618),
+	)
+
+	circle := domain.MustNewCircle(
+		domain.NewPosition(
+			domain.MustNewLatitude(48.21019),
+			domain.MustNewLongitude(16.36163),
+		),
+		500,
+	)
+
+	name := domain.MustNewPrivacyZoneName("Privacy zone")
+
+	testTracker.UserRepository.Users[userUUID] = appAuth.User{
+		Username: "username",
+	}
+
+	cmd := tracker.AddPrivacyZone{
+		UserUUID: userUUID,
+		Position: position,
+		Circle:   circle,
+		Name:     name,
+	}
+
+	privacyZoneUUID, err := tr.AddPrivacyZone.Execute(cmd)
+	require.NoError(t, err)
+
+	require.False(t, privacyZoneUUID.IsZero())
+
+	// test get
+	_, err = tr.GetPrivacyZone.Execute(
+		tracker.GetPrivacyZone{
+			PrivacyZoneUUID: privacyZoneUUID,
+			AsUser: &auth.ReadUser{
+				UUID: userUUID,
+			},
+		},
+	)
+	require.NoError(t, err)
+}
+
 func NewTracker(t *testing.T) (wire.TestTracker, fixture.CleanupFunc) {
 	db, cleanup := fixture.Bolt(t)
 

@@ -43,31 +43,17 @@ var trackerTransactableRepositoriesSet = wire.NewSet(
 
 	trackerAdapters.NewUserToActivityRepository,
 	wire.Bind(new(tracker.UserToActivityRepository), new(*trackerAdapters.UserToActivityRepository)),
-)
 
-//lint:ignore U1000 because
-var testTrackerTransactableRepositoriesSet = wire.NewSet(
-	wire.Struct(new(tracker.TransactableRepositories), "*"),
+	trackerAdapters.NewPrivacyZoneRepository,
+	wire.Bind(new(tracker.PrivacyZoneRepository), new(*trackerAdapters.PrivacyZoneRepository)),
 
-	trackerAdapters.NewActivityRepository,
-	wire.Bind(new(tracker.ActivityRepository), new(*trackerAdapters.ActivityRepository)),
-
-	trackerAdapters.NewRouteRepository,
-	wire.Bind(new(tracker.RouteRepository), new(*trackerAdapters.RouteRepository)),
-
-	trackerAdapters.NewUserToActivityRepository,
-	wire.Bind(new(tracker.UserToActivityRepository), new(*trackerAdapters.UserToActivityRepository)),
+	trackerAdapters.NewUserToPrivacyZoneRepository,
+	wire.Bind(new(tracker.UserToPrivacyZoneRepository), new(*trackerAdapters.UserToPrivacyZoneRepository)),
 )
 
 //lint:ignore U1000 because
 var trackerTestTransactableRepositoriesSet = wire.NewSet(
-	trackerAdapters.NewTrackerTransactionProvider,
-	wire.Bind(new(tracker.TransactionProvider), new(*trackerAdapters.TrackerTransactionProvider)),
-
 	wire.Struct(new(tracker.TransactableRepositories), "*"),
-
-	newTrackerTestRepositoriesProvider,
-	wire.Bind(new(trackerAdapters.TrackerRepositoriesProvider), new(*trackerTestRepositoriesProvider)),
 
 	trackerAdapters.NewActivityRepository,
 	wire.Bind(new(tracker.ActivityRepository), new(*trackerAdapters.ActivityRepository)),
@@ -77,6 +63,12 @@ var trackerTestTransactableRepositoriesSet = wire.NewSet(
 
 	trackerAdapters.NewUserToActivityRepository,
 	wire.Bind(new(tracker.UserToActivityRepository), new(*trackerAdapters.UserToActivityRepository)),
+
+	trackerAdapters.NewPrivacyZoneRepository,
+	wire.Bind(new(tracker.PrivacyZoneRepository), new(*trackerAdapters.PrivacyZoneRepository)),
+
+	trackerAdapters.NewUserToPrivacyZoneRepository,
+	wire.Bind(new(tracker.UserToPrivacyZoneRepository), new(*trackerAdapters.UserToPrivacyZoneRepository)),
 )
 
 type trackerRepositoriesProvider struct {

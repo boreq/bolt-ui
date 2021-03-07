@@ -63,7 +63,7 @@ func NewActivityFromHistory(events eventsourcing.EventSourcingEvents) (*Activity
 		activity.es.LoadVersion(event)
 	}
 
-	activity.PopChanges()
+	activity.es.PopChanges()
 
 	return activity, nil
 }

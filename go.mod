@@ -7,13 +7,16 @@ require (
 	github.com/boreq/rest v0.1.0
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/go-stack/stack v1.8.0 // indirect
-	github.com/google/wire v0.4.0
+	github.com/google/subcommands v1.2.0 // indirect
+	github.com/google/wire v0.5.0
 	github.com/inconshreveable/log15 v0.0.0-20180818164646-67afb5ed74ec
 	github.com/julienschmidt/httprouter v1.2.0
 	github.com/kr/pretty v0.1.0 // indirect
 	github.com/mattn/go-colorable v0.1.2 // indirect
+	github.com/nfnt/resize v0.0.0-20180221191011-83c6a9932646
 	github.com/oklog/ulid v1.3.1
 	github.com/oklog/ulid/v2 v2.0.2
+	github.com/oliamb/cutter v0.2.2
 	github.com/pkg/errors v0.8.1
 	github.com/rakyll/statik v0.1.5
 	github.com/rs/cors v1.6.0
@@ -21,9 +24,11 @@ require (
 	github.com/tkrajina/gpxgo v1.0.1
 	go.etcd.io/bbolt v1.3.3
 	golang.org/x/crypto v0.0.0-20200622213623-75b288015ac9
-	golang.org/x/sys v0.0.0-20200930185726-fdedc70b468f // indirect
+	golang.org/x/mod v0.4.1 // indirect
+	golang.org/x/sys v0.0.0-20210305230114-8fe3ee5dd75b // indirect
 	gopkg.in/check.v1 v1.0.0-20180628173108-788fd7840127 // indirect
 	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b // indirect
+	honnef.co/go/tools v0.1.2 // indirect
 )
 
 go 1.13

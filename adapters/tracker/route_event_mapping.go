@@ -22,11 +22,8 @@ var routeEventMapping = eventsourcing.Mapping{
 				transportEvent.Points = append(
 					transportEvent.Points,
 					point{
-						Time: p.Time(),
-						Position: position{
-							Latitude:  p.Position().Latitude().Float64(),
-							Longitude: p.Position().Longitude().Float64(),
-						},
+						Time:     p.Time(),
+						Position: toPosition(p.Position()),
 						Altitude: p.Altitude().Float64(),
 					},
 				)
@@ -49,17 +46,10 @@ var routeEventMapping = eventsourcing.Mapping{
 			var points []domain.Point
 
 			for _, p := range transportEvent.Points {
-				latitude, err := domain.NewLatitude(p.Position.Latitude)
+				position, err := fromPosition(p.Position)
 				if err != nil {
-					return nil, errors.Wrap(err, "could not create a latitude")
+					return nil, errors.Wrap(err, "could not create a position")
 				}
-
-				longitude, err := domain.NewLongitude(p.Position.Longitude)
-				if err != nil {
-					return nil, errors.Wrap(err, "could not create a longitude")
-				}
-
-				position := domain.NewPosition(latitude, longitude)
 
 				altitude := domain.NewAltitude(p.Altitude)
 
@@ -80,17 +70,12 @@ var routeEventMapping = eventsourcing.Mapping{
 }
 
 type routeCreated struct {
-	UUID   string `json:"uuid"`
-	Points []point
+	UUID   string  `json:"uuid"`
+	Points []point `json:"points"`
 }
 
 type point struct {
-	Time     time.Time
-	Position position
-	Altitude float64
-}
-
-type position struct {
-	Latitude  float64
-	Longitude float64
+	Time     time.Time `json:"time"`
+	Position position  `json:"position"`
+	Altitude float64   `json:"altitude"`
 }
