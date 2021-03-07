@@ -13,10 +13,8 @@ require (
 	github.com/julienschmidt/httprouter v1.2.0
 	github.com/kr/pretty v0.1.0 // indirect
 	github.com/mattn/go-colorable v0.1.2 // indirect
-	github.com/nfnt/resize v0.0.0-20180221191011-83c6a9932646
 	github.com/oklog/ulid v1.3.1
 	github.com/oklog/ulid/v2 v2.0.2
-	github.com/oliamb/cutter v0.2.2
 	github.com/pkg/errors v0.8.1
 	github.com/rakyll/statik v0.1.5
 	github.com/rs/cors v1.6.0
