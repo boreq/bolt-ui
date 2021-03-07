@@ -411,7 +411,7 @@ func (h *Handler) getCurrentUser(r *http.Request) rest.RestResponse {
 		return rest.ErrUnauthorized
 	}
 
-	return rest.NewResponse(toCurrentUser(u.User))
+	return rest.NewResponse(toDetailedUser(u.User))
 }
 
 func (h *Handler) getUser(r *http.Request) rest.RestResponse {
@@ -511,7 +511,7 @@ func (h *Handler) getUsers(r *http.Request) rest.RestResponse {
 		return rest.ErrInternalServerError
 	}
 
-	return rest.NewResponse(users)
+	return rest.NewResponse(toDetailedUsers(users))
 }
 
 type createInvitationResponse struct {

@@ -56,17 +56,12 @@ type User struct {
 	DisplayName string `json:"displayName"`
 }
 
-type CurrentUser struct {
+type DetailedUser struct {
 	Username      string    `json:"username"`
 	DisplayName   string    `json:"displayName"`
 	Administrator bool      `json:"administrator"`
 	Created       time.Time `json:"created"`
 	LastSeen      time.Time `json:"lastSeen"`
-	Sessions      []Session `json:"sessions"`
-}
-
-type Session struct {
-	LastSeen time.Time `json:"lastSeen"`
 }
 
 func toUserProfile(user auth.ReadUser) UserProfile {
@@ -76,30 +71,23 @@ func toUserProfile(user auth.ReadUser) UserProfile {
 	}
 }
 
-func toCurrentUser(user auth.ReadUser) CurrentUser {
-	return CurrentUser{
-		Username:      user.Username,
-		DisplayName:   user.Username,
-		Administrator: user.Administrator,
-		Created:       user.Created,
-		LastSeen:      user.LastSeen,
-		Sessions:      toSessions(user.Sessions),
-	}
-}
+func toDetailedUsers(users []auth.ReadUser) []DetailedUser {
+	var result []DetailedUser
 
-func toSessions(sessions []auth.ReadSession) []Session {
-	var result []Session
-
-	for _, session := range sessions {
-		result = append(result, toSession(session))
+	for _, user := range users {
+		result = append(result, toDetailedUser(user))
 	}
 
 	return result
 }
 
-func toSession(session auth.ReadSession) Session {
-	return Session{
-		LastSeen: session.LastSeen,
+func toDetailedUser(user auth.ReadUser) DetailedUser {
+	return DetailedUser{
+		Username:      user.Username,
+		DisplayName:   user.Username,
+		Administrator: user.Administrator,
+		Created:       user.Created,
+		LastSeen:      user.LastSeen,
 	}
 }
 
