@@ -106,7 +106,3 @@ type PrivacyZoneCreated struct {
 func (e PrivacyZoneCreated) EventType() eventsourcing.EventType {
 	return "PrivacyZoneCreated_v1"
 }
-
-func isWithinCircle(position Position, circleCenter Position, circleRadius float64) bool {
-	return circleCenter.Distance(position) <= circleRadius
-}
