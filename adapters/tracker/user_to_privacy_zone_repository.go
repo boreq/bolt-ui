@@ -59,14 +59,6 @@ func (r *UserToPrivacyZoneRepository) privacyZoneKey(uuid domain.PrivacyZoneUUID
 	return []byte(uuid.String())
 }
 
-func (r *UserToPrivacyZoneRepository) getUserBucket(userUUID auth.UserUUID) *bolt.Bucket {
-	b := r.tx.Bucket(r.bucket)
-	if b == nil {
-		return nil
-	}
-	return b.Bucket([]byte(userUUID.String()))
-}
-
 func (r *UserToPrivacyZoneRepository) getOrCreateUserBucket(userUUID auth.UserUUID) (*bolt.Bucket, error) {
 	b := r.tx.Bucket(r.bucket)
 	if b == nil {
