@@ -3,6 +3,7 @@ package http
 import (
 	"time"
 
+	"github.com/boreq/errors"
 	"github.com/boreq/velo/application/tracker"
 	"github.com/boreq/velo/domain"
 	"github.com/boreq/velo/domain/auth"
@@ -43,6 +44,11 @@ type Point struct {
 type Position struct {
 	Latitude  float64 `json:"latitude"`
 	Longitude float64 `json:"longitude"`
+}
+
+type Circle struct {
+	Radius float64  `json:"radius"`
+	Center Position `json:"center"`
 }
 
 type UserActivities struct {
@@ -123,11 +129,8 @@ func toPoints(points []domain.Point) []Point {
 	var result []Point
 	for _, point := range points {
 		result = append(result, Point{
-			Time: point.Time(),
-			Position: Position{
-				Latitude:  point.Position().Latitude().Float64(),
-				Longitude: point.Position().Longitude().Float64(),
-			},
+			Time:     point.Time(),
+			Position: toPosition(point.Position()),
 			Altitude: point.Altitude().Float64(),
 		})
 	}
@@ -145,4 +148,34 @@ func toUserActivities(v tracker.ListUserActivitiesResult) UserActivities {
 	}
 
 	return result
+}
+
+func toPosition(position domain.Position) Position {
+	return Position{
+		Latitude:  position.Latitude().Float64(),
+		Longitude: position.Longitude().Float64(),
+	}
+}
+
+func fromPosition(position Position) (domain.Position, error) {
+	latitude, err := domain.NewLatitude(position.Latitude)
+	if err != nil {
+		return domain.Position{}, errors.Wrap(err, "could not create latitude")
+	}
+
+	longitude, err := domain.NewLongitude(position.Longitude)
+	if err != nil {
+		return domain.Position{}, errors.Wrap(err, "could not create longitude")
+	}
+
+	return domain.NewPosition(latitude, longitude), nil
+}
+
+func fromCircle(circle Circle) (domain.Circle, error) {
+	center, err := fromPosition(circle.Center)
+	if err != nil {
+		return domain.Circle{}, errors.Wrap(err, "could not create position")
+	}
+
+	return domain.NewCircle(center, circle.Radius)
 }

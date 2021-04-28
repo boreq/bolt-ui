@@ -65,6 +65,8 @@ func NewHandler(app *application.Application, authProvider AuthProvider) (*Handl
 	h.router.HandlerFunc(http.MethodPut, "/api/activities/:uuid", rest.Wrap(h.putActivity))
 	h.router.HandlerFunc(http.MethodDelete, "/api/activities/:uuid", rest.Wrap(h.deleteActivity))
 
+	h.router.HandlerFunc(http.MethodPost, "/api/privacy-zones", rest.Wrap(h.postPrivacyZone))
+
 	h.router.HandlerFunc(http.MethodGet, "/api/users/:username", rest.Wrap(h.getUser))
 	h.router.HandlerFunc(http.MethodGet, "/api/users/:username/activities", rest.Wrap(h.getUserActivities))
 
@@ -624,4 +626,8 @@ func (h *Handler) removeUser(r *http.Request) rest.RestResponse {
 
 func (h *Handler) isAdmin(u *AuthenticatedUser) bool {
 	return u != nil && u.User.Administrator
+}
+
+func (h *Handler) handlerLogger(name string) logging.Logger {
+	return h.log.New("handler", name)
 }
