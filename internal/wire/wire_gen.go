@@ -130,14 +130,16 @@ func BuildTrackerForTest(db *bbolt.DB) (TestTracker, error) {
 	listUserActivitiesHandler := tracker.NewListUserActivitiesHandler(trackerTransactionProvider)
 	addPrivacyZoneHandler := tracker.NewAddPrivacyZoneHandler(trackerTransactionProvider, routeFileParser, uuidGenerator)
 	getPrivacyZoneHandler := tracker.NewGetPrivacyZoneHandler(trackerTransactionProvider)
+	listUserPrivacyZonesHandler := tracker.NewListUserPrivacyZonesHandler(trackerTransactionProvider)
 	trackerTracker := &tracker.Tracker{
-		AddActivity:        addActivityHandler,
-		GetActivity:        getActivityHandler,
-		EditActivity:       editActivityHandler,
-		DeleteActivity:     deleteActivityHandler,
-		ListUserActivities: listUserActivitiesHandler,
-		AddPrivacyZone:     addPrivacyZoneHandler,
-		GetPrivacyZone:     getPrivacyZoneHandler,
+		AddActivity:          addActivityHandler,
+		GetActivity:          getActivityHandler,
+		EditActivity:         editActivityHandler,
+		DeleteActivity:       deleteActivityHandler,
+		ListUserActivities:   listUserActivitiesHandler,
+		AddPrivacyZone:       addPrivacyZoneHandler,
+		GetPrivacyZone:       getPrivacyZoneHandler,
+		ListUserPrivacyZones: listUserPrivacyZonesHandler,
 	}
 	testTracker := TestTracker{
 		Tracker:      trackerTracker,
@@ -257,14 +259,16 @@ func BuildService(conf *config.Config) (*service.Service, error) {
 	listUserActivitiesHandler := tracker.NewListUserActivitiesHandler(trackerTransactionProvider)
 	addPrivacyZoneHandler := tracker.NewAddPrivacyZoneHandler(trackerTransactionProvider, routeFileParser, uuidGenerator)
 	getPrivacyZoneHandler := tracker.NewGetPrivacyZoneHandler(trackerTransactionProvider)
+	listUserPrivacyZonesHandler := tracker.NewListUserPrivacyZonesHandler(trackerTransactionProvider)
 	trackerTracker := tracker.Tracker{
-		AddActivity:        addActivityHandler,
-		GetActivity:        getActivityHandler,
-		EditActivity:       editActivityHandler,
-		DeleteActivity:     deleteActivityHandler,
-		ListUserActivities: listUserActivitiesHandler,
-		AddPrivacyZone:     addPrivacyZoneHandler,
-		GetPrivacyZone:     getPrivacyZoneHandler,
+		AddActivity:          addActivityHandler,
+		GetActivity:          getActivityHandler,
+		EditActivity:         editActivityHandler,
+		DeleteActivity:       deleteActivityHandler,
+		ListUserActivities:   listUserActivitiesHandler,
+		AddPrivacyZone:       addPrivacyZoneHandler,
+		GetPrivacyZone:       getPrivacyZoneHandler,
+		ListUserPrivacyZones: listUserPrivacyZonesHandler,
 	}
 	applicationApplication := &application.Application{
 		Auth:    authAuth,

@@ -44,3 +44,7 @@ func CanDeleteActivity(activity *domain.Activity, user *auth.ReadUser) (bool, er
 func CanViewPrivacyZone(privacyZone *domain.PrivacyZone, user *auth.ReadUser) (bool, error) {
 	return user != nil && privacyZone.UserUUID() == user.UUID, nil
 }
+
+func CanListPrivacyZones(userUUID auth.UserUUID, user *auth.ReadUser) bool {
+	return user != nil && userUUID == user.UUID
+}

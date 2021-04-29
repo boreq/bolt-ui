@@ -42,4 +42,5 @@ var trackerSet = wire.NewSet(
 	tracker.NewListUserActivitiesHandler,
 	tracker.NewAddPrivacyZoneHandler,
 	tracker.NewGetPrivacyZoneHandler,
+	tracker.NewListUserPrivacyZonesHandler,
 )

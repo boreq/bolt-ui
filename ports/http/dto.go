@@ -70,6 +70,13 @@ type DetailedUser struct {
 	LastSeen      time.Time `json:"lastSeen"`
 }
 
+type PrivacyZone struct {
+	UUID     string   `json:"uuid"`
+	Position Position `json:"position"`
+	Circle   Circle   `json:"circle"`
+	Name     string   `json:"name"`
+}
+
 func toUserProfile(user auth.ReadUser) UserProfile {
 	return UserProfile{
 		Username:    user.Username,
@@ -171,6 +178,13 @@ func fromPosition(position Position) (domain.Position, error) {
 	return domain.NewPosition(latitude, longitude), nil
 }
 
+func toCircle(circle domain.Circle) Circle {
+	return Circle{
+		Radius: circle.Radius(),
+		Center: toPosition(circle.Center()),
+	}
+}
+
 func fromCircle(circle Circle) (domain.Circle, error) {
 	center, err := fromPosition(circle.Center)
 	if err != nil {
@@ -178,4 +192,21 @@ func fromCircle(circle Circle) (domain.Circle, error) {
 	}
 
 	return domain.NewCircle(center, circle.Radius)
+}
+
+func toPrivacyZones(privacyZones []*domain.PrivacyZone) []PrivacyZone {
+	var result []PrivacyZone
+	for _, privacyZone := range privacyZones {
+		result = append(result, toPrivacyZone(privacyZone))
+	}
+	return result
+}
+
+func toPrivacyZone(privacyZone *domain.PrivacyZone) PrivacyZone {
+	return PrivacyZone{
+		UUID:     privacyZone.UUID().String(),
+		Position: toPosition(privacyZone.Position()),
+		Circle:   toCircle(privacyZone.Circle()),
+		Name:     privacyZone.Name().String(),
+	}
 }

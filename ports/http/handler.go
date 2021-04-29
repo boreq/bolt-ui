@@ -69,6 +69,7 @@ func NewHandler(app *application.Application, authProvider AuthProvider) (*Handl
 
 	h.router.HandlerFunc(http.MethodGet, "/api/users/:username", rest.Wrap(h.getUser))
 	h.router.HandlerFunc(http.MethodGet, "/api/users/:username/activities", rest.Wrap(h.getUserActivities))
+	h.router.HandlerFunc(http.MethodGet, "/api/users/:username/privacy-zones", rest.Wrap(h.getUserPrivacyZones))
 
 	// Frontend
 	ffs, err := frontend.NewFrontendFileSystem()

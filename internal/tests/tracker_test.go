@@ -185,7 +185,7 @@ func TestListUserActivities(t *testing.T) {
 	require.True(t, activities.HasNext)
 }
 
-func TestPermissions(t *testing.T) {
+func TestActivityPermissions(t *testing.T) {
 	testCases := []struct {
 		Visibility domain.ActivityVisibility
 
@@ -357,7 +357,6 @@ func TestPermissions(t *testing.T) {
 			})
 		})
 	}
-
 }
 
 func TestEditActivityPermissions(t *testing.T) {
@@ -750,6 +749,129 @@ func TestAddPrivacyZone(t *testing.T) {
 		},
 	)
 	require.NoError(t, err)
+
+	// test list
+	zones, err := tr.ListUserPrivacyZones.Execute(
+		tracker.ListUserPrivacyZones{
+			UserUUID: userUUID,
+			AsUser: &auth.ReadUser{
+				UUID: userUUID,
+			},
+		},
+	)
+	require.NoError(t, err)
+	require.Len(t, zones, 1)
+}
+
+func TestPrivacyZonesPermissions(t *testing.T) {
+	testTracker, cleanupTracker := NewTracker(t)
+	defer cleanupTracker()
+
+	tr := testTracker.Tracker
+
+	user := auth.ReadUser{
+		UUID: auth.MustNewUserUUID("user-uuid"),
+	}
+
+	otherUser := auth.ReadUser{
+		UUID: auth.MustNewUserUUID("other-user-uuid"),
+	}
+
+	testTracker.UserRepository.Users[user.UUID] = appAuth.User{
+		Username: "username",
+	}
+
+	position := domain.NewPosition(
+		domain.MustNewLatitude(48.20952),
+		domain.MustNewLongitude(16.35618),
+	)
+
+	circle := domain.MustNewCircle(
+		domain.NewPosition(
+			domain.MustNewLatitude(48.21019),
+			domain.MustNewLongitude(16.36163),
+		),
+		500,
+	)
+
+	name := domain.MustNewPrivacyZoneName("Privacy zone")
+
+	cmd := tracker.AddPrivacyZone{
+		UserUUID: user.UUID,
+		Position: position,
+		Circle:   circle,
+		Name:     name,
+	}
+
+	privacyZoneUUID, err := tr.AddPrivacyZone.Execute(cmd)
+	require.NoError(t, err)
+
+	t.Run("get unauthorised", func(t *testing.T) {
+		_, err = tr.GetPrivacyZone.Execute(
+			tracker.GetPrivacyZone{
+				PrivacyZoneUUID: privacyZoneUUID,
+				AsUser:          nil,
+			},
+		)
+
+		require.ErrorIs(t, err, tracker.ErrGettingPrivacyZoneForbidden)
+	})
+
+	t.Run("get other", func(t *testing.T) {
+		_, err = tr.GetPrivacyZone.Execute(
+			tracker.GetPrivacyZone{
+				PrivacyZoneUUID: privacyZoneUUID,
+				AsUser:          &otherUser,
+			},
+		)
+
+		require.ErrorIs(t, err, tracker.ErrGettingPrivacyZoneForbidden)
+	})
+
+	t.Run("get owner", func(t *testing.T) {
+		_, err = tr.GetPrivacyZone.Execute(
+			tracker.GetPrivacyZone{
+				PrivacyZoneUUID: privacyZoneUUID,
+				AsUser:          &user,
+			},
+		)
+
+		require.NoError(t, err)
+	})
+
+	t.Run("list unauthorised", func(t *testing.T) {
+		_, err := tr.ListUserPrivacyZones.Execute(
+			tracker.ListUserPrivacyZones{
+				UserUUID: user.UUID,
+				AsUser:   nil,
+			},
+		)
+
+		require.ErrorIs(t, err, tracker.ErrGettingPrivacyZoneForbidden)
+	})
+
+	t.Run("list other", func(t *testing.T) {
+		_, err := tr.ListUserPrivacyZones.Execute(
+			tracker.ListUserPrivacyZones{
+				UserUUID: user.UUID,
+				AsUser:   &otherUser,
+			},
+		)
+
+		require.ErrorIs(t, err, tracker.ErrGettingPrivacyZoneForbidden)
+	})
+
+	t.Run("list owner", func(t *testing.T) {
+		result, err := tr.ListUserPrivacyZones.Execute(
+			tracker.ListUserPrivacyZones{
+				UserUUID: user.UUID,
+				AsUser:   &user,
+			},
+		)
+
+		require.NoError(t, err)
+		require.NotEmpty(t, result)
+	})
 }
 
 func NewTracker(t *testing.T) (wire.TestTracker, fixture.CleanupFunc) {

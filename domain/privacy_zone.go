@@ -68,8 +68,20 @@ func (z *PrivacyZone) UUID() PrivacyZoneUUID {
 	return z.uuid
 }
 
+func (z *PrivacyZone) Position() Position {
+	return z.position
+}
+
+func (z *PrivacyZone) Circle() Circle {
+	return z.circle
+}
+
 func (z *PrivacyZone) UserUUID() auth.UserUUID {
 	return z.userUUID
+}
+
+func (z *PrivacyZone) Name() PrivacyZoneName {
+	return z.name
 }
 
 func (z *PrivacyZone) PopChanges() eventsourcing.EventSourcingEvents {

@@ -52,7 +52,32 @@ func (r *UserToPrivacyZoneRepository) Unassign(userUUID auth.UserUUID, privacyZo
 }
 
 func (r *UserToPrivacyZoneRepository) List(userUUID auth.UserUUID) ([]*domain.PrivacyZone, error) {
-	return nil, errors.New("not implemented")
+	b := r.getUserBucket(userUUID)
+	if b == nil {
+		return nil, nil
+	}
+
+	var result []*domain.PrivacyZone
+
+	if err := b.ForEach(func(key, value []byte) error {
+		privacyZoneUUID, err := domain.NewPrivacyZoneUUID(string(key))
+		if err != nil {
+			return errors.Wrap(err, "could not create a uuid")
+		}
+
+		privacyZone, err := r.privacyZoneRepository.Get(privacyZoneUUID)
+		if err != nil {
+			return errors.Wrap(err, "could not get a privacy zone")
+		}
+
+		result = append(result, privacyZone)
+
+		return nil
+	}); err != nil {
+		return nil, errors.Wrap(err, "could not iterate over the bucket")
+	}
+
+	return result, nil
 }
 
 func (r *UserToPrivacyZoneRepository) privacyZoneKey(uuid domain.PrivacyZoneUUID) []byte {
@@ -66,4 +91,12 @@ func (r *UserToPrivacyZoneRepository) getOrCreateUserBucket(userUUID auth.UserUU
 	}
 
 	return b.CreateBucketIfNotExists([]byte(userUUID.String()))
+}
+
+func (r *UserToPrivacyZoneRepository) getUserBucket(userUUID auth.UserUUID) *bolt.Bucket {
+	b := r.tx.Bucket(r.bucket)
+	if b == nil {
+		return nil
+	}
+	return b.Bucket([]byte(userUUID.String()))
 }

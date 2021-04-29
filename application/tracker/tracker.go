@@ -78,13 +78,14 @@ type ActivityIterator interface {
 }
 
 type Tracker struct {
-	AddActivity        *AddActivityHandler
-	GetActivity        *GetActivityHandler
-	EditActivity       *EditActivityHandler
-	DeleteActivity     *DeleteActivityHandler
-	ListUserActivities *ListUserActivitiesHandler
-	AddPrivacyZone     *AddPrivacyZoneHandler
-	GetPrivacyZone     *GetPrivacyZoneHandler
+	AddActivity          *AddActivityHandler
+	GetActivity          *GetActivityHandler
+	EditActivity         *EditActivityHandler
+	DeleteActivity       *DeleteActivityHandler
+	ListUserActivities   *ListUserActivitiesHandler
+	AddPrivacyZone       *AddPrivacyZoneHandler
+	GetPrivacyZone       *GetPrivacyZoneHandler
+	ListUserPrivacyZones *ListUserPrivacyZonesHandler
 }
 
 type TransactionProvider interface {
