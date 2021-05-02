@@ -85,7 +85,7 @@ func toUserProfile(user auth.ReadUser) UserProfile {
 }
 
 func toDetailedUsers(users []auth.ReadUser) []DetailedUser {
-	var result []DetailedUser
+	result := make([]DetailedUser, 0)
 
 	for _, user := range users {
 		result = append(result, toDetailedUser(user))
@@ -133,7 +133,7 @@ func toRoute(route *domain.SafeRoute) Route {
 }
 
 func toPoints(points []domain.Point) []Point {
-	var result []Point
+	result := make([]Point, 0)
 	for _, point := range points {
 		result = append(result, Point{
 			Time:     point.Time(),
@@ -195,7 +195,7 @@ func fromCircle(circle Circle) (domain.Circle, error) {
 }
 
 func toPrivacyZones(privacyZones []*domain.PrivacyZone) []PrivacyZone {
-	var result []PrivacyZone
+	result := make([]PrivacyZone, 0)
 	for _, privacyZone := range privacyZones {
 		result = append(result, toPrivacyZone(privacyZone))
 	}
