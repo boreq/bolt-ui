@@ -41,10 +41,12 @@ type UserToActivityRepository interface {
 
 var ErrPrivacyZoneNotFound = errors.New("privacy zone not found")
 var ErrGettingPrivacyZoneForbidden = errors.New("this user can not view this privacy zone")
+var ErrDeletingPrivacyZoneForbidden = errors.New("this user can not delete this privacy zone")
 
 type PrivacyZoneRepository interface {
 	Save(privacyZone *domain.PrivacyZone) error
 	Get(uuid domain.PrivacyZoneUUID) (*domain.PrivacyZone, error)
+	Delete(uuid domain.PrivacyZoneUUID) error
 }
 
 type UserToPrivacyZoneRepository interface {
@@ -86,6 +88,7 @@ type Tracker struct {
 	AddPrivacyZone       *AddPrivacyZoneHandler
 	GetPrivacyZone       *GetPrivacyZoneHandler
 	ListUserPrivacyZones *ListUserPrivacyZonesHandler
+	DeletePrivacyZone    *DeletePrivacyZoneHandler
 }
 
 type TransactionProvider interface {

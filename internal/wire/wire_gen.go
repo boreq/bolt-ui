@@ -131,6 +131,7 @@ func BuildTrackerForTest(db *bbolt.DB) (TestTracker, error) {
 	addPrivacyZoneHandler := tracker.NewAddPrivacyZoneHandler(trackerTransactionProvider, routeFileParser, uuidGenerator)
 	getPrivacyZoneHandler := tracker.NewGetPrivacyZoneHandler(trackerTransactionProvider)
 	listUserPrivacyZonesHandler := tracker.NewListUserPrivacyZonesHandler(trackerTransactionProvider)
+	deletePrivacyZoneHandler := tracker.NewDeletePrivacyZoneHandler(trackerTransactionProvider)
 	trackerTracker := &tracker.Tracker{
 		AddActivity:          addActivityHandler,
 		GetActivity:          getActivityHandler,
@@ -140,6 +141,7 @@ func BuildTrackerForTest(db *bbolt.DB) (TestTracker, error) {
 		AddPrivacyZone:       addPrivacyZoneHandler,
 		GetPrivacyZone:       getPrivacyZoneHandler,
 		ListUserPrivacyZones: listUserPrivacyZonesHandler,
+		DeletePrivacyZone:    deletePrivacyZoneHandler,
 	}
 	testTracker := TestTracker{
 		Tracker:      trackerTracker,
@@ -260,6 +262,7 @@ func BuildService(conf *config.Config) (*service.Service, error) {
 	addPrivacyZoneHandler := tracker.NewAddPrivacyZoneHandler(trackerTransactionProvider, routeFileParser, uuidGenerator)
 	getPrivacyZoneHandler := tracker.NewGetPrivacyZoneHandler(trackerTransactionProvider)
 	listUserPrivacyZonesHandler := tracker.NewListUserPrivacyZonesHandler(trackerTransactionProvider)
+	deletePrivacyZoneHandler := tracker.NewDeletePrivacyZoneHandler(trackerTransactionProvider)
 	trackerTracker := tracker.Tracker{
 		AddActivity:          addActivityHandler,
 		GetActivity:          getActivityHandler,
@@ -269,6 +272,7 @@ func BuildService(conf *config.Config) (*service.Service, error) {
 		AddPrivacyZone:       addPrivacyZoneHandler,
 		GetPrivacyZone:       getPrivacyZoneHandler,
 		ListUserPrivacyZones: listUserPrivacyZonesHandler,
+		DeletePrivacyZone:    deletePrivacyZoneHandler,
 	}
 	applicationApplication := &application.Application{
 		Auth:    authAuth,

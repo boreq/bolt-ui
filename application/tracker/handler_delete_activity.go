@@ -39,7 +39,7 @@ func (h *DeleteActivityHandler) Execute(cmd DeleteActivity) error {
 		}
 
 		if err := repositories.UserToActivity.Unassign(activity.UserUUID(), activity.UUID()); err != nil {
-			return errors.Wrap(err, "could not delete the activity")
+			return errors.Wrap(err, "could not unassign the activity")
 		}
 
 		if err := repositories.Activity.Delete(activity.UUID()); err != nil {

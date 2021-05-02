@@ -51,6 +51,15 @@ func (c *PrivacyZoneRepository) Get(uuid domain.PrivacyZoneUUID) (*domain.Privac
 	return domain.NewPrivacyZoneFromHistory(events)
 }
 
+func (c *PrivacyZoneRepository) Delete(uuid domain.PrivacyZoneUUID) error {
+	b := c.tx.Bucket([]byte(privacyZoneBucket))
+	if b == nil {
+		return nil
+	}
+
+	return b.DeleteBucket([]byte(uuid.String()))
+}
+
 func (c *PrivacyZoneRepository) convertUUID(uuid domain.PrivacyZoneUUID) eventsourcing.AggregateUUID {
 	return eventsourcing.AggregateUUID(uuid.String())
 }

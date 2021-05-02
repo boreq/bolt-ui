@@ -552,24 +552,24 @@ func TestDeleteActivityPermissions(t *testing.T) {
 	}
 
 	testCases := []struct {
-		Name    string
-		User    *auth.ReadUser
-		CanEdit bool
+		Name      string
+		User      *auth.ReadUser
+		CanDelete bool
 	}{
 		{
-			Name:    "unauthorized_user",
-			User:    nil,
-			CanEdit: false,
+			Name:      "unauthorized_user",
+			User:      nil,
+			CanDelete: false,
 		},
 		{
-			Name:    "other_user",
-			User:    &otherUser,
-			CanEdit: false,
+			Name:      "other_user",
+			User:      &otherUser,
+			CanDelete: false,
 		},
 		{
-			Name:    "user",
-			User:    &user,
-			CanEdit: true,
+			Name:      "user",
+			User:      &user,
+			CanDelete: true,
 		},
 	}
 
@@ -604,7 +604,7 @@ func TestDeleteActivityPermissions(t *testing.T) {
 				},
 			)
 
-			if testCase.CanEdit {
+			if testCase.CanDelete {
 				require.NoError(t, err)
 			} else {
 				require.ErrorIs(t, err, tracker.ErrDeletingActivityForbidden)
@@ -807,7 +807,7 @@ func TestApplyPrivacyZones(t *testing.T) {
 	}
 }
 
-func TestAddPrivacyZone(t *testing.T) {
+func TestAddAndDeletePrivacyZone(t *testing.T) {
 	testTracker, cleanupTracker := NewTracker(t)
 	defer cleanupTracker()
 
@@ -829,10 +829,6 @@ func TestAddPrivacyZone(t *testing.T) {
 	)
 
 	name := domain.MustNewPrivacyZoneName("Privacy zone")
-
-	testTracker.UserRepository.Users[userUUID] = appAuth.User{
-		Username: "username",
-	}
 
 	cmd := tracker.AddPrivacyZone{
 		UserUUID: userUUID,
@@ -868,6 +864,119 @@ func TestAddPrivacyZone(t *testing.T) {
 	)
 	require.NoError(t, err)
 	require.Len(t, zones, 1)
+
+	// test delete
+	err = tr.DeletePrivacyZone.Execute(
+		tracker.DeletePrivacyZone{
+			PrivacyZoneUUID: privacyZoneUUID,
+			AsUser: &auth.ReadUser{
+				UUID: userUUID,
+			},
+		},
+	)
+	require.NoError(t, err)
+
+	// test get
+	_, err = tr.GetPrivacyZone.Execute(
+		tracker.GetPrivacyZone{
+			PrivacyZoneUUID: privacyZoneUUID,
+			AsUser: &auth.ReadUser{
+				UUID: userUUID,
+			},
+		},
+	)
+	require.ErrorIs(t, err, tracker.ErrPrivacyZoneNotFound)
+
+	// test list
+	zones, err = tr.ListUserPrivacyZones.Execute(
+		tracker.ListUserPrivacyZones{
+			UserUUID: userUUID,
+			AsUser: &auth.ReadUser{
+				UUID: userUUID,
+			},
+		},
+	)
+	require.NoError(t, err)
+	require.Empty(t, zones)
+}
+
+func TestDeletePrivacyZonePermissions(t *testing.T) {
+	user := auth.ReadUser{
+		UUID: auth.MustNewUserUUID("user-uuid"),
+	}
+
+	otherUser := auth.ReadUser{
+		UUID: auth.MustNewUserUUID("other-user-uuid"),
+	}
+
+	testCases := []struct {
+		Name      string
+		User      *auth.ReadUser
+		CanDelete bool
+	}{
+		{
+			Name:      "unauthorized_user",
+			User:      nil,
+			CanDelete: false,
+		},
+		{
+			Name:      "other_user",
+			User:      &otherUser,
+			CanDelete: false,
+		},
+		{
+			Name:      "user",
+			User:      &user,
+			CanDelete: true,
+		},
+	}
+
+	for _, testCase := range testCases {
+		t.Run(testCase.Name, func(t *testing.T) {
+			testTracker, cleanupTracker := NewTracker(t)
+			defer cleanupTracker()
+
+			tr := testTracker.Tracker
+
+			position := domain.NewPosition(
+				domain.MustNewLatitude(48.20952),
+				domain.MustNewLongitude(16.35618),
+			)
+
+			circle := domain.MustNewCircle(
+				domain.NewPosition(
+					domain.MustNewLatitude(48.21019),
+					domain.MustNewLongitude(16.36163),
+				),
+				500,
+			)
+
+			name := domain.MustNewPrivacyZoneName("Privacy zone")
+
+			cmd := tracker.AddPrivacyZone{
+				UserUUID: user.UUID,
+				Position: position,
+				Circle:   circle,
+				Name:     name,
+			}
+
+			privacyZoneUUID, err := tr.AddPrivacyZone.Execute(cmd)
+			require.NoError(t, err)
+
+			err = tr.DeletePrivacyZone.Execute(
+				tracker.DeletePrivacyZone{
+					PrivacyZoneUUID: privacyZoneUUID,
+					AsUser:          testCase.User,
+				},
+			)
+
+			if testCase.CanDelete {
+				require.NoError(t, err)
+			} else {
+				require.ErrorIs(t, err, tracker.ErrDeletingPrivacyZoneForbidden)
+			}
+		})
+	}
 }
 
 func TestPrivacyZonesPermissions(t *testing.T) {
