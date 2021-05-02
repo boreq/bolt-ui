@@ -33,6 +33,10 @@ func CanViewActivity(activity *domain.Activity, user *auth.ReadUser) (bool, erro
 	}
 }
 
+func CanViewActivityWithoutAplyingPrivacyZones(activity *domain.Activity, user *auth.ReadUser) bool {
+	return user != nil && activity.UserUUID() == user.UUID
+}
+
 func CanEditActivity(activity *domain.Activity, user *auth.ReadUser) (bool, error) {
 	return user != nil && activity.UserUUID() == user.UUID, nil
 }

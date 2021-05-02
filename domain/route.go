@@ -71,32 +71,12 @@ func (r Route) Points() []Point {
 	return points
 }
 
-func (r Route) TimeStarted() time.Time {
-	return r.points[0].Time()
-}
-
-func (r Route) TimeEnded() time.Time {
-	return r.points[len(r.points)-1].Time()
-}
-
 func (r Route) IsZero() bool {
 	return r.uuid.IsZero() // if uuid is set then everything else must be as well
 }
 
 func (r *Route) PopChanges() eventsourcing.EventSourcingEvents {
 	return r.es.PopChanges()
-}
-
-func (r *Route) TimeMoving() time.Duration {
-	return r.TimeEnded().Sub(r.TimeStarted())
-}
-
-func (r *Route) Distance() float64 {
-	var distance float64
-	for i := 0; i < len(r.points)-1; i++ {
-		distance += r.points[i].Position().Distance(r.points[i+1].Position())
-	}
-	return distance
 }
 
 func (r *Route) update(event eventsourcing.Event) error {

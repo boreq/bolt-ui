@@ -70,14 +70,14 @@ func (h *ListUserActivitiesHandler) Execute(query ListUserActivities) (ListUserA
 				continue
 			}
 
-			route, err := adapters.Route.Get(activity.RouteUUID())
+			safeRoute, err := getSafeRoute(adapters, query.AsUser, activity)
 			if err != nil {
-				return errors.Wrap(err, "could not get a route")
+				return errors.Wrap(err, "could not create a safe route")
 			}
 
 			result.Activities = append(result.Activities, Activity{
 				Activity: activity,
-				Route:    route,
+				Route:    safeRoute,
 				User:     toUser(user),
 			})
 

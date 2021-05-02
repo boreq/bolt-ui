@@ -123,7 +123,7 @@ func toUser(user *tracker.User) User {
 	}
 }
 
-func toRoute(route *domain.Route) Route {
+func toRoute(route *domain.SafeRoute) Route {
 	return Route{
 		UUID:       route.UUID().String(),
 		Points:     toPoints(route.Points()),

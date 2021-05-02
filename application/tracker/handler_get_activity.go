@@ -40,19 +40,19 @@ func (h *GetActivityHandler) Execute(query GetActivity) (Activity, error) {
 			return ErrGettingActivityForbidden
 		}
 
-		route, err := repositories.Route.Get(activity.RouteUUID())
-		if err != nil {
-			return errors.Wrap(err, "could not get a route")
-		}
-
 		user, err := repositories.User.GetByUUID(activity.UserUUID())
 		if err != nil {
 			return errors.Wrap(err, "could not get a user")
 		}
 
+		safeRoute, err := getSafeRoute(repositories, query.AsUser, activity)
+		if err != nil {
+			return errors.Wrap(err, "could not create a safe route")
+		}
+
 		result = Activity{
 			Activity: activity,
-			Route:    route,
+			Route:    safeRoute,
 			User:     toUser(user),
 		}
 

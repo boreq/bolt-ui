@@ -700,6 +700,113 @@ func TestDeleteActivityThatDoesNotExist(t *testing.T) {
 	require.ErrorIs(t, err, tracker.ErrActivityNotFound)
 }
 
+func TestApplyPrivacyZones(t *testing.T) {
+	testTracker, cleanupTracker := NewTracker(t)
+	defer cleanupTracker()
+
+	tr := testTracker.Tracker
+
+	gpxFile, cleanupFile := fixture.TestDataFile(t, testRouteFile)
+	defer cleanupFile()
+
+	user := auth.ReadUser{
+		UUID: auth.MustNewUserUUID("user-uuid"),
+	}
+
+	otherUser := auth.ReadUser{
+		UUID: auth.MustNewUserUUID("other-user-uuid"),
+	}
+
+	testTracker.UserRepository.Users[user.UUID] = appAuth.User{
+		Username: "username",
+	}
+
+	cmd := tracker.AddActivity{
+		RouteFile:  gpxFile,
+		UserUUID:   user.UUID,
+		Visibility: domain.PublicActivityVisibility,
+	}
+
+	activityUUID, err := tr.AddActivity.Execute(cmd)
+	require.NoError(t, err)
+
+	position := domain.NewPosition(
+		domain.MustNewLatitude(50.07357803907662),
+		domain.MustNewLongitude(19.993221096609236),
+	)
+
+	circle := domain.MustNewCircle(
+		domain.NewPosition(
+			domain.MustNewLatitude(50.07357803907662),
+			domain.MustNewLongitude(19.993221096609236),
+		),
+		500,
+	)
+
+	name := domain.MustNewPrivacyZoneName("Privacy zone")
+
+	privacyZoneCmd := tracker.AddPrivacyZone{
+		UserUUID: user.UUID,
+		Position: position,
+		Circle:   circle,
+		Name:     name,
+	}
+
+	_, err = tr.AddPrivacyZone.Execute(privacyZoneCmd)
+	require.NoError(t, err)
+
+	testCases := []struct {
+		Name           string
+		AsUser         *auth.ReadUser
+		ExpectedPoints int
+	}{
+		{
+			Name:           "unauthorized",
+			AsUser:         nil,
+			ExpectedPoints: 210,
+		},
+		{
+			Name:           "other",
+			AsUser:         &otherUser,
+			ExpectedPoints: 210,
+		},
+		{
+			Name:           "owner",
+			AsUser:         &user,
+			ExpectedPoints: 233,
+		},
+	}
+
+	for _, testCase := range testCases {
+		t.Run(testCase.Name, func(t *testing.T) {
+
+			t.Run("get", func(t *testing.T) {
+				result, err := tr.GetActivity.Execute(
+					tracker.GetActivity{
+						ActivityUUID: activityUUID,
+						AsUser:       testCase.AsUser,
+					},
+				)
+				require.NoError(t, err)
+				require.Len(t, result.Route.Points(), testCase.ExpectedPoints)
+			})
+
+			t.Run("list", func(t *testing.T) {
+				result, err := tr.ListUserActivities.Execute(
+					tracker.ListUserActivities{
+						UserUUID: user.UUID,
+						AsUser:   testCase.AsUser,
+					},
+				)
+				require.NoError(t, err)
+
+				require.Len(t, result.Activities, 1)
+				require.Len(t, result.Activities[0].Route.Points(), testCase.ExpectedPoints)
+			})
+		})
+	}
+}
+
 func TestAddPrivacyZone(t *testing.T) {
 	testTracker, cleanupTracker := NewTracker(t)
 	defer cleanupTracker()

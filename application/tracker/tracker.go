@@ -1,11 +1,11 @@
 package tracker
 
 import (
-	"errors"
-
+	"github.com/boreq/errors"
 	appAuth "github.com/boreq/velo/application/auth"
 	"github.com/boreq/velo/domain"
 	"github.com/boreq/velo/domain/auth"
+	"github.com/boreq/velo/domain/permissions"
 )
 
 type UUIDGenerator interface {
@@ -59,7 +59,7 @@ type UserRepository interface {
 
 type Activity struct {
 	Activity *domain.Activity
-	Route    *domain.Route
+	Route    *domain.SafeRoute
 	User     *User
 }
 
@@ -108,4 +108,39 @@ func toUser(user *appAuth.User) *User {
 	return &User{
 		Username: user.Username,
 	}
+}
+
+func getSafeRoute(
+	adapters *TransactableRepositories,
+	asUser *auth.ReadUser,
+	activity *domain.Activity,
+) (*domain.SafeRoute, error) {
+	route, err := adapters.Route.Get(activity.RouteUUID())
+	if err != nil {
+		return nil, errors.Wrap(err, "could not get a route")
+	}
+
+	privacyZones, err := getPrivacyZonesForSafeRoute(adapters, asUser, activity)
+	if err != nil {
+		return nil, errors.Wrap(err, "could not get privacy zones")
+	}
+
+	safeRoute, err := domain.NewSafeRoute(route, privacyZones)
+	if err != nil {
+		return nil, errors.Wrap(err, "could not create a safe route")
+	}
+
+	return safeRoute, nil
+}
+
+func getPrivacyZonesForSafeRoute(
+	adapters *TransactableRepositories,
+	asUser *auth.ReadUser,
+	activity *domain.Activity,
+) ([]*domain.PrivacyZone, error) {
+	if permissions.CanViewActivityWithoutAplyingPrivacyZones(activity, asUser) {
+		return nil, nil
+	}
+
+	return adapters.UserToPrivacyZone.List(activity.UserUUID())
 }

@@ -27,6 +27,10 @@ func NewPrivacyZone(uuid PrivacyZoneUUID, userUUID auth.UserUUID, position Posit
 		return nil, errors.New("zero value of user uuid")
 	}
 
+	if circle.IsZero() {
+		return nil, errors.New("zero value of circle")
+	}
+
 	if !circle.Contains(position) {
 		return nil, errors.New("position is not within the circle")
 	}
@@ -86,6 +90,10 @@ func (z *PrivacyZone) Name() PrivacyZoneName {
 
 func (z *PrivacyZone) PopChanges() eventsourcing.EventSourcingEvents {
 	return z.es.PopChanges()
+}
+
+func (z PrivacyZone) IsZero() bool {
+	return z.uuid.IsZero() // if uuid is set then everything else must be as well
 }
 
 func (z *PrivacyZone) update(event eventsourcing.Event) error {
