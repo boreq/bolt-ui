@@ -105,9 +105,9 @@ func (r RouteCreated) EventType() eventsourcing.EventType {
 }
 
 // Points that occur more often than that will be dropped. Should probably be
-// slightly lower than the desired 10 seconds just to account for tiny
-// precision problems.
-const intervalBetweenPoints = 9 * time.Second
+// slightly lower than the desired 5 seconds just to account for tiny precision
+// problems.
+const intervalBetweenPoints = 4 * time.Second
 
 func NormaliseRoutePoints(points []Point) []Point {
 	sort.Slice(points, func(i, j int) bool {

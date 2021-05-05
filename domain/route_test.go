@@ -24,8 +24,8 @@ func TestNormaliseRoutePoints(t *testing.T) {
 	date := time.Date(1954, time.June, 7, 12, 0, 0, 0, time.UTC)
 
 	p1 := somePoint(date)
-	p2 := somePoint(date.Add(5 * time.Second))
-	p3 := somePoint(date.Add(10 * time.Second))
+	p2 := somePoint(date.Add(2 * time.Second))
+	p3 := somePoint(date.Add(5 * time.Second))
 
 	testCases := []struct {
 		Input  []domain.Point

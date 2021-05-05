@@ -763,23 +763,22 @@ func TestApplyPrivacyZones(t *testing.T) {
 		{
 			Name:           "unauthorized",
 			AsUser:         nil,
-			ExpectedPoints: 210,
+			ExpectedPoints: 433,
 		},
 		{
 			Name:           "other",
 			AsUser:         &otherUser,
-			ExpectedPoints: 210,
+			ExpectedPoints: 433,
 		},
 		{
 			Name:           "owner",
 			AsUser:         &user,
-			ExpectedPoints: 233,
+			ExpectedPoints: 481,
 		},
 	}
 
 	for _, testCase := range testCases {
 		t.Run(testCase.Name, func(t *testing.T) {
-
 			t.Run("get", func(t *testing.T) {
 				result, err := tr.GetActivity.Execute(
 					tracker.GetActivity{
