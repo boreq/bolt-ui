@@ -50,5 +50,5 @@ echo "package frontend" > "${versionFile}"
 echo "" >> "${versionFile}"
 echo "const FrontendCommit = \"${commit}\"" >> "${versionFile}"
 
-git add -u
+git add ports/http/frontend/
 git commit -F ${commitFile}
