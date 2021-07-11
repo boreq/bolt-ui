@@ -15,7 +15,6 @@ require (
 	github.com/oklog/ulid v1.3.1
 	github.com/oklog/ulid/v2 v2.0.2
 	github.com/pkg/errors v0.8.1
-	github.com/rakyll/statik v0.1.5
 	github.com/rs/cors v1.6.0
 	github.com/stretchr/testify v1.7.0
 	github.com/tkrajina/gpxgo v1.1.3-0.20210709161704-b3f6680cae1e
