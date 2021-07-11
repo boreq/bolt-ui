@@ -3,34 +3,35 @@ package frontend
 import (
 	"embed"
 	"net/http"
-	"path"
+
+	"github.com/boreq/velo/logging"
 )
 
-//go:embed static/*
+//go:embed css/* js/* index.html favicon.ico
 var content embed.FS
 
 type FrontendFileSystem struct {
-	fs http.FileSystem
+	fs  http.FileSystem
+	log logging.Logger
 }
 
 func NewFrontendFileSystem() (*FrontendFileSystem, error) {
 	return &FrontendFileSystem{
-		fs: http.FS(content),
+		fs:  http.FS(content),
+		log: logging.New("frontend"),
 	}, nil
 }
 
 func (f *FrontendFileSystem) Open(name string) (http.File, error) {
-	file, err := f.fs.Open(f.addPrefix(name))
+	f.log.Debug("serving frontend file", "name", name)
+
+	file, err := f.fs.Open(name)
 	if err != nil {
-		file, err := f.fs.Open(f.addPrefix("/index.html"))
+		file, err := f.fs.Open("/index.html")
 		if err != nil {
 			return nil, err
 		}
 		return file, nil
 	}
 	return file, nil
-}
-
-func (f *FrontendFileSystem) addPrefix(name string) string {
-	return path.Join("static", name)
 }
