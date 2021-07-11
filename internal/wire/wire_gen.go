@@ -132,6 +132,8 @@ func BuildTrackerForTest(db *bbolt.DB) (TestTracker, error) {
 	getPrivacyZoneHandler := tracker.NewGetPrivacyZoneHandler(trackerTransactionProvider)
 	listUserPrivacyZonesHandler := tracker.NewListUserPrivacyZonesHandler(trackerTransactionProvider)
 	deletePrivacyZoneHandler := tracker.NewDeletePrivacyZoneHandler(trackerTransactionProvider)
+	stravaExportFileParser := tracker2.NewStravaExportFileParser(routeFileParser)
+	importStravaHandler := tracker.NewImportStravaHandler(trackerTransactionProvider, uuidGenerator, stravaExportFileParser)
 	trackerTracker := &tracker.Tracker{
 		AddActivity:          addActivityHandler,
 		GetActivity:          getActivityHandler,
@@ -142,6 +144,7 @@ func BuildTrackerForTest(db *bbolt.DB) (TestTracker, error) {
 		GetPrivacyZone:       getPrivacyZoneHandler,
 		ListUserPrivacyZones: listUserPrivacyZonesHandler,
 		DeletePrivacyZone:    deletePrivacyZoneHandler,
+		ImportStrava:         importStravaHandler,
 	}
 	testTracker := TestTracker{
 		Tracker:      trackerTracker,
@@ -263,6 +266,8 @@ func BuildService(conf *config.Config) (*service.Service, error) {
 	getPrivacyZoneHandler := tracker.NewGetPrivacyZoneHandler(trackerTransactionProvider)
 	listUserPrivacyZonesHandler := tracker.NewListUserPrivacyZonesHandler(trackerTransactionProvider)
 	deletePrivacyZoneHandler := tracker.NewDeletePrivacyZoneHandler(trackerTransactionProvider)
+	stravaExportFileParser := tracker2.NewStravaExportFileParser(routeFileParser)
+	importStravaHandler := tracker.NewImportStravaHandler(trackerTransactionProvider, uuidGenerator, stravaExportFileParser)
 	trackerTracker := tracker.Tracker{
 		AddActivity:          addActivityHandler,
 		GetActivity:          getActivityHandler,
@@ -273,6 +278,7 @@ func BuildService(conf *config.Config) (*service.Service, error) {
 		GetPrivacyZone:       getPrivacyZoneHandler,
 		ListUserPrivacyZones: listUserPrivacyZonesHandler,
 		DeletePrivacyZone:    deletePrivacyZoneHandler,
+		ImportStrava:         importStravaHandler,
 	}
 	applicationApplication := &application.Application{
 		Auth:    authAuth,

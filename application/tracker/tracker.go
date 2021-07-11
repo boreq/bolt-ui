@@ -89,6 +89,7 @@ type Tracker struct {
 	GetPrivacyZone       *GetPrivacyZoneHandler
 	ListUserPrivacyZones *ListUserPrivacyZonesHandler
 	DeletePrivacyZone    *DeletePrivacyZoneHandler
+	ImportStrava         *ImportStravaHandler
 }
 
 type TransactionProvider interface {

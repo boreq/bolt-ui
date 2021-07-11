@@ -13,7 +13,8 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-const testRouteFile = "data/strava_export.gpx"
+const testRouteFile = "data/strava_export_route.gpx"
+const testStravaExportFile = "data/strava_export.zip"
 
 func TestAddActivity(t *testing.T) {
 	testTracker, cleanupTracker := NewTracker(t)
@@ -1087,6 +1088,53 @@ func TestPrivacyZonesPermissions(t *testing.T) {
 		require.NoError(t, err)
 		require.NotEmpty(t, result)
 	})
+}
+
+func TestStravaExport(t *testing.T) {
+	testTracker, cleanupTracker := NewTracker(t)
+	defer cleanupTracker()
+
+	tr := testTracker.Tracker
+
+	stravaExportFile, cleanupFile := fixture.TestDataFile(t, testStravaExportFile)
+	defer cleanupFile()
+
+	fi, err := stravaExportFile.Stat()
+	require.NoError(t, err)
+
+	userUUID := auth.MustNewUserUUID("user-uuid")
+
+	testTracker.UserRepository.Users[userUUID] = appAuth.User{
+		Username: "username",
+	}
+
+	cmd := tracker.ImportStrava{
+		Archive:     stravaExportFile,
+		ArchiveSize: fi.Size(),
+		UserUUID:    userUUID,
+	}
+
+	err = tr.ImportStrava.Execute(cmd)
+	require.NoError(t, err)
+
+	// test list
+	activities, err := tr.ListUserActivities.Execute(
+		tracker.ListUserActivities{
+			UserUUID: userUUID,
+			AsUser: &auth.ReadUser{
+				UUID: userUUID,
+			},
+		},
+	)
+	require.NoError(t, err)
+
+	require.Len(t, activities.Activities, 2)
+	for _, activity := range activities.Activities {
+		require.Equal(t,
+			domain.PrivateActivityVisibility,
+			activity.Activity.Visibility(),
+		)
+	}
 }
 
 func NewTracker(t *testing.T) (wire.TestTracker, fixture.CleanupFunc) {

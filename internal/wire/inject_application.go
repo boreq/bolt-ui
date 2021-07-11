@@ -44,4 +44,5 @@ var trackerSet = wire.NewSet(
 	tracker.NewGetPrivacyZoneHandler,
 	tracker.NewListUserPrivacyZonesHandler,
 	tracker.NewDeletePrivacyZoneHandler,
+	tracker.NewImportStravaHandler,
 )

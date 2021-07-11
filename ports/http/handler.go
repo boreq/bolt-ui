@@ -72,6 +72,8 @@ func NewHandler(app *application.Application, authProvider AuthProvider) (*Handl
 	h.router.HandlerFunc(http.MethodGet, "/api/users/:username/activities", rest.Wrap(h.getUserActivities))
 	h.router.HandlerFunc(http.MethodGet, "/api/users/:username/privacy-zones", rest.Wrap(h.getUserPrivacyZones))
 
+	h.router.HandlerFunc(http.MethodPost, "/api/import/strava", rest.Wrap(h.importStrava))
+
 	// Frontend
 	ffs, err := frontend.NewFrontendFileSystem()
 	if err != nil {
