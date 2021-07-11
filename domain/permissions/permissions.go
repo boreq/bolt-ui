@@ -56,3 +56,7 @@ func CanListPrivacyZones(userUUID auth.UserUUID, user *auth.ReadUser) bool {
 func CanDeletePrivacyZone(privacyZone *domain.PrivacyZone, user *auth.ReadUser) (bool, error) {
 	return user != nil && privacyZone.UserUUID() == user.UUID, nil
 }
+
+func CanUpdateProfile(user auth.ReadUser, as *auth.ReadUser) (bool, error) {
+	return as != nil && as.UUID == user.UUID, nil
+}

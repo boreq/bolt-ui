@@ -58,6 +58,7 @@ func (h *RegisterHandler) Execute(cmd Register) error {
 	u := User{
 		UUID:          userUUID,
 		Username:      cmd.Username.String(),
+		DisplayName:   cmd.Username.String(),
 		Password:      passwordHash,
 		Administrator: false,
 		Created:       time.Now(),

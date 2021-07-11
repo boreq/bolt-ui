@@ -66,7 +66,8 @@ type Activity struct {
 }
 
 type User struct {
-	Username string
+	Username    string
+	DisplayName string
 }
 
 type ActivityIterator interface {
@@ -110,7 +111,8 @@ type TransactableRepositories struct {
 
 func toUser(user *appAuth.User) *User {
 	return &User{
-		Username: user.Username,
+		Username:    user.Username,
+		DisplayName: user.DisplayName,
 	}
 }
 

@@ -80,7 +80,7 @@ type PrivacyZone struct {
 func toUserProfile(user auth.ReadUser) UserProfile {
 	return UserProfile{
 		Username:    user.Username,
-		DisplayName: user.Username,
+		DisplayName: user.DisplayName,
 	}
 }
 
@@ -97,7 +97,7 @@ func toDetailedUsers(users []auth.ReadUser) []DetailedUser {
 func toDetailedUser(user auth.ReadUser) DetailedUser {
 	return DetailedUser{
 		Username:      user.Username,
-		DisplayName:   user.Username,
+		DisplayName:   user.DisplayName,
 		Administrator: user.Administrator,
 		Created:       user.Created,
 		LastSeen:      user.LastSeen,
@@ -119,7 +119,7 @@ func toActivity(activity tracker.Activity) Activity {
 func toUser(user *tracker.User) User {
 	return User{
 		Username:    user.Username,
-		DisplayName: user.Username,
+		DisplayName: user.DisplayName,
 	}
 }
 

@@ -170,6 +170,7 @@ func BuildAuthForTest(db *bbolt.DB) (*auth.Auth, error) {
 	removeHandler := auth.NewRemoveHandler(authTransactionProvider)
 	setPasswordHandler := auth.NewSetPasswordHandler(bcryptPasswordHasher, authTransactionProvider)
 	getUserHandler := auth.NewGetUserHandler(authTransactionProvider)
+	updateProfileHandler := auth.NewUpdateProfileHandler(authTransactionProvider)
 	authAuth := &auth.Auth{
 		RegisterInitial:  registerInitialHandler,
 		Register:         registerHandler,
@@ -181,6 +182,7 @@ func BuildAuthForTest(db *bbolt.DB) (*auth.Auth, error) {
 		Remove:           removeHandler,
 		SetPassword:      setPasswordHandler,
 		GetUser:          getUserHandler,
+		UpdateProfile:    updateProfileHandler,
 	}
 	return authAuth, nil
 }
@@ -206,6 +208,7 @@ func BuildAuth(conf *config.Config) (*auth.Auth, error) {
 	removeHandler := auth.NewRemoveHandler(authTransactionProvider)
 	setPasswordHandler := auth.NewSetPasswordHandler(bcryptPasswordHasher, authTransactionProvider)
 	getUserHandler := auth.NewGetUserHandler(authTransactionProvider)
+	updateProfileHandler := auth.NewUpdateProfileHandler(authTransactionProvider)
 	authAuth := &auth.Auth{
 		RegisterInitial:  registerInitialHandler,
 		Register:         registerHandler,
@@ -217,6 +220,7 @@ func BuildAuth(conf *config.Config) (*auth.Auth, error) {
 		Remove:           removeHandler,
 		SetPassword:      setPasswordHandler,
 		GetUser:          getUserHandler,
+		UpdateProfile:    updateProfileHandler,
 	}
 	return authAuth, nil
 }
@@ -242,6 +246,7 @@ func BuildService(conf *config.Config) (*service.Service, error) {
 	removeHandler := auth.NewRemoveHandler(authTransactionProvider)
 	setPasswordHandler := auth.NewSetPasswordHandler(bcryptPasswordHasher, authTransactionProvider)
 	getUserHandler := auth.NewGetUserHandler(authTransactionProvider)
+	updateProfileHandler := auth.NewUpdateProfileHandler(authTransactionProvider)
 	authAuth := auth.Auth{
 		RegisterInitial:  registerInitialHandler,
 		Register:         registerHandler,
@@ -253,6 +258,7 @@ func BuildService(conf *config.Config) (*service.Service, error) {
 		Remove:           removeHandler,
 		SetPassword:      setPasswordHandler,
 		GetUser:          getUserHandler,
+		UpdateProfile:    updateProfileHandler,
 	}
 	wireTrackerRepositoriesProvider := newTrackerRepositoriesProvider()
 	trackerTransactionProvider := tracker2.NewTrackerTransactionProvider(db, wireTrackerRepositoriesProvider)

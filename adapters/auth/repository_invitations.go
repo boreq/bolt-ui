@@ -3,9 +3,9 @@ package auth
 import (
 	"encoding/json"
 
+	"github.com/boreq/errors"
 	"github.com/boreq/velo/application/auth"
 	"github.com/boreq/velo/logging"
-	"github.com/boreq/errors"
 	bolt "go.etcd.io/bbolt"
 )
 
@@ -32,7 +32,7 @@ func NewInvitationRepository(tx *bolt.Tx) (*InvitationRepository, error) {
 }
 
 func (r *InvitationRepository) Put(invitation auth.Invitation) error {
-	j, err := json.Marshal(invitation)
+	j, err := json.Marshal(r.toPersisted(invitation))
 	if err != nil {
 		return errors.Wrap(err, "marshaling to json failed")
 	}
@@ -54,12 +54,12 @@ func (r *InvitationRepository) Get(token auth.InvitationToken) (*auth.Invitation
 		return nil, auth.ErrNotFound
 	}
 
-	invitation := &auth.Invitation{}
+	invitation := &persistedInvitation{}
 	if err := json.Unmarshal(j, invitation); err != nil {
 		return nil, errors.Wrap(err, "json unmarshal failed")
 	}
 
-	return invitation, nil
+	return r.fromPersisted(*invitation), nil
 }
 
 func (r *InvitationRepository) Remove(token auth.InvitationToken) error {
@@ -68,4 +68,18 @@ func (r *InvitationRepository) Remove(token auth.InvitationToken) error {
 		return errors.New("bucket does not exist")
 	}
 	return b.Delete([]byte(token))
+}
+
+func (r *InvitationRepository) toPersisted(i auth.Invitation) persistedInvitation {
+	return persistedInvitation{
+		Token:   string(i.Token),
+		Created: i.Created,
+	}
+}
+
+func (r *InvitationRepository) fromPersisted(i persistedInvitation) *auth.Invitation {
+	return &auth.Invitation{
+		Token:   auth.InvitationToken(i.Token),
+		Created: i.Created,
+	}
 }

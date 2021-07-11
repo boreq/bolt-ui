@@ -57,6 +57,7 @@ func (h *RegisterInitialHandler) Execute(cmd RegisterInitial) error {
 	u := User{
 		UUID:          userUUID,
 		Username:      cmd.Username.String(),
+		DisplayName:   cmd.Username.String(),
 		Password:      passwordHash,
 		Administrator: true,
 		Created:       time.Now(),

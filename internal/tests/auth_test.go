@@ -33,6 +33,7 @@ func TestRegisterInitial(t *testing.T) {
 				require.Equal(t, 1, len(users))
 				require.NotEmpty(t, users[0].UUID)
 				require.Equal(t, testCase.Username.String(), users[0].Username)
+				require.Equal(t, testCase.Username.String(), users[0].DisplayName)
 				require.Equal(t, true, users[0].Administrator)
 				require.False(t, users[0].Created.IsZero())
 				require.False(t, users[0].LastSeen.IsZero())
@@ -387,6 +388,7 @@ func TestRegisterInvalid(t *testing.T) {
 				require.Equal(t, 1, len(users))
 				require.NotEmpty(t, users[0].UUID)
 				require.Equal(t, testCase.Username.String(), users[0].Username)
+				require.Equal(t, testCase.Username.String(), users[0].DisplayName)
 				require.Equal(t, false, users[0].Administrator)
 				require.False(t, users[0].Created.IsZero())
 				require.False(t, users[0].LastSeen.IsZero())
@@ -582,6 +584,140 @@ func TestGetUserMissingUserReturnsAppropriateError(t *testing.T) {
 	require.Error(t, err)
 
 	require.True(t, errors.Is(err, auth.ErrNotFound))
+}
+
+func TestUpdateNonexistentProfile(t *testing.T) {
+	a, cleanup := NewAuth(t)
+	defer cleanup()
+
+	err := a.UpdateProfile.Execute(
+		auth.UpdateProfile{
+			Username:    "some-username",
+			DisplayName: authDomain.MustNewValidatedDisplayName("display-name"),
+			AsUser: &authDomain.ReadUser{
+				UUID: authDomain.MustNewUserUUID("some-user-uuid"),
+			},
+		},
+	)
+	require.ErrorIs(t, err, auth.ErrNotFound)
+}
+
+func TestUpdateProfile(t *testing.T) {
+	const username = "username"
+	const password = "password"
+
+	a, cleanup := NewAuth(t)
+	defer cleanup()
+
+	// register
+	err := a.RegisterInitial.Execute(
+		auth.RegisterInitial{
+			Username: authDomain.MustNewValidatedUsername(username),
+			Password: authDomain.MustNewValidatedPassword(password),
+		},
+	)
+	require.NoError(t, err)
+
+	// get
+	user, err := a.GetUser.Execute(
+		auth.GetUser{
+			Username: username,
+		},
+	)
+	require.NoError(t, err)
+
+	require.Equal(t, username, user.DisplayName)
+
+	// update profile
+	const displayName = "display-name"
+
+	err = a.UpdateProfile.Execute(
+		auth.UpdateProfile{
+			Username:    username,
+			DisplayName: authDomain.MustNewValidatedDisplayName(displayName),
+			AsUser: &authDomain.ReadUser{
+				UUID: user.UUID,
+			},
+		},
+	)
+	require.NoError(t, err)
+
+	// get
+	user, err = a.GetUser.Execute(
+		auth.GetUser{
+			Username: username,
+		},
+	)
+	require.NoError(t, err)
+
+	require.Equal(t, displayName, user.DisplayName)
+}
+
+func TestUpdateProfilePermissions(t *testing.T) {
+	const username = "username"
+	const password = "password"
+
+	a, cleanup := NewAuth(t)
+	defer cleanup()
+
+	err := a.RegisterInitial.Execute(
+		auth.RegisterInitial{
+			Username: authDomain.MustNewValidatedUsername(username),
+			Password: authDomain.MustNewValidatedPassword(password),
+		},
+	)
+	require.NoError(t, err)
+
+	user, err := a.GetUser.Execute(
+		auth.GetUser{
+			Username: username,
+		},
+	)
+	require.NoError(t, err)
+
+	testCases := []struct {
+		Name    string
+		User    *authDomain.ReadUser
+		CanEdit bool
+	}{
+		{
+			Name:    "unauthorized_user",
+			User:    nil,
+			CanEdit: false,
+		},
+		{
+			Name: "other_user",
+			User: &authDomain.ReadUser{
+				UUID: authDomain.MustNewUserUUID("other-user-uuid"),
+			},
+			CanEdit: false,
+		},
+		{
+			Name: "user",
+			User: &authDomain.ReadUser{
+				UUID: user.UUID,
+			},
+			CanEdit: true,
+		},
+	}
+
+	for _, testCase := range testCases {
+		t.Run(testCase.Name, func(t *testing.T) {
+			err = a.UpdateProfile.Execute(
+				auth.UpdateProfile{
+					Username:    username,
+					DisplayName: authDomain.MustNewValidatedDisplayName("display-name"),
+					AsUser:      testCase.User,
+				},
+			)
+
+			if testCase.CanEdit {
+				require.NoError(t, err)
+			} else {
+				require.ErrorIs(t, err, auth.ErrUpdatingProfileForbidden)
+			}
+		})
+	}
 }
 
 func NewAuth(t *testing.T) (*auth.Auth, fixture.CleanupFunc) {

@@ -69,23 +69,24 @@ type InvitationToken string
 type PasswordHash []byte
 
 type User struct {
-	UUID          auth.UserUUID `json:"uuid"`
-	Username      string        `json:"username"`
-	Password      PasswordHash  `json:"password"`
-	Administrator bool          `json:"administrator"`
-	Created       time.Time     `json:"created"`
-	LastSeen      time.Time     `json:"lastSeen"`
-	Sessions      []Session     `json:"sessions"`
+	UUID          auth.UserUUID
+	Username      string
+	DisplayName   string
+	Password      PasswordHash
+	Administrator bool
+	Created       time.Time
+	LastSeen      time.Time
+	Sessions      []Session
 }
 
 type Session struct {
-	Token    AccessToken `json:"token"`
-	LastSeen time.Time   `json:"lastSeen"`
+	Token    AccessToken
+	LastSeen time.Time
 }
 
 type Invitation struct {
-	Token   InvitationToken `json:"invitation"`
-	Created time.Time       `json:"created"`
+	Token   InvitationToken
+	Created time.Time
 }
 
 type TransactionProvider interface {
@@ -111,6 +112,7 @@ type Auth struct {
 	Remove           *RemoveHandler
 	SetPassword      *SetPasswordHandler
 	GetUser          *GetUserHandler
+	UpdateProfile    *UpdateProfileHandler
 }
 
 func toReadUsers(users []User) []auth.ReadUser {
@@ -125,6 +127,7 @@ func toReadUser(user User) auth.ReadUser {
 	rv := auth.ReadUser{
 		UUID:          user.UUID,
 		Username:      user.Username,
+		DisplayName:   user.DisplayName,
 		Administrator: user.Administrator,
 		Created:       user.Created,
 		LastSeen:      user.LastSeen,

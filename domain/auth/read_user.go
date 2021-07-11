@@ -7,6 +7,7 @@ import (
 type ReadUser struct {
 	UUID          UserUUID
 	Username      string
+	DisplayName   string
 	Administrator bool
 	Created       time.Time
 	LastSeen      time.Time

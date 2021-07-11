@@ -162,6 +162,7 @@ func (r *UserRepository) toPersisted(user auth.User) persistedUser {
 	return persistedUser{
 		UUID:          user.UUID.String(),
 		Username:      user.Username,
+		DisplayName:   user.DisplayName,
 		Password:      user.Password,
 		Administrator: user.Administrator,
 		Created:       user.Created,
@@ -188,6 +189,7 @@ func (r *UserRepository) fromPersisted(user persistedUser) (*auth.User, error) {
 	return &auth.User{
 		UUID:          uuid,
 		Username:      user.Username,
+		DisplayName:   user.DisplayName,
 		Password:      user.Password,
 		Administrator: user.Administrator,
 		Created:       user.Created,
