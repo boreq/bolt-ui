@@ -41,7 +41,7 @@ fi
 
 echo "Running https://github.com/rakyll/statik"
 cd ./ports/http/frontend
-statik -f -src=../../../../velo-frontend/dist
+cp -r ../../../../velo-frontend/dist/. ./static/
 cd ../../../
 
 echo "Persisting frontend version"
