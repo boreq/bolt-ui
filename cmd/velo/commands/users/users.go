@@ -78,8 +78,7 @@ var resetPasswordCmd = guinea.Command{
 			Multiple:    false,
 			Description: "Username",
 		},
-	},
-	ShortDescription: "resets a user's password",
+	}, ShortDescription: "resets a user's password",
 }
 
 func runResetPassword(c guinea.Context) error {
@@ -112,12 +111,7 @@ func runResetPassword(c guinea.Context) error {
 		return errors.Wrap(err, "failed to set a password")
 	}
 
-	j, err := json.MarshalIndent(cmd, "", "    ")
-	if err != nil {
-		return errors.Wrap(err, "failed to marshal to json")
-	}
-
-	fmt.Println(string(j))
+	fmt.Println(cmd.Password.String())
 
 	return nil
 }
