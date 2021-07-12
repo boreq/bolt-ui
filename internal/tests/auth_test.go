@@ -49,8 +49,8 @@ func TestRegisterInitialCanOnlyBePerformedOnce(t *testing.T) {
 	defer cleanup()
 
 	cmd := auth.RegisterInitial{
-		Username: authDomain.MustNewValidatedUsername("username"),
-		Password: authDomain.MustNewValidatedPassword("password"),
+		Username: authDomain.MustNewUsername("username"),
+		Password: authDomain.MustNewPassword("password"),
 	}
 
 	err := a.RegisterInitial.Execute(cmd)
@@ -69,8 +69,8 @@ func TestLoginInitialUser(t *testing.T) {
 
 	err := a.RegisterInitial.Execute(
 		auth.RegisterInitial{
-			Username: authDomain.MustNewValidatedUsername(username),
-			Password: authDomain.MustNewValidatedPassword(password),
+			Username: authDomain.MustNewUsername(username),
+			Password: authDomain.MustNewPassword(password),
 		},
 	)
 	require.NoError(t, err)
@@ -111,8 +111,8 @@ func TestCheckAccessToken(t *testing.T) {
 	defer cleanup()
 
 	err := a.RegisterInitial.Execute(auth.RegisterInitial{
-		Username: authDomain.MustNewValidatedUsername(username),
-		Password: authDomain.MustNewValidatedPassword(password),
+		Username: authDomain.MustNewUsername(username),
+		Password: authDomain.MustNewPassword(password),
 	})
 	require.NoError(t, err)
 
@@ -163,8 +163,8 @@ func TestUpdateLastSeen(t *testing.T) {
 
 	err := a.RegisterInitial.Execute(
 		auth.RegisterInitial{
-			Username: authDomain.MustNewValidatedUsername(username),
-			Password: authDomain.MustNewValidatedPassword(password),
+			Username: authDomain.MustNewUsername(username),
+			Password: authDomain.MustNewPassword(password),
 		},
 	)
 	require.NoError(t, err)
@@ -210,8 +210,8 @@ func TestLogout(t *testing.T) {
 
 	err := a.RegisterInitial.Execute(
 		auth.RegisterInitial{
-			Username: authDomain.MustNewValidatedUsername(username),
-			Password: authDomain.MustNewValidatedPassword(password),
+			Username: authDomain.MustNewUsername(username),
+			Password: authDomain.MustNewPassword(password),
 		},
 	)
 	require.NoError(t, err)
@@ -234,24 +234,8 @@ func TestLogout(t *testing.T) {
 	require.EqualError(t, err, "transaction failed: could not get the user: not found")
 
 	err = a.Logout.Execute(auth.Logout{Token: "fake-757365726E616D65"})
-	require.EqualError(t, err, "transaction failed: session not found")
+	require.EqualError(t, err, "transaction failed: could not log out the user: session not found")
 }
-
-//func TestCount(t *testing.T) {
-//	a, cleanup := NewAuth(t)
-//	defer cleanup()
-//
-//	n, err := a.List.Execute()
-//	require.NoError(t, err)
-//	require.Equal(t, 0, n)
-//
-//	err = r.RegisterInitial("username", "password")
-//	require.NoError(t, err)
-//
-//	n, err = r.Count()
-//	require.NoError(t, err)
-//	require.Equal(t, 1, n)
-//}
 
 func TestList(t *testing.T) {
 	const username = "username"
@@ -262,8 +246,8 @@ func TestList(t *testing.T) {
 
 	err := a.RegisterInitial.Execute(
 		auth.RegisterInitial{
-			Username: authDomain.MustNewValidatedUsername(username),
-			Password: authDomain.MustNewValidatedPassword(password),
+			Username: authDomain.MustNewUsername(username),
+			Password: authDomain.MustNewPassword(password),
 		},
 	)
 	require.NoError(t, err)
@@ -296,8 +280,8 @@ func TestRegisterInvalidInvitationToken(t *testing.T) {
 
 	err := a.Register.Execute(
 		auth.Register{
-			Username: authDomain.MustNewValidatedUsername(username),
-			Password: authDomain.MustNewValidatedPassword(password),
+			Username: authDomain.MustNewUsername(username),
+			Password: authDomain.MustNewPassword(password),
 			Token:    auth.InvitationToken("invalid"),
 		},
 	)
@@ -313,8 +297,8 @@ func TestRegisterTokenCanNotBeReused(t *testing.T) {
 
 	err = a.Register.Execute(
 		auth.Register{
-			Username: authDomain.MustNewValidatedUsername("username"),
-			Password: authDomain.MustNewValidatedPassword("password"),
+			Username: authDomain.MustNewUsername("username"),
+			Password: authDomain.MustNewPassword("password"),
 			Token:    token,
 		},
 	)
@@ -322,8 +306,8 @@ func TestRegisterTokenCanNotBeReused(t *testing.T) {
 
 	err = a.Register.Execute(
 		auth.Register{
-			Username: authDomain.MustNewValidatedUsername("other-username"),
-			Password: authDomain.MustNewValidatedPassword("other-password"),
+			Username: authDomain.MustNewUsername("other-username"),
+			Password: authDomain.MustNewPassword("other-password"),
 			Token:    token,
 		},
 	)
@@ -343,8 +327,8 @@ func TestRegisterUsernameCanNotBeTaken(t *testing.T) {
 
 	err = a.Register.Execute(
 		auth.Register{
-			Username: authDomain.MustNewValidatedUsername(username),
-			Password: authDomain.MustNewValidatedPassword(password),
+			Username: authDomain.MustNewUsername(username),
+			Password: authDomain.MustNewPassword(password),
 			Token:    token,
 		},
 	)
@@ -355,8 +339,8 @@ func TestRegisterUsernameCanNotBeTaken(t *testing.T) {
 
 	err = a.Register.Execute(
 		auth.Register{
-			Username: authDomain.MustNewValidatedUsername(username),
-			Password: authDomain.MustNewValidatedPassword(password),
+			Username: authDomain.MustNewUsername(username),
+			Password: authDomain.MustNewPassword(password),
 			Token:    token,
 		},
 	)
@@ -385,6 +369,7 @@ func TestRegisterInvalid(t *testing.T) {
 
 				users, err := a.List.Execute()
 				require.NoError(t, err)
+
 				require.Equal(t, 1, len(users))
 				require.NotEmpty(t, users[0].UUID)
 				require.Equal(t, testCase.Username.String(), users[0].Username)
@@ -411,8 +396,8 @@ func TestLogin(t *testing.T) {
 
 	err = a.Register.Execute(
 		auth.Register{
-			Username: authDomain.MustNewValidatedUsername(username),
-			Password: authDomain.MustNewValidatedPassword(password),
+			Username: authDomain.MustNewUsername(username),
+			Password: authDomain.MustNewPassword(password),
 			Token:    invitationToken,
 		},
 	)
@@ -456,8 +441,8 @@ func TestRemove(t *testing.T) {
 
 	err = a.Register.Execute(
 		auth.Register{
-			Username: authDomain.MustNewValidatedUsername(username),
-			Password: authDomain.MustNewValidatedPassword(password),
+			Username: authDomain.MustNewUsername(username),
+			Password: authDomain.MustNewPassword(password),
 			Token:    invitationToken,
 		},
 	)
@@ -515,8 +500,8 @@ func TestSetPassword(t *testing.T) {
 
 	err = a.Register.Execute(
 		auth.Register{
-			Username: authDomain.MustNewValidatedUsername(username),
-			Password: authDomain.MustNewValidatedPassword(password),
+			Username: authDomain.MustNewUsername(username),
+			Password: authDomain.MustNewPassword(password),
 			Token:    invitationToken,
 		},
 	)
@@ -533,7 +518,7 @@ func TestSetPassword(t *testing.T) {
 	err = a.SetPassword.Execute(
 		auth.SetPassword{
 			Username: username,
-			Password: authDomain.MustNewValidatedPassword(newPassword),
+			Password: authDomain.MustNewPassword(newPassword),
 		},
 	)
 	require.NoError(t, err)
@@ -556,8 +541,8 @@ func TestGetUser(t *testing.T) {
 
 	err := a.RegisterInitial.Execute(
 		auth.RegisterInitial{
-			Username: authDomain.MustNewValidatedUsername(username),
-			Password: authDomain.MustNewValidatedPassword(password),
+			Username: authDomain.MustNewUsername(username),
+			Password: authDomain.MustNewPassword(password),
 		},
 	)
 	require.NoError(t, err)
@@ -593,7 +578,7 @@ func TestUpdateNonexistentProfile(t *testing.T) {
 	err := a.UpdateProfile.Execute(
 		auth.UpdateProfile{
 			Username:    "some-username",
-			DisplayName: authDomain.MustNewValidatedDisplayName("display-name"),
+			DisplayName: authDomain.MustNewDisplayName("display-name"),
 			AsUser: &authDomain.ReadUser{
 				UUID: authDomain.MustNewUserUUID("some-user-uuid"),
 			},
@@ -612,8 +597,8 @@ func TestUpdateProfile(t *testing.T) {
 	// register
 	err := a.RegisterInitial.Execute(
 		auth.RegisterInitial{
-			Username: authDomain.MustNewValidatedUsername(username),
-			Password: authDomain.MustNewValidatedPassword(password),
+			Username: authDomain.MustNewUsername(username),
+			Password: authDomain.MustNewPassword(password),
 		},
 	)
 	require.NoError(t, err)
@@ -634,7 +619,7 @@ func TestUpdateProfile(t *testing.T) {
 	err = a.UpdateProfile.Execute(
 		auth.UpdateProfile{
 			Username:    username,
-			DisplayName: authDomain.MustNewValidatedDisplayName(displayName),
+			DisplayName: authDomain.MustNewDisplayName(displayName),
 			AsUser: &authDomain.ReadUser{
 				UUID: user.UUID,
 			},
@@ -662,8 +647,8 @@ func TestUpdateProfilePermissions(t *testing.T) {
 
 	err := a.RegisterInitial.Execute(
 		auth.RegisterInitial{
-			Username: authDomain.MustNewValidatedUsername(username),
-			Password: authDomain.MustNewValidatedPassword(password),
+			Username: authDomain.MustNewUsername(username),
+			Password: authDomain.MustNewPassword(password),
 		},
 	)
 	require.NoError(t, err)
@@ -706,7 +691,7 @@ func TestUpdateProfilePermissions(t *testing.T) {
 			err = a.UpdateProfile.Execute(
 				auth.UpdateProfile{
 					Username:    username,
-					DisplayName: authDomain.MustNewValidatedDisplayName("display-name"),
+					DisplayName: authDomain.MustNewDisplayName("display-name"),
 					AsUser:      testCase.User,
 				},
 			)
@@ -730,8 +715,8 @@ func TestChangePassword(t *testing.T) {
 	// register
 	err := a.RegisterInitial.Execute(
 		auth.RegisterInitial{
-			Username: authDomain.MustNewValidatedUsername(username),
-			Password: authDomain.MustNewValidatedPassword(password),
+			Username: authDomain.MustNewUsername(username),
+			Password: authDomain.MustNewPassword(password),
 		},
 	)
 	require.NoError(t, err)
@@ -759,7 +744,7 @@ func TestChangePassword(t *testing.T) {
 		auth.ChangePassword{
 			Username:    username,
 			OldPassword: password,
-			NewPassword: authDomain.MustNewValidatedPassword(newPassword),
+			NewPassword: authDomain.MustNewPassword(newPassword),
 			AsUser: &authDomain.ReadUser{
 				UUID: user.UUID,
 			},
@@ -786,8 +771,8 @@ func TestChangePasswordPermissions(t *testing.T) {
 
 	err := a.RegisterInitial.Execute(
 		auth.RegisterInitial{
-			Username: authDomain.MustNewValidatedUsername(username),
-			Password: authDomain.MustNewValidatedPassword(password),
+			Username: authDomain.MustNewUsername(username),
+			Password: authDomain.MustNewPassword(password),
 		},
 	)
 	require.NoError(t, err)
@@ -831,7 +816,7 @@ func TestChangePasswordPermissions(t *testing.T) {
 				auth.ChangePassword{
 					Username:    username,
 					OldPassword: password,
-					NewPassword: authDomain.MustNewValidatedPassword(password),
+					NewPassword: authDomain.MustNewPassword(password),
 					AsUser:      testCase.User,
 				},
 			)
@@ -859,27 +844,27 @@ func NewAuth(t *testing.T) (*auth.Auth, fixture.CleanupFunc) {
 var registerTestCases = []struct {
 	Name string
 
-	Username authDomain.ValidatedUsername
-	Password authDomain.ValidatedPassword
+	Username authDomain.Username
+	Password authDomain.Password
 
 	ExpectedError error
 }{
 	{
 		Name:          "valid",
-		Username:      authDomain.MustNewValidatedUsername("username"),
-		Password:      authDomain.MustNewValidatedPassword("password"),
+		Username:      authDomain.MustNewUsername("username"),
+		Password:      authDomain.MustNewPassword("password"),
 		ExpectedError: nil,
 	},
 	{
 		Name:          "zero_value_of_username",
-		Username:      authDomain.ValidatedUsername{},
-		Password:      authDomain.MustNewValidatedPassword("password"),
+		Username:      authDomain.Username{},
+		Password:      authDomain.MustNewPassword("password"),
 		ExpectedError: errors.New("zero value of username"),
 	},
 	{
 		Name:          "zero_value_of_password",
-		Username:      authDomain.MustNewValidatedUsername("username"),
-		Password:      authDomain.ValidatedPassword{},
+		Username:      authDomain.MustNewUsername("username"),
+		Password:      authDomain.Password{},
 		ExpectedError: errors.New("zero value of password"),
 	},
 }

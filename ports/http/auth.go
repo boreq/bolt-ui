@@ -3,9 +3,10 @@ package http
 import (
 	"net/http"
 
+	"github.com/boreq/errors"
 	"github.com/boreq/velo/application"
 	"github.com/boreq/velo/application/auth"
-	"github.com/boreq/errors"
+	authDomain "github.com/boreq/velo/domain/auth"
 )
 
 type HttpAuthProvider struct {
@@ -44,6 +45,6 @@ func (h *HttpAuthProvider) Get(r *http.Request) (*AuthenticatedUser, error) {
 	return &u, nil
 }
 
-func (h *HttpAuthProvider) getToken(r *http.Request) auth.AccessToken {
-	return auth.AccessToken(r.Header.Get("Access-Token"))
+func (h *HttpAuthProvider) getToken(r *http.Request) authDomain.AccessToken {
+	return authDomain.AccessToken(r.Header.Get("Access-Token"))
 }

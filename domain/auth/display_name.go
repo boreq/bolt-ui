@@ -7,34 +7,34 @@ import (
 
 const maxDisplayNameLen = 100
 
-type ValidatedDisplayName struct {
+type DisplayName struct {
 	displayName string
 }
 
-func NewValidatedDisplayName(displayName string) (ValidatedDisplayName, error) {
+func NewDisplayName(displayName string) (DisplayName, error) {
 	if displayName == "" {
-		return ValidatedDisplayName{}, errors.New("display name can't be empty")
+		return DisplayName{}, errors.New("display name can't be empty")
 	}
 
 	if len(displayName) > maxDisplayNameLen {
-		return ValidatedDisplayName{}, fmt.Errorf("display name length can't exceed %d characters", maxDisplayNameLen)
+		return DisplayName{}, fmt.Errorf("display name length can't exceed %d characters", maxDisplayNameLen)
 	}
 
-	return ValidatedDisplayName{displayName}, nil
+	return DisplayName{displayName}, nil
 }
 
-func MustNewValidatedDisplayName(displayName string) ValidatedDisplayName {
-	v, err := NewValidatedDisplayName(displayName)
+func MustNewDisplayName(displayName string) DisplayName {
+	v, err := NewDisplayName(displayName)
 	if err != nil {
 		panic(err)
 	}
 	return v
 }
 
-func (u ValidatedDisplayName) String() string {
+func (u DisplayName) String() string {
 	return u.displayName
 }
 
-func (u ValidatedDisplayName) IsZero() bool {
-	return u == ValidatedDisplayName{}
+func (u DisplayName) IsZero() bool {
+	return u == DisplayName{}
 }

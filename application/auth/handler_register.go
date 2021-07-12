@@ -1,15 +1,13 @@
 package auth
 
 import (
-	"time"
-
 	"github.com/boreq/errors"
 	"github.com/boreq/velo/domain/auth"
 )
 
 type Register struct {
-	Username auth.ValidatedUsername
-	Password auth.ValidatedPassword
+	Username auth.Username
+	Password auth.Password
 	Token    InvitationToken
 }
 
@@ -55,14 +53,20 @@ func (h *RegisterHandler) Execute(cmd Register) error {
 		return errors.Wrap(err, "could not create a user uuid")
 	}
 
-	u := User{
-		UUID:          userUUID,
-		Username:      cmd.Username.String(),
-		DisplayName:   cmd.Username.String(),
-		Password:      passwordHash,
-		Administrator: false,
-		Created:       time.Now(),
-		LastSeen:      time.Now(),
+	displayName, err := auth.NewDisplayName(cmd.Username.String())
+	if err != nil {
+		return errors.Wrap(err, "could not create a display name")
+	}
+
+	u, err := auth.NewUser(
+		userUUID,
+		cmd.Username,
+		displayName,
+		passwordHash,
+		false,
+	)
+	if err != nil {
+		return errors.Wrap(err, "could not create a user")
 	}
 
 	if err := h.transactionProvider.Write(func(r *TransactableRepositories) error {

@@ -96,7 +96,7 @@ func runResetPassword(c guinea.Context) error {
 		return errors.Wrap(err, "failed to generate a secure string")
 	}
 
-	password, err := authDomain.NewValidatedPassword(s)
+	password, err := authDomain.NewPassword(s)
 	if err != nil {
 		return errors.Wrap(err, "invalid password")
 	}

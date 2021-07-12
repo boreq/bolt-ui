@@ -10,7 +10,7 @@ var ErrUpdatingProfileForbidden = errors.New("this user can not update this prof
 
 type UpdateProfile struct {
 	Username    string
-	DisplayName auth.ValidatedDisplayName
+	DisplayName auth.DisplayName
 	AsUser      *auth.ReadUser
 }
 
@@ -37,7 +37,7 @@ func (h *UpdateProfileHandler) Execute(cmd UpdateProfile) error {
 			return errors.Wrap(err, "could not get the user")
 		}
 
-		ok, err := permissions.CanUpdateProfile(toReadUser(*u), cmd.AsUser)
+		ok, err := permissions.CanUpdateProfile(u.AsReadUser(), cmd.AsUser)
 		if err != nil {
 			return errors.Wrap(err, "permission check failed")
 		}
@@ -46,7 +46,9 @@ func (h *UpdateProfileHandler) Execute(cmd UpdateProfile) error {
 			return ErrUpdatingProfileForbidden
 		}
 
-		u.DisplayName = cmd.DisplayName.String()
+		if err := u.ChangeDisplayName(cmd.DisplayName); err != nil {
+			return errors.Wrap(err, "could not change the display name")
+		}
 
 		return r.Users.Put(*u)
 	})

@@ -1,9 +1,8 @@
 package auth
 
 import (
-	"time"
-
 	"github.com/boreq/errors"
+	"github.com/boreq/velo/domain/auth"
 )
 
 type Login struct {
@@ -29,8 +28,8 @@ func NewLoginHandler(
 	}
 }
 
-func (h *LoginHandler) Execute(cmd Login) (AccessToken, error) {
-	var token AccessToken
+func (h *LoginHandler) Execute(cmd Login) (auth.AccessToken, error) {
+	var token auth.AccessToken
 
 	if err := h.transactionProvider.Write(func(r *TransactableRepositories) error {
 		u, err := r.Users.Get(cmd.Username)
@@ -41,7 +40,7 @@ func (h *LoginHandler) Execute(cmd Login) (AccessToken, error) {
 			return errors.Wrap(err, "could not get the user")
 		}
 
-		if err := h.passwordHasher.Compare(u.Password, cmd.Password); err != nil {
+		if err := h.passwordHasher.Compare(u.Password(), cmd.Password); err != nil {
 			return errors.Wrap(ErrUnauthorized, "invalid password")
 		}
 
@@ -51,12 +50,9 @@ func (h *LoginHandler) Execute(cmd Login) (AccessToken, error) {
 		}
 		token = t
 
-		s := Session{
-			Token:    t,
-			LastSeen: time.Now(),
+		if err := u.Login(t); err != nil {
+			return errors.Wrap(err, "failed to log in the user")
 		}
-
-		u.Sessions = append(u.Sessions, s)
 
 		return r.Users.Put(*u)
 	}); err != nil {

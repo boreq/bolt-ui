@@ -19,7 +19,7 @@ import (
 
 type AuthenticatedUser struct {
 	User  authDomain.ReadUser
-	Token auth.AccessToken
+	Token authDomain.AccessToken
 }
 
 func (a *AuthenticatedUser) UserPointer() *authDomain.ReadUser {
@@ -121,12 +121,12 @@ func (h *Handler) registerInitial(r *http.Request) rest.RestResponse {
 		return rest.ErrBadRequest.WithMessage("Malformed input.")
 	}
 
-	username, err := authDomain.NewValidatedUsername(t.Username)
+	username, err := authDomain.NewUsername(t.Username)
 	if err != nil {
 		return rest.ErrBadRequest.WithMessage(fmt.Sprintf("Invalid username: %s", err))
 	}
 
-	password, err := authDomain.NewValidatedPassword(t.Password)
+	password, err := authDomain.NewPassword(t.Password)
 	if err != nil {
 		return rest.ErrBadRequest.WithMessage(fmt.Sprintf("Invalid password: %s", err))
 	}
@@ -533,12 +533,12 @@ func (h *Handler) register(r *http.Request) rest.RestResponse {
 		return rest.ErrBadRequest.WithMessage("Malformed input.")
 	}
 
-	username, err := authDomain.NewValidatedUsername(t.Username)
+	username, err := authDomain.NewUsername(t.Username)
 	if err != nil {
 		return rest.ErrBadRequest.WithMessage(fmt.Sprintf("Invalid username: %s", err))
 	}
 
-	password, err := authDomain.NewValidatedPassword(t.Password)
+	password, err := authDomain.NewPassword(t.Password)
 	if err != nil {
 		return rest.ErrBadRequest.WithMessage(fmt.Sprintf("Invalid password: %s", err))
 	}

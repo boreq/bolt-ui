@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/boreq/velo/application/auth"
 	"github.com/boreq/errors"
+	"github.com/boreq/velo/domain/auth"
 )
 
 const tokenLengthBytes = 256 / 8

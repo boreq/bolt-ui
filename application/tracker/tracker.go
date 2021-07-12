@@ -2,7 +2,6 @@ package tracker
 
 import (
 	"github.com/boreq/errors"
-	appAuth "github.com/boreq/velo/application/auth"
 	"github.com/boreq/velo/domain"
 	"github.com/boreq/velo/domain/auth"
 	"github.com/boreq/velo/domain/permissions"
@@ -56,7 +55,7 @@ type UserToPrivacyZoneRepository interface {
 }
 
 type UserRepository interface {
-	GetByUUID(uuid auth.UserUUID) (*appAuth.User, error)
+	GetByUUID(uuid auth.UserUUID) (*auth.User, error)
 }
 
 type Activity struct {
@@ -109,10 +108,10 @@ type TransactableRepositories struct {
 	User              UserRepository
 }
 
-func toUser(user *appAuth.User) *User {
+func toUser(user *auth.User) *User {
 	return &User{
-		Username:    user.Username,
-		DisplayName: user.DisplayName,
+		Username:    user.Username().String(),
+		DisplayName: user.DisplayName().String(),
 	}
 }
 

@@ -7,7 +7,7 @@ import (
 
 type SetPassword struct {
 	Username string
-	Password auth.ValidatedPassword
+	Password auth.Password
 }
 
 type SetPasswordHandler struct {
@@ -41,7 +41,9 @@ func (h *SetPasswordHandler) Execute(cmd SetPassword) error {
 			return errors.Wrap(err, "could not get the user")
 		}
 
-		u.Password = passwordHash
+		if err := u.ChangePassword(passwordHash); err != nil {
+			return errors.Wrap(err, "could not change the password")
+		}
 
 		return r.Users.Put(*u)
 	})

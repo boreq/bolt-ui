@@ -20,29 +20,29 @@ type CryptoStringGenerator interface {
 }
 
 type AccessTokenGenerator interface {
-	Generate(username string) (AccessToken, error)
-	GetUsername(token AccessToken) (string, error)
+	Generate(username string) (auth.AccessToken, error)
+	GetUsername(token auth.AccessToken) (string, error)
 }
 
 type PasswordHasher interface {
-	Hash(password string) (PasswordHash, error)
-	Compare(hashedPassword PasswordHash, password string) error
+	Hash(password string) (auth.PasswordHash, error)
+	Compare(hashedPassword auth.PasswordHash, password string) error
 }
 
 type UserRepository interface {
 	// Put inserts the user into the repository. The previous entry with
 	// this username is overwriten.
-	Put(user User) error
+	Put(user auth.User) error
 
 	// Get returns the user with the provided username. If the user doesn't
 	// exist ErrNotFound is returned.
-	Get(username string) (*User, error)
+	Get(username string) (*auth.User, error)
 
 	// Remove should remove a user.
 	Remove(username string) error
 
 	// List should return a list of all users.
-	List() ([]User, error)
+	List() ([]auth.User, error)
 
 	// Count returns the number of users.
 	Count() (int, error)
@@ -62,27 +62,7 @@ type InvitationRepository interface {
 	Remove(token InvitationToken) error
 }
 
-type AccessToken string
-
 type InvitationToken string
-
-type PasswordHash []byte
-
-type User struct {
-	UUID          auth.UserUUID
-	Username      string
-	DisplayName   string
-	Password      PasswordHash
-	Administrator bool
-	Created       time.Time
-	LastSeen      time.Time
-	Sessions      []Session
-}
-
-type Session struct {
-	Token    AccessToken
-	LastSeen time.Time
-}
 
 type Invitation struct {
 	Token   InvitationToken
@@ -116,27 +96,10 @@ type Auth struct {
 	ChangePassword   *ChangePasswordHandler
 }
 
-func toReadUsers(users []User) []auth.ReadUser {
+func toReadUsers(users []auth.User) []auth.ReadUser {
 	var rv []auth.ReadUser
 	for _, user := range users {
-		rv = append(rv, toReadUser(user))
-	}
-	return rv
-}
-
-func toReadUser(user User) auth.ReadUser {
-	rv := auth.ReadUser{
-		UUID:          user.UUID,
-		Username:      user.Username,
-		DisplayName:   user.DisplayName,
-		Administrator: user.Administrator,
-		Created:       user.Created,
-		LastSeen:      user.LastSeen,
-	}
-	for _, session := range user.Sessions {
-		rv.Sessions = append(rv.Sessions, auth.ReadSession{
-			LastSeen: session.LastSeen,
-		})
+		rv = append(rv, user.AsReadUser())
 	}
 	return rv
 }

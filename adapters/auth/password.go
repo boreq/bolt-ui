@@ -1,7 +1,7 @@
 package auth
 
 import (
-	"github.com/boreq/velo/application/auth"
+	"github.com/boreq/velo/domain/auth"
 	"golang.org/x/crypto/bcrypt"
 )
 

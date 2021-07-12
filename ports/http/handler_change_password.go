@@ -36,7 +36,7 @@ func (h *Handler) putUserPassword(r *http.Request) rest.RestResponse {
 		return rest.ErrBadRequest.WithMessage("Malformed input.")
 	}
 
-	newPassword, err := authDomain.NewValidatedPassword(t.NewPassword)
+	newPassword, err := authDomain.NewPassword(t.NewPassword)
 	if err != nil {
 		return rest.ErrBadRequest.WithMessage("Invalid password.")
 	}

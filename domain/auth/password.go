@@ -7,34 +7,34 @@ import (
 
 const maxPasswordLen = 10000
 
-type ValidatedPassword struct {
+type Password struct {
 	password string
 }
 
-func NewValidatedPassword(password string) (ValidatedPassword, error) {
+func NewPassword(password string) (Password, error) {
 	if password == "" {
-		return ValidatedPassword{}, errors.New("password can't be empty")
+		return Password{}, errors.New("password can't be empty")
 	}
 
 	if len(password) > maxPasswordLen {
-		return ValidatedPassword{}, fmt.Errorf("password length can't exceed %d characters", maxPasswordLen)
+		return Password{}, fmt.Errorf("password length can't exceed %d characters", maxPasswordLen)
 	}
 
-	return ValidatedPassword{password}, nil
+	return Password{password}, nil
 }
 
-func MustNewValidatedPassword(password string) ValidatedPassword {
-	v, err := NewValidatedPassword(password)
+func MustNewPassword(password string) Password {
+	v, err := NewPassword(password)
 	if err != nil {
 		panic(err)
 	}
 	return v
 }
 
-func (u ValidatedPassword) String() string {
+func (u Password) String() string {
 	return u.password
 }
 
-func (u ValidatedPassword) IsZero() bool {
-	return u == ValidatedPassword{}
+func (u Password) IsZero() bool {
+	return u == Password{}
 }

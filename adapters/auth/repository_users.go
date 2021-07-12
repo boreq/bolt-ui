@@ -43,7 +43,7 @@ func (r *UserRepository) Count() (int, error) {
 	return count, nil
 }
 
-func (r *UserRepository) List() ([]auth.User, error) {
+func (r *UserRepository) List() ([]authDomain.User, error) {
 	b := r.tx.Bucket(r.bucket)
 	if b == nil {
 		return nil, nil
@@ -51,7 +51,7 @@ func (r *UserRepository) List() ([]auth.User, error) {
 
 	c := b.Cursor()
 
-	var users []auth.User
+	var users []authDomain.User
 	for k, v := c.First(); k != nil; k, v = c.Next() {
 		var pu persistedUser
 		if err := json.Unmarshal(v, &pu); err != nil {
@@ -63,7 +63,7 @@ func (r *UserRepository) List() ([]auth.User, error) {
 			return nil, errors.Wrap(err, "could not convert from persisted")
 		}
 
-		users = append(users, *u)
+		users = append(users, u)
 	}
 
 	return users, nil
@@ -78,7 +78,7 @@ func (r *UserRepository) Remove(username string) error {
 		return errors.Wrap(err, "could not get a user")
 	}
 
-	if err := r.uuidToUsernameRepository.Remove(u.UUID); err != nil {
+	if err := r.uuidToUsernameRepository.Remove(u.UUID()); err != nil {
 		return errors.Wrap(err, "could not remove the username mapping")
 	}
 
@@ -89,7 +89,7 @@ func (r *UserRepository) Remove(username string) error {
 	return b.Delete([]byte(username))
 }
 
-func (r *UserRepository) Get(username string) (*auth.User, error) {
+func (r *UserRepository) Get(username string) (*authDomain.User, error) {
 	b := r.tx.Bucket(r.bucket)
 	if b == nil {
 		return nil, errors.Wrap(auth.ErrNotFound, "bucket does not exist")
@@ -104,10 +104,11 @@ func (r *UserRepository) Get(username string) (*auth.User, error) {
 		return nil, errors.Wrap(err, "json unmarshal failed")
 	}
 
-	return r.fromPersisted(u)
+	tmp, err := r.fromPersisted(u)
+	return &tmp, err
 }
 
-func (r *UserRepository) GetByUUID(uuid authDomain.UserUUID) (*auth.User, error) {
+func (r *UserRepository) GetByUUID(uuid authDomain.UserUUID) (*authDomain.User, error) {
 	username, err := r.uuidToUsernameRepository.Get(uuid)
 	if err != nil {
 		return nil, errors.Wrap(err, "could not get the mapping")
@@ -127,10 +128,11 @@ func (r *UserRepository) GetByUUID(uuid authDomain.UserUUID) (*auth.User, error)
 		return nil, errors.Wrap(err, "json unmarshal failed")
 	}
 
-	return r.fromPersisted(u)
+	tmp, err := r.fromPersisted(u)
+	return &tmp, err
 }
 
-func (r *UserRepository) Put(user auth.User) error {
+func (r *UserRepository) Put(user authDomain.User) error {
 	persistedUser := r.toPersisted(user)
 
 	j, err := json.Marshal(persistedUser)
@@ -138,7 +140,7 @@ func (r *UserRepository) Put(user auth.User) error {
 		return errors.Wrap(err, "marshaling to json failed")
 	}
 
-	if err := r.uuidToUsernameRepository.Put(user.UUID, user.Username); err != nil {
+	if err := r.uuidToUsernameRepository.Put(user.UUID(), user.Username()); err != nil {
 		return errors.Wrap(err, "could not store the mapping")
 	}
 
@@ -146,54 +148,69 @@ func (r *UserRepository) Put(user auth.User) error {
 	if b == nil {
 		return errors.New("bucket does not exist")
 	}
-	return b.Put([]byte(user.Username), j)
+	return b.Put([]byte(user.Username().String()), j)
 }
 
-func (r *UserRepository) toPersisted(user auth.User) persistedUser {
+func (r *UserRepository) toPersisted(user authDomain.User) persistedUser {
 	var sessions []persistedSession
 
-	for _, session := range user.Sessions {
+	for _, session := range user.Sessions() {
 		sessions = append(sessions, persistedSession{
-			Token:    string(session.Token),
-			LastSeen: session.LastSeen,
+			Token:    string(session.Token()),
+			LastSeen: session.LastSeen(),
 		})
 	}
 
 	return persistedUser{
-		UUID:          user.UUID.String(),
-		Username:      user.Username,
-		DisplayName:   user.DisplayName,
-		Password:      user.Password,
-		Administrator: user.Administrator,
-		Created:       user.Created,
-		LastSeen:      user.LastSeen,
+		UUID:          user.UUID().String(),
+		Username:      user.Username().String(),
+		DisplayName:   user.DisplayName().String(),
+		Password:      user.Password(),
+		Administrator: user.Administrator(),
+		Created:       user.Created(),
+		LastSeen:      user.LastSeen(),
 		Sessions:      sessions,
 	}
 }
 
-func (r *UserRepository) fromPersisted(user persistedUser) (*auth.User, error) {
+func (r *UserRepository) fromPersisted(user persistedUser) (authDomain.User, error) {
 	uuid, err := authDomain.NewUserUUID(user.UUID)
 	if err != nil {
-		return nil, errors.Wrap(err, "could not create user uuid")
+		return authDomain.User{}, errors.Wrap(err, "could not create user uuid")
 	}
 
-	var sessions []auth.Session
+	username, err := authDomain.NewUsername(user.Username)
+	if err != nil {
+		return authDomain.User{}, errors.Wrap(err, "could not create username")
+	}
+
+	displayName, err := authDomain.NewDisplayName(user.DisplayName)
+	if err != nil {
+		return authDomain.User{}, errors.Wrap(err, "could not create display name")
+	}
+
+	var sessions []authDomain.Session
 
 	for _, session := range user.Sessions {
-		sessions = append(sessions, auth.Session{
-			Token:    auth.AccessToken(session.Token),
-			LastSeen: session.LastSeen,
-		})
+		session, err := authDomain.NewSession(
+			authDomain.AccessToken(session.Token),
+			session.LastSeen,
+		)
+		if err != nil {
+			return authDomain.User{}, errors.Wrap(err, "could not create a session")
+		}
+
+		sessions = append(sessions, session)
 	}
 
-	return &auth.User{
-		UUID:          uuid,
-		Username:      user.Username,
-		DisplayName:   user.DisplayName,
-		Password:      user.Password,
-		Administrator: user.Administrator,
-		Created:       user.Created,
-		LastSeen:      user.LastSeen,
-		Sessions:      sessions,
-	}, nil
+	return authDomain.NewHistoricalUser(
+		uuid,
+		username,
+		displayName,
+		authDomain.PasswordHash(user.Password),
+		user.Administrator,
+		user.Created,
+		user.LastSeen,
+		sessions,
+	)
 }

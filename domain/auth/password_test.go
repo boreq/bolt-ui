@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestValidatedPassword(t *testing.T) {
+func TestPassword(t *testing.T) {
 	testCases := []struct {
 		Password      string
 		ExpectedError error
@@ -29,7 +29,7 @@ func TestValidatedPassword(t *testing.T) {
 
 	for _, testCase := range testCases {
 		t.Run(testCase.Password, func(t *testing.T) {
-			_, err := NewValidatedPassword(testCase.Password)
+			_, err := NewPassword(testCase.Password)
 			if testCase.ExpectedError == nil {
 				require.NoError(t, err)
 			} else {

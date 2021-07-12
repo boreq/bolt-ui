@@ -20,7 +20,7 @@ func NewGetUserHandler(transactionProvider TransactionProvider) *GetUserHandler 
 }
 
 func (h *GetUserHandler) Execute(query GetUser) (auth.ReadUser, error) {
-	var user User
+	var user auth.User
 	if err := h.transactionProvider.Read(func(r *TransactableRepositories) error {
 		u, err := r.Users.Get(query.Username)
 		if err != nil {
@@ -31,5 +31,5 @@ func (h *GetUserHandler) Execute(query GetUser) (auth.ReadUser, error) {
 	}); err != nil {
 		return auth.ReadUser{}, errors.Wrap(err, "transaction failed")
 	}
-	return toReadUser(user), nil
+	return user.AsReadUser(), nil
 }

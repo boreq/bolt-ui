@@ -35,7 +35,7 @@ func (h *Handler) putUser(r *http.Request) rest.RestResponse {
 		return rest.ErrBadRequest.WithMessage("Malformed input.")
 	}
 
-	displayName, err := authDomain.NewValidatedDisplayName(t.DisplayName)
+	displayName, err := authDomain.NewDisplayName(t.DisplayName)
 	if err != nil {
 		return rest.ErrBadRequest.WithMessage("Invalid display name.")
 	}

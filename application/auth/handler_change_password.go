@@ -11,7 +11,7 @@ var ErrChangingPasswordForbidden = errors.New("this user can not change this pas
 type ChangePassword struct {
 	Username    string
 	OldPassword string
-	NewPassword auth.ValidatedPassword
+	NewPassword auth.Password
 	AsUser      *auth.ReadUser
 }
 
@@ -46,7 +46,7 @@ func (h *ChangePasswordHandler) Execute(cmd ChangePassword) error {
 			return errors.Wrap(err, "could not get the user")
 		}
 
-		ok, err := permissions.CanChangePassword(toReadUser(*u), cmd.AsUser)
+		ok, err := permissions.CanChangePassword(u.AsReadUser(), cmd.AsUser)
 		if err != nil {
 			return errors.Wrap(err, "permission check failed")
 		}
@@ -55,11 +55,13 @@ func (h *ChangePasswordHandler) Execute(cmd ChangePassword) error {
 			return ErrChangingPasswordForbidden
 		}
 
-		if err := h.passwordHasher.Compare(u.Password, cmd.OldPassword); err != nil {
+		if err := h.passwordHasher.Compare(u.Password(), cmd.OldPassword); err != nil {
 			return errors.Wrap(ErrUnauthorized, "invalid password")
 		}
 
-		u.Password = passwordHash
+		if err := u.ChangePassword(passwordHash); err != nil {
+			return errors.Wrap(err, "could not change the password")
+		}
 
 		return r.Users.Put(*u)
 	})

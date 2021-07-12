@@ -16,7 +16,7 @@ func NewListHandler(transactionProvider TransactionProvider) *ListHandler {
 }
 
 func (h *ListHandler) Execute() ([]auth.ReadUser, error) {
-	var users []User
+	var users []auth.User
 	if err := h.transactionProvider.Read(func(r *TransactableRepositories) error {
 		u, err := r.Users.List()
 		if err != nil {

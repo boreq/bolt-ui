@@ -4,7 +4,6 @@ import (
 	"sort"
 	"testing"
 
-	appAuth "github.com/boreq/velo/application/auth"
 	"github.com/boreq/velo/application/tracker"
 	"github.com/boreq/velo/domain"
 	"github.com/boreq/velo/domain/auth"
@@ -25,17 +24,15 @@ func TestAddActivity(t *testing.T) {
 	gpxFile, cleanupFile := fixture.TestDataFile(t, testRouteFile)
 	defer cleanupFile()
 
-	userUUID := auth.MustNewUserUUID("user-uuid")
 	visibility := domain.PublicActivityVisibility
 	title := domain.MustNewActivityTitle("title")
 
-	testTracker.UserRepository.Users[userUUID] = appAuth.User{
-		Username: "username",
-	}
+	user := mockUser()
+	testTracker.UserRepository.Users[user.UUID()] = user
 
 	cmd := tracker.AddActivity{
 		RouteFile:  gpxFile,
-		UserUUID:   userUUID,
+		UserUUID:   user.UUID(),
 		Visibility: visibility,
 		Title:      title,
 	}
@@ -55,7 +52,7 @@ func TestAddActivity(t *testing.T) {
 
 	require.False(t, result.Activity.UUID().IsZero())
 	require.False(t, result.Activity.RouteUUID().IsZero())
-	require.Equal(t, userUUID, result.Activity.UserUUID())
+	require.Equal(t, user.UUID(), result.Activity.UserUUID())
 	require.Equal(t, visibility, result.Activity.Visibility())
 	require.Equal(t, title, result.Activity.Title())
 
@@ -67,7 +64,7 @@ func TestAddActivity(t *testing.T) {
 	// test list
 	activities, err := tr.ListUserActivities.Execute(
 		tracker.ListUserActivities{
-			UserUUID: userUUID,
+			UserUUID: user.UUID(),
 		},
 	)
 	require.NoError(t, err)
@@ -84,11 +81,8 @@ func TestListUserActivities(t *testing.T) {
 
 	tr := testTracker.Tracker
 
-	userUUID := auth.MustNewUserUUID("user-uuid")
-
-	testTracker.UserRepository.Users[userUUID] = appAuth.User{
-		Username: "username",
-	}
+	user := mockUser()
+	testTracker.UserRepository.Users[user.UUID()] = user
 
 	var activityUUIDs []domain.ActivityUUID
 
@@ -98,7 +92,7 @@ func TestListUserActivities(t *testing.T) {
 
 		cmd := tracker.AddActivity{
 			RouteFile:  gpxFile,
-			UserUUID:   userUUID,
+			UserUUID:   user.UUID(),
 			Visibility: domain.PublicActivityVisibility,
 		}
 
@@ -121,7 +115,7 @@ func TestListUserActivities(t *testing.T) {
 	// page1 (initial)
 	activities, err := tr.ListUserActivities.Execute(
 		tracker.ListUserActivities{
-			UserUUID: userUUID,
+			UserUUID: user.UUID(),
 		},
 	)
 	require.NoError(t, err)
@@ -134,7 +128,7 @@ func TestListUserActivities(t *testing.T) {
 	// page2 (from page1)
 	activities, err = tr.ListUserActivities.Execute(
 		tracker.ListUserActivities{
-			UserUUID:   userUUID,
+			UserUUID:   user.UUID(),
 			StartAfter: &afterUUID,
 		},
 	)
@@ -148,7 +142,7 @@ func TestListUserActivities(t *testing.T) {
 	// page3 (from page2)
 	activities, err = tr.ListUserActivities.Execute(
 		tracker.ListUserActivities{
-			UserUUID:   userUUID,
+			UserUUID:   user.UUID(),
 			StartAfter: &afterUUID,
 		},
 	)
@@ -162,7 +156,7 @@ func TestListUserActivities(t *testing.T) {
 	// page2 (from page3)
 	activities, err = tr.ListUserActivities.Execute(
 		tracker.ListUserActivities{
-			UserUUID:    userUUID,
+			UserUUID:    user.UUID(),
 			StartBefore: &beforeUUID,
 		},
 	)
@@ -176,7 +170,7 @@ func TestListUserActivities(t *testing.T) {
 	// page1 (from page2)
 	activities, err = tr.ListUserActivities.Execute(
 		tracker.ListUserActivities{
-			UserUUID:    userUUID,
+			UserUUID:    user.UUID(),
 			StartBefore: &beforeUUID,
 		},
 	)
@@ -243,21 +237,20 @@ func TestActivityPermissions(t *testing.T) {
 			gpxFile, cleanupFile := fixture.TestDataFile(t, testRouteFile)
 			defer cleanupFile()
 
-			user := auth.ReadUser{
-				UUID: auth.MustNewUserUUID("user-uuid"),
+			user := mockUser()
+			testTracker.UserRepository.Users[user.UUID()] = user
+
+			readUser := auth.ReadUser{
+				UUID: user.UUID(),
 			}
 
-			otherUser := auth.ReadUser{
+			readOtherUser := auth.ReadUser{
 				UUID: auth.MustNewUserUUID("other-user-uuid"),
-			}
-
-			testTracker.UserRepository.Users[user.UUID] = appAuth.User{
-				Username: "username",
 			}
 
 			cmd := tracker.AddActivity{
 				RouteFile:  gpxFile,
-				UserUUID:   user.UUID,
+				UserUUID:   user.UUID(),
 				Visibility: testCase.Visibility,
 			}
 
@@ -283,7 +276,7 @@ func TestActivityPermissions(t *testing.T) {
 				_, err = tr.GetActivity.Execute(
 					tracker.GetActivity{
 						ActivityUUID: activityUUID,
-						AsUser:       &otherUser,
+						AsUser:       &readOtherUser,
 					},
 				)
 
@@ -298,7 +291,7 @@ func TestActivityPermissions(t *testing.T) {
 				_, err = tr.GetActivity.Execute(
 					tracker.GetActivity{
 						ActivityUUID: activityUUID,
-						AsUser:       &user,
+						AsUser:       &readUser,
 					},
 				)
 
@@ -312,7 +305,7 @@ func TestActivityPermissions(t *testing.T) {
 			t.Run("list unauthorised", func(t *testing.T) {
 				result, err := tr.ListUserActivities.Execute(
 					tracker.ListUserActivities{
-						UserUUID: user.UUID,
+						UserUUID: user.UUID(),
 						AsUser:   nil,
 					},
 				)
@@ -328,8 +321,8 @@ func TestActivityPermissions(t *testing.T) {
 			t.Run("list other", func(t *testing.T) {
 				result, err := tr.ListUserActivities.Execute(
 					tracker.ListUserActivities{
-						UserUUID: user.UUID,
-						AsUser:   &otherUser,
+						UserUUID: user.UUID(),
+						AsUser:   &readOtherUser,
 					},
 				)
 				require.NoError(t, err)
@@ -344,8 +337,8 @@ func TestActivityPermissions(t *testing.T) {
 			t.Run("list owner", func(t *testing.T) {
 				result, err := tr.ListUserActivities.Execute(
 					tracker.ListUserActivities{
-						UserUUID: user.UUID,
-						AsUser:   &user,
+						UserUUID: user.UUID(),
+						AsUser:   &readUser,
 					},
 				)
 				require.NoError(t, err)
@@ -401,13 +394,12 @@ func TestEditActivityPermissions(t *testing.T) {
 			gpxFile, cleanupFile := fixture.TestDataFile(t, testRouteFile)
 			defer cleanupFile()
 
-			testTracker.UserRepository.Users[user.UUID] = appAuth.User{
-				Username: "username",
-			}
+			user := mockUser()
+			testTracker.UserRepository.Users[user.UUID()] = user
 
 			cmd := tracker.AddActivity{
 				RouteFile:  gpxFile,
-				UserUUID:   user.UUID,
+				UserUUID:   user.UUID(),
 				Title:      domain.MustNewActivityTitle("title"),
 				Visibility: domain.PublicActivityVisibility,
 			}
@@ -434,10 +426,6 @@ func TestEditActivityPermissions(t *testing.T) {
 }
 
 func TestEditActivity(t *testing.T) {
-	user := auth.ReadUser{
-		UUID: auth.MustNewUserUUID("user-uuid"),
-	}
-
 	testTracker, cleanupTracker := NewTracker(t)
 	defer cleanupTracker()
 
@@ -446,16 +434,17 @@ func TestEditActivity(t *testing.T) {
 	gpxFile, cleanupFile := fixture.TestDataFile(t, testRouteFile)
 	defer cleanupFile()
 
-	testTracker.UserRepository.Users[user.UUID] = appAuth.User{
-		Username: "username",
-	}
+	user := mockUser()
+	testTracker.UserRepository.Users[user.UUID()] = user
+
+	readUser := user.AsReadUser()
 
 	initialTitle := domain.MustNewActivityTitle("title")
 	initialVisibility := domain.PublicActivityVisibility
 
 	cmd := tracker.AddActivity{
 		RouteFile:  gpxFile,
-		UserUUID:   user.UUID,
+		UserUUID:   user.UUID(),
 		Title:      initialTitle,
 		Visibility: initialVisibility,
 	}
@@ -466,7 +455,7 @@ func TestEditActivity(t *testing.T) {
 	activity, err := tr.GetActivity.Execute(
 		tracker.GetActivity{
 			ActivityUUID: activityUUID,
-			AsUser:       &user,
+			AsUser:       &readUser,
 		},
 	)
 	require.NoError(t, err)
@@ -483,7 +472,7 @@ func TestEditActivity(t *testing.T) {
 	err = tr.EditActivity.Execute(
 		tracker.EditActivity{
 			ActivityUUID: activityUUID,
-			AsUser:       &user,
+			AsUser:       &readUser,
 			Title:        newTitle,
 			Visibility:   newVisibility,
 		},
@@ -493,7 +482,7 @@ func TestEditActivity(t *testing.T) {
 	activity, err = tr.GetActivity.Execute(
 		tracker.GetActivity{
 			ActivityUUID: activityUUID,
-			AsUser:       &user,
+			AsUser:       &readUser,
 		},
 	)
 	require.NoError(t, err)
@@ -503,10 +492,6 @@ func TestEditActivity(t *testing.T) {
 }
 
 func TestEditActivityWithoutChangesShouldNotReturnAnError(t *testing.T) {
-	user := auth.ReadUser{
-		UUID: auth.MustNewUserUUID("user-uuid"),
-	}
-
 	testTracker, cleanupTracker := NewTracker(t)
 	defer cleanupTracker()
 
@@ -515,16 +500,17 @@ func TestEditActivityWithoutChangesShouldNotReturnAnError(t *testing.T) {
 	gpxFile, cleanupFile := fixture.TestDataFile(t, testRouteFile)
 	defer cleanupFile()
 
-	testTracker.UserRepository.Users[user.UUID] = appAuth.User{
-		Username: "username",
-	}
+	user := mockUser()
+	testTracker.UserRepository.Users[user.UUID()] = user
+
+	readUser := user.AsReadUser()
 
 	initialTitle := domain.MustNewActivityTitle("title")
 	initialVisibility := domain.PublicActivityVisibility
 
 	cmd := tracker.AddActivity{
 		RouteFile:  gpxFile,
-		UserUUID:   user.UUID,
+		UserUUID:   user.UUID(),
 		Title:      initialTitle,
 		Visibility: initialVisibility,
 	}
@@ -535,7 +521,7 @@ func TestEditActivityWithoutChangesShouldNotReturnAnError(t *testing.T) {
 	err = tr.EditActivity.Execute(
 		tracker.EditActivity{
 			ActivityUUID: activityUUID,
-			AsUser:       &user,
+			AsUser:       &readUser,
 			Title:        initialTitle,
 			Visibility:   initialVisibility,
 		},
@@ -584,13 +570,12 @@ func TestDeleteActivityPermissions(t *testing.T) {
 			gpxFile, cleanupFile := fixture.TestDataFile(t, testRouteFile)
 			defer cleanupFile()
 
-			testTracker.UserRepository.Users[user.UUID] = appAuth.User{
-				Username: "username",
-			}
+			user := mockUser()
+			testTracker.UserRepository.Users[user.UUID()] = user
 
 			cmd := tracker.AddActivity{
 				RouteFile:  gpxFile,
-				UserUUID:   user.UUID,
+				UserUUID:   user.UUID(),
 				Title:      domain.MustNewActivityTitle("title"),
 				Visibility: domain.PublicActivityVisibility,
 			}
@@ -615,10 +600,6 @@ func TestDeleteActivityPermissions(t *testing.T) {
 }
 
 func TestDeleteActivity(t *testing.T) {
-	user := auth.ReadUser{
-		UUID: auth.MustNewUserUUID("user-uuid"),
-	}
-
 	testTracker, cleanupTracker := NewTracker(t)
 	defer cleanupTracker()
 
@@ -627,13 +608,13 @@ func TestDeleteActivity(t *testing.T) {
 	gpxFile, cleanupFile := fixture.TestDataFile(t, testRouteFile)
 	defer cleanupFile()
 
-	testTracker.UserRepository.Users[user.UUID] = appAuth.User{
-		Username: "username",
-	}
+	user := mockUser()
+	testTracker.UserRepository.Users[user.UUID()] = user
+	readUser := user.AsReadUser()
 
 	cmd := tracker.AddActivity{
 		RouteFile:  gpxFile,
-		UserUUID:   user.UUID,
+		UserUUID:   user.UUID(),
 		Title:      domain.MustNewActivityTitle("title"),
 		Visibility: domain.PublicActivityVisibility,
 	}
@@ -644,14 +625,14 @@ func TestDeleteActivity(t *testing.T) {
 	_, err = tr.GetActivity.Execute(
 		tracker.GetActivity{
 			ActivityUUID: activityUUID,
-			AsUser:       &user,
+			AsUser:       &readUser,
 		},
 	)
 	require.NoError(t, err)
 
 	activities, err := tr.ListUserActivities.Execute(
 		tracker.ListUserActivities{
-			UserUUID: user.UUID,
+			UserUUID: user.UUID(),
 		},
 	)
 	require.NoError(t, err)
@@ -660,7 +641,7 @@ func TestDeleteActivity(t *testing.T) {
 	err = tr.DeleteActivity.Execute(
 		tracker.DeleteActivity{
 			ActivityUUID: activityUUID,
-			AsUser:       &user,
+			AsUser:       &readUser,
 		},
 	)
 	require.NoError(t, err)
@@ -668,14 +649,14 @@ func TestDeleteActivity(t *testing.T) {
 	_, err = tr.GetActivity.Execute(
 		tracker.GetActivity{
 			ActivityUUID: activityUUID,
-			AsUser:       &user,
+			AsUser:       &readUser,
 		},
 	)
 	require.ErrorIs(t, err, tracker.ErrActivityNotFound)
 
 	activities, err = tr.ListUserActivities.Execute(
 		tracker.ListUserActivities{
-			UserUUID: user.UUID,
+			UserUUID: user.UUID(),
 		},
 	)
 	require.NoError(t, err)
@@ -710,21 +691,17 @@ func TestApplyPrivacyZones(t *testing.T) {
 	gpxFile, cleanupFile := fixture.TestDataFile(t, testRouteFile)
 	defer cleanupFile()
 
-	user := auth.ReadUser{
-		UUID: auth.MustNewUserUUID("user-uuid"),
-	}
+	user := mockUser()
+	testTracker.UserRepository.Users[user.UUID()] = user
+	readUser := user.AsReadUser()
 
 	otherUser := auth.ReadUser{
 		UUID: auth.MustNewUserUUID("other-user-uuid"),
 	}
 
-	testTracker.UserRepository.Users[user.UUID] = appAuth.User{
-		Username: "username",
-	}
-
 	cmd := tracker.AddActivity{
 		RouteFile:  gpxFile,
-		UserUUID:   user.UUID,
+		UserUUID:   user.UUID(),
 		Visibility: domain.PublicActivityVisibility,
 	}
 
@@ -747,7 +724,7 @@ func TestApplyPrivacyZones(t *testing.T) {
 	name := domain.MustNewPrivacyZoneName("Privacy zone")
 
 	privacyZoneCmd := tracker.AddPrivacyZone{
-		UserUUID: user.UUID,
+		UserUUID: user.UUID(),
 		Position: position,
 		Circle:   circle,
 		Name:     name,
@@ -773,7 +750,7 @@ func TestApplyPrivacyZones(t *testing.T) {
 		},
 		{
 			Name:           "owner",
-			AsUser:         &user,
+			AsUser:         &readUser,
 			ExpectedPoints: 481,
 		},
 	}
@@ -794,7 +771,7 @@ func TestApplyPrivacyZones(t *testing.T) {
 			t.Run("list", func(t *testing.T) {
 				result, err := tr.ListUserActivities.Execute(
 					tracker.ListUserActivities{
-						UserUUID: user.UUID,
+						UserUUID: user.UUID(),
 						AsUser:   testCase.AsUser,
 					},
 				)
@@ -813,7 +790,7 @@ func TestAddAndDeletePrivacyZone(t *testing.T) {
 
 	tr := testTracker.Tracker
 
-	userUUID := auth.MustNewUserUUID("user-uuid")
+	user := mockUser()
 
 	position := domain.NewPosition(
 		domain.MustNewLatitude(48.20952),
@@ -831,7 +808,7 @@ func TestAddAndDeletePrivacyZone(t *testing.T) {
 	name := domain.MustNewPrivacyZoneName("Privacy zone")
 
 	cmd := tracker.AddPrivacyZone{
-		UserUUID: userUUID,
+		UserUUID: user.UUID(),
 		Position: position,
 		Circle:   circle,
 		Name:     name,
@@ -847,7 +824,7 @@ func TestAddAndDeletePrivacyZone(t *testing.T) {
 		tracker.GetPrivacyZone{
 			PrivacyZoneUUID: privacyZoneUUID,
 			AsUser: &auth.ReadUser{
-				UUID: userUUID,
+				UUID: user.UUID(),
 			},
 		},
 	)
@@ -856,9 +833,9 @@ func TestAddAndDeletePrivacyZone(t *testing.T) {
 	// test list
 	zones, err := tr.ListUserPrivacyZones.Execute(
 		tracker.ListUserPrivacyZones{
-			UserUUID: userUUID,
+			UserUUID: user.UUID(),
 			AsUser: &auth.ReadUser{
-				UUID: userUUID,
+				UUID: user.UUID(),
 			},
 		},
 	)
@@ -870,7 +847,7 @@ func TestAddAndDeletePrivacyZone(t *testing.T) {
 		tracker.DeletePrivacyZone{
 			PrivacyZoneUUID: privacyZoneUUID,
 			AsUser: &auth.ReadUser{
-				UUID: userUUID,
+				UUID: user.UUID(),
 			},
 		},
 	)
@@ -881,7 +858,7 @@ func TestAddAndDeletePrivacyZone(t *testing.T) {
 		tracker.GetPrivacyZone{
 			PrivacyZoneUUID: privacyZoneUUID,
 			AsUser: &auth.ReadUser{
-				UUID: userUUID,
+				UUID: user.UUID(),
 			},
 		},
 	)
@@ -890,9 +867,9 @@ func TestAddAndDeletePrivacyZone(t *testing.T) {
 	// test list
 	zones, err = tr.ListUserPrivacyZones.Execute(
 		tracker.ListUserPrivacyZones{
-			UserUUID: userUUID,
+			UserUUID: user.UUID(),
 			AsUser: &auth.ReadUser{
-				UUID: userUUID,
+				UUID: user.UUID(),
 			},
 		},
 	)
@@ -985,17 +962,13 @@ func TestPrivacyZonesPermissions(t *testing.T) {
 
 	tr := testTracker.Tracker
 
-	user := auth.ReadUser{
-		UUID: auth.MustNewUserUUID("user-uuid"),
-	}
-
 	otherUser := auth.ReadUser{
 		UUID: auth.MustNewUserUUID("other-user-uuid"),
 	}
 
-	testTracker.UserRepository.Users[user.UUID] = appAuth.User{
-		Username: "username",
-	}
+	user := mockUser()
+	testTracker.UserRepository.Users[user.UUID()] = user
+	readUser := user.AsReadUser()
 
 	position := domain.NewPosition(
 		domain.MustNewLatitude(48.20952),
@@ -1013,7 +986,7 @@ func TestPrivacyZonesPermissions(t *testing.T) {
 	name := domain.MustNewPrivacyZoneName("Privacy zone")
 
 	cmd := tracker.AddPrivacyZone{
-		UserUUID: user.UUID,
+		UserUUID: user.UUID(),
 		Position: position,
 		Circle:   circle,
 		Name:     name,
@@ -1048,7 +1021,7 @@ func TestPrivacyZonesPermissions(t *testing.T) {
 		_, err = tr.GetPrivacyZone.Execute(
 			tracker.GetPrivacyZone{
 				PrivacyZoneUUID: privacyZoneUUID,
-				AsUser:          &user,
+				AsUser:          &readUser,
 			},
 		)
 
@@ -1058,7 +1031,7 @@ func TestPrivacyZonesPermissions(t *testing.T) {
 	t.Run("list unauthorised", func(t *testing.T) {
 		_, err := tr.ListUserPrivacyZones.Execute(
 			tracker.ListUserPrivacyZones{
-				UserUUID: user.UUID,
+				UserUUID: user.UUID(),
 				AsUser:   nil,
 			},
 		)
@@ -1069,7 +1042,7 @@ func TestPrivacyZonesPermissions(t *testing.T) {
 	t.Run("list other", func(t *testing.T) {
 		_, err := tr.ListUserPrivacyZones.Execute(
 			tracker.ListUserPrivacyZones{
-				UserUUID: user.UUID,
+				UserUUID: user.UUID(),
 				AsUser:   &otherUser,
 			},
 		)
@@ -1080,8 +1053,8 @@ func TestPrivacyZonesPermissions(t *testing.T) {
 	t.Run("list owner", func(t *testing.T) {
 		result, err := tr.ListUserPrivacyZones.Execute(
 			tracker.ListUserPrivacyZones{
-				UserUUID: user.UUID,
-				AsUser:   &user,
+				UserUUID: user.UUID(),
+				AsUser:   &readUser,
 			},
 		)
 
@@ -1102,16 +1075,14 @@ func TestStravaExport(t *testing.T) {
 	fi, err := stravaExportFile.Stat()
 	require.NoError(t, err)
 
-	userUUID := auth.MustNewUserUUID("user-uuid")
-
-	testTracker.UserRepository.Users[userUUID] = appAuth.User{
-		Username: "username",
-	}
+	user := mockUser()
+	testTracker.UserRepository.Users[user.UUID()] = user
+	readUser := user.AsReadUser()
 
 	cmd := tracker.ImportStrava{
 		Archive:     stravaExportFile,
 		ArchiveSize: fi.Size(),
-		UserUUID:    userUUID,
+		UserUUID:    user.UUID(),
 	}
 
 	err = tr.ImportStrava.Execute(cmd)
@@ -1120,10 +1091,8 @@ func TestStravaExport(t *testing.T) {
 	// test list
 	activities, err := tr.ListUserActivities.Execute(
 		tracker.ListUserActivities{
-			UserUUID: userUUID,
-			AsUser: &auth.ReadUser{
-				UUID: userUUID,
-			},
+			UserUUID: user.UUID(),
+			AsUser:   &readUser,
 		},
 	)
 	require.NoError(t, err)
@@ -1156,4 +1125,14 @@ func toUUIDs(activities []tracker.Activity) []domain.ActivityUUID {
 	}
 
 	return uuids
+}
+
+func mockUser() auth.User {
+	return auth.MustNewUser(
+		auth.MustNewUserUUID("user-uuid"),
+		auth.MustNewUsername("username"),
+		auth.MustNewDisplayName("display-name"),
+		auth.PasswordHash("made-up"),
+		false,
+	)
 }

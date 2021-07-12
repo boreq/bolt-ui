@@ -51,10 +51,10 @@ func (r *UUIDToUsernameRepository) Get(uuid authDomain.UserUUID) (string, error)
 	return string(u), nil
 }
 
-func (r *UUIDToUsernameRepository) Put(uuid authDomain.UserUUID, username string) error {
+func (r *UUIDToUsernameRepository) Put(uuid authDomain.UserUUID, username authDomain.Username) error {
 	b := r.tx.Bucket(r.bucket)
 	if b == nil {
 		return errors.New("bucket does not exist")
 	}
-	return b.Put([]byte(uuid.String()), []byte(username))
+	return b.Put([]byte(uuid.String()), []byte(username.String()))
 }

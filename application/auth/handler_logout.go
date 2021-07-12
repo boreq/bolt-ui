@@ -1,9 +1,12 @@
 package auth
 
-import "github.com/pkg/errors"
+import (
+	"github.com/boreq/velo/domain/auth"
+	"github.com/pkg/errors"
+)
 
 type Logout struct {
-	Token AccessToken
+	Token auth.AccessToken
 }
 
 type LogoutHandler struct {
@@ -33,14 +36,11 @@ func (h *LogoutHandler) Execute(cmd Logout) error {
 			return errors.Wrap(err, "could not get the user")
 		}
 
-		for i := range u.Sessions {
-			if u.Sessions[i].Token == cmd.Token {
-				u.Sessions = append(u.Sessions[:i], u.Sessions[i+1:]...)
-				return r.Users.Put(*u)
-			}
+		if err := u.Logout(cmd.Token); err != nil {
+			return errors.Wrap(err, "could not log out the user")
 		}
 
-		return errors.New("session not found")
+		return r.Users.Put(*u)
 	}); err != nil {
 		return errors.Wrap(err, "transaction failed")
 	}
