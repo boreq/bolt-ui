@@ -28,6 +28,7 @@ var authSet = wire.NewSet(
 	auth.NewSetPasswordHandler,
 	auth.NewGetUserHandler,
 	auth.NewUpdateProfileHandler,
+	auth.NewChangePasswordHandler,
 
 	authRepositoriesSet,
 	authTransactableRepositoriesSet,

@@ -720,6 +720,131 @@ func TestUpdateProfilePermissions(t *testing.T) {
 	}
 }
 
+func TestChangePassword(t *testing.T) {
+	const username = "username"
+	const password = "password"
+
+	a, cleanup := NewAuth(t)
+	defer cleanup()
+
+	// register
+	err := a.RegisterInitial.Execute(
+		auth.RegisterInitial{
+			Username: authDomain.MustNewValidatedUsername(username),
+			Password: authDomain.MustNewValidatedPassword(password),
+		},
+	)
+	require.NoError(t, err)
+
+	// get
+	user, err := a.GetUser.Execute(
+		auth.GetUser{
+			Username: username,
+		},
+	)
+	require.NoError(t, err)
+
+	// login
+	const newPassword = "new-password"
+	_, err = a.Login.Execute(
+		auth.Login{
+			Username: username,
+			Password: newPassword,
+		},
+	)
+	require.ErrorIs(t, err, auth.ErrUnauthorized)
+
+	// change password
+	err = a.ChangePassword.Execute(
+		auth.ChangePassword{
+			Username:    username,
+			OldPassword: password,
+			NewPassword: authDomain.MustNewValidatedPassword(newPassword),
+			AsUser: &authDomain.ReadUser{
+				UUID: user.UUID,
+			},
+		},
+	)
+	require.NoError(t, err)
+
+	// login
+	_, err = a.Login.Execute(
+		auth.Login{
+			Username: username,
+			Password: newPassword,
+		},
+	)
+	require.NoError(t, err)
+}
+
+func TestChangePasswordPermissions(t *testing.T) {
+	const username = "username"
+	const password = "password"
+
+	a, cleanup := NewAuth(t)
+	defer cleanup()
+
+	err := a.RegisterInitial.Execute(
+		auth.RegisterInitial{
+			Username: authDomain.MustNewValidatedUsername(username),
+			Password: authDomain.MustNewValidatedPassword(password),
+		},
+	)
+	require.NoError(t, err)
+
+	user, err := a.GetUser.Execute(
+		auth.GetUser{
+			Username: username,
+		},
+	)
+	require.NoError(t, err)
+
+	testCases := []struct {
+		Name    string
+		User    *authDomain.ReadUser
+		CanEdit bool
+	}{
+		{
+			Name:    "unauthorized_user",
+			User:    nil,
+			CanEdit: false,
+		},
+		{
+			Name: "other_user",
+			User: &authDomain.ReadUser{
+				UUID: authDomain.MustNewUserUUID("other-user-uuid"),
+			},
+			CanEdit: false,
+		},
+		{
+			Name: "user",
+			User: &authDomain.ReadUser{
+				UUID: user.UUID,
+			},
+			CanEdit: true,
+		},
+	}
+
+	for _, testCase := range testCases {
+		t.Run(testCase.Name, func(t *testing.T) {
+			err = a.ChangePassword.Execute(
+				auth.ChangePassword{
+					Username:    username,
+					OldPassword: password,
+					NewPassword: authDomain.MustNewValidatedPassword(password),
+					AsUser:      testCase.User,
+				},
+			)
+
+			if testCase.CanEdit {
+				require.NoError(t, err)
+			} else {
+				require.ErrorIs(t, err, auth.ErrChangingPasswordForbidden)
+			}
+		})
+	}
+}
+
 func NewAuth(t *testing.T) (*auth.Auth, fixture.CleanupFunc) {
 	db, cleanup := fixture.Bolt(t)
 

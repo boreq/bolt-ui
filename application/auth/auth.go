@@ -113,6 +113,7 @@ type Auth struct {
 	SetPassword      *SetPasswordHandler
 	GetUser          *GetUserHandler
 	UpdateProfile    *UpdateProfileHandler
+	ChangePassword   *ChangePasswordHandler
 }
 
 func toReadUsers(users []User) []auth.ReadUser {

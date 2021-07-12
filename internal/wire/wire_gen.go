@@ -171,6 +171,7 @@ func BuildAuthForTest(db *bbolt.DB) (*auth.Auth, error) {
 	setPasswordHandler := auth.NewSetPasswordHandler(bcryptPasswordHasher, authTransactionProvider)
 	getUserHandler := auth.NewGetUserHandler(authTransactionProvider)
 	updateProfileHandler := auth.NewUpdateProfileHandler(authTransactionProvider)
+	changePasswordHandler := auth.NewChangePasswordHandler(authTransactionProvider, bcryptPasswordHasher)
 	authAuth := &auth.Auth{
 		RegisterInitial:  registerInitialHandler,
 		Register:         registerHandler,
@@ -183,6 +184,7 @@ func BuildAuthForTest(db *bbolt.DB) (*auth.Auth, error) {
 		SetPassword:      setPasswordHandler,
 		GetUser:          getUserHandler,
 		UpdateProfile:    updateProfileHandler,
+		ChangePassword:   changePasswordHandler,
 	}
 	return authAuth, nil
 }
@@ -209,6 +211,7 @@ func BuildAuth(conf *config.Config) (*auth.Auth, error) {
 	setPasswordHandler := auth.NewSetPasswordHandler(bcryptPasswordHasher, authTransactionProvider)
 	getUserHandler := auth.NewGetUserHandler(authTransactionProvider)
 	updateProfileHandler := auth.NewUpdateProfileHandler(authTransactionProvider)
+	changePasswordHandler := auth.NewChangePasswordHandler(authTransactionProvider, bcryptPasswordHasher)
 	authAuth := &auth.Auth{
 		RegisterInitial:  registerInitialHandler,
 		Register:         registerHandler,
@@ -221,6 +224,7 @@ func BuildAuth(conf *config.Config) (*auth.Auth, error) {
 		SetPassword:      setPasswordHandler,
 		GetUser:          getUserHandler,
 		UpdateProfile:    updateProfileHandler,
+		ChangePassword:   changePasswordHandler,
 	}
 	return authAuth, nil
 }
@@ -247,6 +251,7 @@ func BuildService(conf *config.Config) (*service.Service, error) {
 	setPasswordHandler := auth.NewSetPasswordHandler(bcryptPasswordHasher, authTransactionProvider)
 	getUserHandler := auth.NewGetUserHandler(authTransactionProvider)
 	updateProfileHandler := auth.NewUpdateProfileHandler(authTransactionProvider)
+	changePasswordHandler := auth.NewChangePasswordHandler(authTransactionProvider, bcryptPasswordHasher)
 	authAuth := auth.Auth{
 		RegisterInitial:  registerInitialHandler,
 		Register:         registerHandler,
@@ -259,6 +264,7 @@ func BuildService(conf *config.Config) (*service.Service, error) {
 		SetPassword:      setPasswordHandler,
 		GetUser:          getUserHandler,
 		UpdateProfile:    updateProfileHandler,
+		ChangePassword:   changePasswordHandler,
 	}
 	wireTrackerRepositoriesProvider := newTrackerRepositoriesProvider()
 	trackerTransactionProvider := tracker2.NewTrackerTransactionProvider(db, wireTrackerRepositoriesProvider)
