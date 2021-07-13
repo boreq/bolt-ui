@@ -16,7 +16,7 @@ func TestSafeRoute(t *testing.T) {
 			domain.MustNewLatitude(10),
 			domain.MustNewLongitude(10),
 		),
-		domain.NewAltitude(10),
+		domain.MustNewAltitude(10),
 	)
 	require.NoError(t, err)
 
@@ -26,7 +26,7 @@ func TestSafeRoute(t *testing.T) {
 			domain.MustNewLatitude(20),
 			domain.MustNewLongitude(20),
 		),
-		domain.NewAltitude(10),
+		domain.MustNewAltitude(10),
 	)
 	require.NoError(t, err)
 
@@ -36,7 +36,7 @@ func TestSafeRoute(t *testing.T) {
 			domain.MustNewLatitude(30),
 			domain.MustNewLongitude(30),
 		),
-		domain.NewAltitude(10),
+		domain.MustNewAltitude(10),
 	)
 	require.NoError(t, err)
 
@@ -79,7 +79,7 @@ func TestSafeRouteDistance(t *testing.T) {
 			domain.MustNewLatitude(10),
 			domain.MustNewLongitude(10),
 		),
-		domain.NewAltitude(10),
+		domain.MustNewAltitude(10),
 	)
 	require.NoError(t, err)
 
@@ -89,7 +89,7 @@ func TestSafeRouteDistance(t *testing.T) {
 			domain.MustNewLatitude(20),
 			domain.MustNewLongitude(20),
 		),
-		domain.NewAltitude(10),
+		domain.MustNewAltitude(10),
 	)
 	require.NoError(t, err)
 
@@ -99,7 +99,7 @@ func TestSafeRouteDistance(t *testing.T) {
 			domain.MustNewLatitude(30),
 			domain.MustNewLongitude(30),
 		),
-		domain.NewAltitude(10),
+		domain.MustNewAltitude(10),
 	)
 	require.NoError(t, err)
 

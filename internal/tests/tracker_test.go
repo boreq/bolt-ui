@@ -14,6 +14,7 @@ import (
 
 const testRouteFile = "data/strava_export_route.gpx"
 const testStravaExportFile = "data/strava_export.zip"
+const testStravaExportFileWithFit = "data/strava_export_with_fit.zip"
 
 func TestAddActivity(t *testing.T) {
 	testTracker, cleanupTracker := NewTracker(t)
@@ -31,10 +32,11 @@ func TestAddActivity(t *testing.T) {
 	testTracker.UserRepository.Users[user.UUID()] = user
 
 	cmd := tracker.AddActivity{
-		RouteFile:  gpxFile,
-		UserUUID:   user.UUID(),
-		Visibility: visibility,
-		Title:      title,
+		RouteFile:       gpxFile,
+		RouteFileFormat: tracker.RouteFileFormatGpx,
+		UserUUID:        user.UUID(),
+		Visibility:      visibility,
+		Title:           title,
 	}
 
 	activityUUID, err := tr.AddActivity.Execute(cmd)
@@ -91,9 +93,10 @@ func TestListUserActivities(t *testing.T) {
 		defer cleanupFile()
 
 		cmd := tracker.AddActivity{
-			RouteFile:  gpxFile,
-			UserUUID:   user.UUID(),
-			Visibility: domain.PublicActivityVisibility,
+			RouteFile:       gpxFile,
+			RouteFileFormat: tracker.RouteFileFormatGpx,
+			UserUUID:        user.UUID(),
+			Visibility:      domain.PublicActivityVisibility,
 		}
 
 		activityUUID, err := tr.AddActivity.Execute(cmd)
@@ -249,9 +252,10 @@ func TestActivityPermissions(t *testing.T) {
 			}
 
 			cmd := tracker.AddActivity{
-				RouteFile:  gpxFile,
-				UserUUID:   user.UUID(),
-				Visibility: testCase.Visibility,
+				RouteFile:       gpxFile,
+				RouteFileFormat: tracker.RouteFileFormatGpx,
+				UserUUID:        user.UUID(),
+				Visibility:      testCase.Visibility,
 			}
 
 			activityUUID, err := tr.AddActivity.Execute(cmd)
@@ -398,10 +402,11 @@ func TestEditActivityPermissions(t *testing.T) {
 			testTracker.UserRepository.Users[user.UUID()] = user
 
 			cmd := tracker.AddActivity{
-				RouteFile:  gpxFile,
-				UserUUID:   user.UUID(),
-				Title:      domain.MustNewActivityTitle("title"),
-				Visibility: domain.PublicActivityVisibility,
+				RouteFile:       gpxFile,
+				RouteFileFormat: tracker.RouteFileFormatGpx,
+				UserUUID:        user.UUID(),
+				Title:           domain.MustNewActivityTitle("title"),
+				Visibility:      domain.PublicActivityVisibility,
 			}
 
 			activityUUID, err := tr.AddActivity.Execute(cmd)
@@ -443,10 +448,11 @@ func TestEditActivity(t *testing.T) {
 	initialVisibility := domain.PublicActivityVisibility
 
 	cmd := tracker.AddActivity{
-		RouteFile:  gpxFile,
-		UserUUID:   user.UUID(),
-		Title:      initialTitle,
-		Visibility: initialVisibility,
+		RouteFile:       gpxFile,
+		RouteFileFormat: tracker.RouteFileFormatGpx,
+		UserUUID:        user.UUID(),
+		Title:           initialTitle,
+		Visibility:      initialVisibility,
 	}
 
 	activityUUID, err := tr.AddActivity.Execute(cmd)
@@ -509,10 +515,11 @@ func TestEditActivityWithoutChangesShouldNotReturnAnError(t *testing.T) {
 	initialVisibility := domain.PublicActivityVisibility
 
 	cmd := tracker.AddActivity{
-		RouteFile:  gpxFile,
-		UserUUID:   user.UUID(),
-		Title:      initialTitle,
-		Visibility: initialVisibility,
+		RouteFile:       gpxFile,
+		RouteFileFormat: tracker.RouteFileFormatGpx,
+		UserUUID:        user.UUID(),
+		Title:           initialTitle,
+		Visibility:      initialVisibility,
 	}
 
 	activityUUID, err := tr.AddActivity.Execute(cmd)
@@ -574,10 +581,11 @@ func TestDeleteActivityPermissions(t *testing.T) {
 			testTracker.UserRepository.Users[user.UUID()] = user
 
 			cmd := tracker.AddActivity{
-				RouteFile:  gpxFile,
-				UserUUID:   user.UUID(),
-				Title:      domain.MustNewActivityTitle("title"),
-				Visibility: domain.PublicActivityVisibility,
+				RouteFile:       gpxFile,
+				RouteFileFormat: tracker.RouteFileFormatGpx,
+				UserUUID:        user.UUID(),
+				Title:           domain.MustNewActivityTitle("title"),
+				Visibility:      domain.PublicActivityVisibility,
 			}
 
 			activityUUID, err := tr.AddActivity.Execute(cmd)
@@ -613,10 +621,11 @@ func TestDeleteActivity(t *testing.T) {
 	readUser := user.AsReadUser()
 
 	cmd := tracker.AddActivity{
-		RouteFile:  gpxFile,
-		UserUUID:   user.UUID(),
-		Title:      domain.MustNewActivityTitle("title"),
-		Visibility: domain.PublicActivityVisibility,
+		RouteFile:       gpxFile,
+		RouteFileFormat: tracker.RouteFileFormatGpx,
+		UserUUID:        user.UUID(),
+		Title:           domain.MustNewActivityTitle("title"),
+		Visibility:      domain.PublicActivityVisibility,
 	}
 
 	activityUUID, err := tr.AddActivity.Execute(cmd)
@@ -700,9 +709,10 @@ func TestApplyPrivacyZones(t *testing.T) {
 	}
 
 	cmd := tracker.AddActivity{
-		RouteFile:  gpxFile,
-		UserUUID:   user.UUID(),
-		Visibility: domain.PublicActivityVisibility,
+		RouteFile:       gpxFile,
+		RouteFileFormat: tracker.RouteFileFormatGpx,
+		UserUUID:        user.UUID(),
+		Visibility:      domain.PublicActivityVisibility,
 	}
 
 	activityUUID, err := tr.AddActivity.Execute(cmd)
@@ -1064,12 +1074,73 @@ func TestPrivacyZonesPermissions(t *testing.T) {
 }
 
 func TestStravaExport(t *testing.T) {
+	testCases := []struct {
+		File string
+		Len  int
+	}{
+		{
+			File: testStravaExportFile,
+			Len:  2,
+		},
+		{
+			File: testStravaExportFileWithFit,
+			Len:  1,
+		},
+	}
+
+	for _, testCase := range testCases {
+		t.Run(testCase.File, func(t *testing.T) {
+			testTracker, cleanupTracker := NewTracker(t)
+			defer cleanupTracker()
+
+			tr := testTracker.Tracker
+
+			stravaExportFile, cleanupFile := fixture.TestDataFile(t, testCase.File)
+			defer cleanupFile()
+
+			fi, err := stravaExportFile.Stat()
+			require.NoError(t, err)
+
+			user := mockUser()
+			testTracker.UserRepository.Users[user.UUID()] = user
+			readUser := user.AsReadUser()
+
+			cmd := tracker.ImportStrava{
+				Archive:     stravaExportFile,
+				ArchiveSize: fi.Size(),
+				UserUUID:    user.UUID(),
+			}
+
+			err = tr.ImportStrava.Execute(cmd)
+			require.NoError(t, err)
+
+			// test list
+			activities, err := tr.ListUserActivities.Execute(
+				tracker.ListUserActivities{
+					UserUUID: user.UUID(),
+					AsUser:   &readUser,
+				},
+			)
+			require.NoError(t, err)
+
+			require.Len(t, activities.Activities, testCase.Len)
+			for _, activity := range activities.Activities {
+				require.Equal(t,
+					domain.PrivateActivityVisibility,
+					activity.Activity.Visibility(),
+				)
+			}
+		})
+	}
+}
+
+func TestStravaExportWithFit(t *testing.T) {
 	testTracker, cleanupTracker := NewTracker(t)
 	defer cleanupTracker()
 
 	tr := testTracker.Tracker
 
-	stravaExportFile, cleanupFile := fixture.TestDataFile(t, testStravaExportFile)
+	stravaExportFile, cleanupFile := fixture.TestDataFile(t, testStravaExportFileWithFit)
 	defer cleanupFile()
 
 	fi, err := stravaExportFile.Stat()
@@ -1097,7 +1168,7 @@ func TestStravaExport(t *testing.T) {
 	)
 	require.NoError(t, err)
 
-	require.Len(t, activities.Activities, 2)
+	require.NotEmpty(t, activities.Activities)
 	for _, activity := range activities.Activities {
 		require.Equal(t,
 			domain.PrivateActivityVisibility,

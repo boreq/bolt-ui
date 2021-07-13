@@ -6,6 +6,7 @@ import (
 	"encoding/csv"
 	"fmt"
 	"io"
+	"path"
 	"strings"
 
 	"github.com/boreq/errors"
@@ -80,9 +81,10 @@ func (s *StravaExportFileParser) loadActivities(r *zip.Reader, ch chan tracker.S
 			return errors.Wrap(err, "failed to read the csv file")
 		}
 
-		route, err := s.loadRoute(r, record)
+		filename := record[stravaActivitiesCSVFieldActivityFilename]
+		route, err := s.loadRoute(r, filename)
 		if err != nil {
-			return errors.Wrap(err, "could not load the route file")
+			return errors.Wrapf(err, "could not load the route file '%s'", filename)
 		}
 
 		title, err := s.getTitle(record)
@@ -99,8 +101,9 @@ func (s *StravaExportFileParser) loadActivities(r *zip.Reader, ch chan tracker.S
 	return nil
 }
 
-func (s *StravaExportFileParser) loadRoute(r *zip.Reader, record []string) ([]domain.Point, error) {
-	filename := record[stravaActivitiesCSVFieldActivityFilename]
+const gzSuffix = ".gz"
+
+func (s *StravaExportFileParser) loadRoute(r *zip.Reader, filename string) ([]domain.Point, error) {
 
 	var activityFile io.ReadCloser
 	var err error
@@ -112,7 +115,7 @@ func (s *StravaExportFileParser) loadRoute(r *zip.Reader, record []string) ([]do
 
 	defer activityFile.Close()
 
-	if strings.HasSuffix(filename, ".gz") {
+	if ext := path.Ext(filename); strings.EqualFold(ext, gzSuffix) {
 		gzipReader, err := gzip.NewReader(activityFile)
 		if err != nil {
 			return nil, errors.Wrap(err, "could not open a gzip reader")
@@ -121,13 +124,24 @@ func (s *StravaExportFileParser) loadRoute(r *zip.Reader, record []string) ([]do
 		defer gzipReader.Close()
 
 		activityFile = gzipReader
+
+		filename = filename[:len(filename)-len(gzSuffix)]
 	}
 
-	return s.routeFileParser.Parse(activityFile)
+	format, err := tracker.NewRouteFileFormatFromExtension(path.Ext(filename))
+	if err != nil {
+		return nil, errors.New("could not determine route file format")
+	}
+
+	return s.routeFileParser.Parse(activityFile, format)
 }
 
 func (s *StravaExportFileParser) getTitle(record []string) (domain.ActivityTitle, error) {
 	title := record[stravaActivitiesCSVFieldActivityName]
+
+	if len(title) > 50 {
+		title = title[0:47] + "..."
+	}
 
 	return domain.NewActivityTitle(title)
 }

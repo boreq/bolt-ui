@@ -121,7 +121,9 @@ func BuildTrackerForTest(db *bbolt.DB) (TestTracker, error) {
 	}
 	wireTrackerTestRepositoriesProvider := newTrackerTestRepositoriesProvider(trackerMocks)
 	trackerTransactionProvider := tracker2.NewTrackerTransactionProvider(db, wireTrackerTestRepositoriesProvider)
-	routeFileParser := tracker2.NewRouteFileParser()
+	routeFileParserGpx := tracker2.NewRouteFileParserGpx()
+	routeFileParserFit := tracker2.NewRouteFileParserFit()
+	routeFileParser := tracker2.NewRouteFileParser(routeFileParserGpx, routeFileParserFit)
 	uuidGenerator := adapters.NewUUIDGenerator()
 	addActivityHandler := tracker.NewAddActivityHandler(trackerTransactionProvider, routeFileParser, uuidGenerator)
 	getActivityHandler := tracker.NewGetActivityHandler(trackerTransactionProvider)
@@ -268,7 +270,9 @@ func BuildService(conf *config.Config) (*service.Service, error) {
 	}
 	wireTrackerRepositoriesProvider := newTrackerRepositoriesProvider()
 	trackerTransactionProvider := tracker2.NewTrackerTransactionProvider(db, wireTrackerRepositoriesProvider)
-	routeFileParser := tracker2.NewRouteFileParser()
+	routeFileParserGpx := tracker2.NewRouteFileParserGpx()
+	routeFileParserFit := tracker2.NewRouteFileParserFit()
+	routeFileParser := tracker2.NewRouteFileParser(routeFileParserGpx, routeFileParserFit)
 	addActivityHandler := tracker.NewAddActivityHandler(trackerTransactionProvider, routeFileParser, uuidGenerator)
 	getActivityHandler := tracker.NewGetActivityHandler(trackerTransactionProvider)
 	editActivityHandler := tracker.NewEditActivityHandler(trackerTransactionProvider)

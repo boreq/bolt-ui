@@ -46,6 +46,10 @@ func NewLongitude(longitude float64) (Longitude, error) {
 		return Longitude{}, errors.New("invalid longitude")
 	}
 
+	if math.IsNaN(longitude) {
+		return Longitude{}, errors.New("not a number")
+	}
+
 	return Longitude{
 		longitude: longitude,
 	}, nil
@@ -70,6 +74,10 @@ type Latitude struct {
 func NewLatitude(latitude float64) (Latitude, error) {
 	if latitude < -90 || latitude > 90 {
 		return Latitude{}, errors.New("invalid latitude")
+	}
+
+	if math.IsNaN(latitude) {
+		return Latitude{}, errors.New("not a number")
 	}
 
 	return Latitude{

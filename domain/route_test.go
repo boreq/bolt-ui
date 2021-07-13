@@ -94,7 +94,7 @@ func somePoint(t time.Time) domain.Point {
 }
 
 func someAltitude() domain.Altitude {
-	return domain.NewAltitude(10)
+	return domain.MustNewAltitude(10)
 }
 
 func somePosition() domain.Position {

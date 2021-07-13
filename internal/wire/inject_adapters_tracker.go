@@ -12,6 +12,9 @@ var trackerRepositoriesSet = wire.NewSet(
 	trackerAdapters.NewRouteFileParser,
 	wire.Bind(new(tracker.RouteFileParser), new(*trackerAdapters.RouteFileParser)),
 
+	trackerAdapters.NewRouteFileParserFit,
+	trackerAdapters.NewRouteFileParserGpx,
+
 	trackerAdapters.NewStravaExportFileParser,
 	wire.Bind(new(tracker.StravaExportFileParser), new(*trackerAdapters.StravaExportFileParser)),
 
@@ -26,6 +29,9 @@ var trackerRepositoriesSet = wire.NewSet(
 var trackerTestRepositoriesSet = wire.NewSet(
 	trackerAdapters.NewRouteFileParser,
 	wire.Bind(new(tracker.RouteFileParser), new(*trackerAdapters.RouteFileParser)),
+
+	trackerAdapters.NewRouteFileParserFit,
+	trackerAdapters.NewRouteFileParserGpx,
 
 	trackerAdapters.NewStravaExportFileParser,
 	wire.Bind(new(tracker.StravaExportFileParser), new(*trackerAdapters.StravaExportFileParser)),

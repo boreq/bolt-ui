@@ -51,7 +51,10 @@ var routeEventMapping = eventsourcing.Mapping{
 					return nil, errors.Wrap(err, "could not create a position")
 				}
 
-				altitude := domain.NewAltitude(p.Altitude)
+				altitude, err := domain.NewAltitude(p.Altitude)
+				if err != nil {
+					return nil, errors.Wrap(err, "could not create an altitude")
+				}
 
 				point, err := domain.NewPoint(p.Time, position, altitude)
 				if err != nil {

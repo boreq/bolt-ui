@@ -1,7 +1,9 @@
 package tracker
 
 import (
+	"fmt"
 	"io"
+	"strings"
 
 	"github.com/boreq/errors"
 	"github.com/boreq/velo/domain"
@@ -9,14 +11,42 @@ import (
 )
 
 type RouteFileParser interface {
-	Parse(io.Reader) ([]domain.Point, error)
+	Parse(r io.Reader, format RouteFileFormat) ([]domain.Point, error)
+}
+
+func NewRouteFileFormatFromExtension(extension string) (RouteFileFormat, error) {
+	if strings.EqualFold(extension, ".gpx") {
+		return RouteFileFormatGpx, nil
+	}
+	if strings.EqualFold(extension, ".fit") {
+		return RouteFileFormatFit, nil
+	}
+	return RouteFileFormat{}, fmt.Errorf("unknown route file extension '%s'", extension)
+}
+
+var (
+	RouteFileFormatGpx = RouteFileFormat{"gpx"}
+	RouteFileFormatFit = RouteFileFormat{"fit"}
+)
+
+type RouteFileFormat struct {
+	format string
+}
+
+func (f RouteFileFormat) IsZero() bool {
+	return f == RouteFileFormat{}
+}
+
+func (f RouteFileFormat) String() string {
+	return f.format
 }
 
 type AddActivity struct {
-	RouteFile  io.Reader
-	UserUUID   auth.UserUUID
-	Visibility domain.ActivityVisibility
-	Title      domain.ActivityTitle
+	RouteFile       io.Reader
+	RouteFileFormat RouteFileFormat
+	UserUUID        auth.UserUUID
+	Visibility      domain.ActivityVisibility
+	Title           domain.ActivityTitle
 }
 
 type AddActivityHandler struct {
@@ -34,7 +64,7 @@ func NewAddActivityHandler(transactionProvider TransactionProvider, routeFilePar
 }
 
 func (h *AddActivityHandler) Execute(cmd AddActivity) (domain.ActivityUUID, error) {
-	points, err := h.routeFileParser.Parse(cmd.RouteFile)
+	points, err := h.routeFileParser.Parse(cmd.RouteFile, cmd.RouteFileFormat)
 	if err != nil {
 		return domain.ActivityUUID{}, errors.Wrap(err, "could not parse the route file")
 	}
