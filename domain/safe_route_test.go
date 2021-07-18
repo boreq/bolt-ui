@@ -114,7 +114,6 @@ func TestSafeRouteDistance(t *testing.T) {
 	safeRoute, err := domain.NewSafeRoute(route, nil)
 	require.NoError(t, err)
 
-	expectedDistance := p1.Position().Distance(p2.Position()) +
-		p2.Position().Distance(p3.Position())
-	require.InEpsilon(t, expectedDistance, safeRoute.Distance(), 0.0001)
+	expectedDistance := p1.Position().Distance(p2.Position()).Add(p2.Position().Distance(p3.Position()))
+	require.InEpsilon(t, expectedDistance.Float64(), safeRoute.Distance().Float64(), 0.0001)
 }

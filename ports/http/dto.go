@@ -29,16 +29,18 @@ type Activity struct {
 }
 
 type Route struct {
-	UUID       string  `json:"uuid"`
-	Points     []Point `json:"points"`
-	TimeMoving float64 `json:"timeMoving"`
-	Distance   float64 `json:"distance"`
+	UUID       string           `json:"uuid"`
+	Points     []AnnotatedPoint `json:"points"`
+	TimeMoving float64          `json:"timeMoving"`
+	Distance   float64          `json:"distance"`
 }
 
-type Point struct {
-	Time     time.Time `json:"time"`
-	Position Position  `json:"position"`
-	Altitude float64   `json:"altitude"`
+type AnnotatedPoint struct {
+	Time               time.Time `json:"time"`
+	Position           Position  `json:"position"`
+	Altitude           float64   `json:"altitude"`
+	Speed              float64   `json:"speed"`
+	CumulativeDistance float64   `json:"cumulativeDistance"`
 }
 
 type Position struct {
@@ -126,19 +128,21 @@ func toUser(user *tracker.User) User {
 func toRoute(route *domain.SafeRoute) Route {
 	return Route{
 		UUID:       route.UUID().String(),
-		Points:     toPoints(route.Points()),
-		Distance:   route.Distance(),
+		Points:     toAnnotatedPoints(route.AnnotatedPoints()),
+		Distance:   route.Distance().Float64(),
 		TimeMoving: route.TimeMoving().Seconds(),
 	}
 }
 
-func toPoints(points []domain.Point) []Point {
-	result := make([]Point, 0)
+func toAnnotatedPoints(points []domain.AnnotatedPoint) []AnnotatedPoint {
+	result := make([]AnnotatedPoint, 0)
 	for _, point := range points {
-		result = append(result, Point{
-			Time:     point.Time(),
-			Position: toPosition(point.Position()),
-			Altitude: point.Altitude().Float64(),
+		result = append(result, AnnotatedPoint{
+			Time:               point.Time(),
+			Position:           toPosition(point.Position()),
+			Altitude:           point.Altitude().Float64(),
+			Speed:              point.Speed().Float64(),
+			CumulativeDistance: point.CumulativeDistance().Float64(),
 		})
 	}
 	return result

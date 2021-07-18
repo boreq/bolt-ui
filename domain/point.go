@@ -43,3 +43,7 @@ func (p Point) Position() Position {
 func (p Point) Altitude() Altitude {
 	return p.altitude
 }
+
+func (p Point) IsZero() bool {
+	return p == Point{}
+}

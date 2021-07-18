@@ -26,7 +26,7 @@ func (p Position) Longitude() Longitude {
 	return p.longitude
 }
 
-func (p Position) Distance(o Position) float64 {
+func (p Position) Distance(o Position) Distance {
 	var la1, lo1, la2, lo2, r float64
 	la1 = p.latitude.Float64() * math.Pi / 180
 	lo1 = p.longitude.Float64() * math.Pi / 180
@@ -34,7 +34,7 @@ func (p Position) Distance(o Position) float64 {
 	lo2 = o.longitude.Float64() * math.Pi / 180
 	r = 6378100 // Earth radius in meters
 	h := hsin(la2-la1) + math.Cos(la1)*math.Cos(la2)*hsin(lo2-lo1)
-	return 2 * r * math.Asin(math.Sqrt(h))
+	return MustNewDistance(2 * r * math.Asin(math.Sqrt(h)))
 }
 
 type Longitude struct {

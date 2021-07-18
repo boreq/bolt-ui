@@ -35,7 +35,7 @@ func (c Circle) Radius() float64 {
 }
 
 func (c Circle) Contains(p Position) bool {
-	return c.center.Distance(p) <= c.radius
+	return c.center.Distance(p).Float64() <= c.radius
 }
 
 func (c Circle) IsZero() bool {
