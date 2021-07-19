@@ -132,11 +132,3 @@ func positionIsWithinPrivacyZones(position Position, privacyZones []*PrivacyZone
 	}
 	return false
 }
-
-func distanceBetweenPoints(points []Point) Distance {
-	var distance Distance
-	for i := 0; i < len(points)-1; i++ {
-		distance = distance.Add(points[i].Position().Distance(points[i+1].Position()))
-	}
-	return distance
-}
