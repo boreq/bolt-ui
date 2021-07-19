@@ -128,7 +128,7 @@ func toUser(user *tracker.User) User {
 func toRoute(route *domain.SafeRoute) Route {
 	return Route{
 		UUID:       route.UUID().String(),
-		Points:     toAnnotatedPoints(route.AnnotatedPoints()),
+		Points:     toAnnotatedPoints(route.Points()),
 		Distance:   route.Distance().Float64(),
 		TimeMoving: route.TimeMoving().Seconds(),
 	}

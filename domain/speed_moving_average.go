@@ -40,3 +40,11 @@ func (a *SpeedMovingAverage) Speed() (Speed, error) {
 	duration := a.points[len(a.points)-1].Time().Sub(a.points[0].Time())
 	return NewSpeedFromDistanceAndDuration(distance, duration)
 }
+
+func (a *SpeedMovingAverage) distanceBetweenPoints() Distance {
+	var distance Distance
+	for i := 0; i < len(a.points)-1; i++ {
+		distance = distance.Add(a.points[i].Position().Distance(a.points[i+1].Position()))
+	}
+	return distance
+}

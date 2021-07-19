@@ -36,3 +36,7 @@ func MustNewSpeed(speed float64) Speed {
 func (s Speed) Float64() float64 {
 	return s.speed
 }
+
+func (s Speed) IsZero() bool {
+	return s == Speed{}
+}

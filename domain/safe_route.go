@@ -6,10 +6,18 @@ import (
 	"github.com/boreq/errors"
 )
 
+const (
+	notMovingSpeedThreshold = 0.25 // meters per second
+	averageSpeedWindow      = 60 * time.Second
+)
+
 type SafeRoute struct {
-	uuid       RouteUUID
-	points     []AnnotatedPoint
-	safePoints []AnnotatedPoint
+	uuid        RouteUUID
+	safePoints  []AnnotatedPoint
+	distance    Distance
+	timeMoving  time.Duration
+	timeStarted time.Time
+	timeEnded   time.Time
 }
 
 func NewSafeRoute(route *Route, privacyZones []*PrivacyZone) (*SafeRoute, error) {
@@ -19,78 +27,20 @@ func NewSafeRoute(route *Route, privacyZones []*PrivacyZone) (*SafeRoute, error)
 		}
 	}
 
-	annotatedPoints, err := toAnnotatedPoints(route.Points())
-	if err != nil {
-		return nil, errors.Wrap(err, "could not convert points to annotated points")
-	}
+	points := route.Points()
 
-	return &SafeRoute{
-		uuid:       route.UUID(),
-		points:     annotatedPoints,
-		safePoints: makePointsSafe(annotatedPoints, privacyZones),
-	}, nil
-}
-
-func (r SafeRoute) UUID() RouteUUID {
-	return r.uuid
-}
-
-func (r SafeRoute) Points() []Point {
-	var points []Point
-	for _, point := range r.safePoints {
-		points = append(points, point.Point())
-	}
-	return points
-}
-
-func (r SafeRoute) AnnotatedPoints() []AnnotatedPoint {
-	points := make([]AnnotatedPoint, len(r.safePoints))
-	copy(points, r.safePoints)
-	return points
-}
-
-func (r SafeRoute) TimeStarted() time.Time {
-	return r.points[0].Time()
-}
-
-func (r SafeRoute) TimeEnded() time.Time {
-	return r.points[len(r.points)-1].Time()
-}
-
-func (r SafeRoute) TimeMoving() time.Duration {
-	return r.TimeEnded().Sub(r.TimeStarted())
-}
-
-func (r SafeRoute) Distance() Distance {
-	return distanceBetweenPoints(r.Points())
-}
-
-func makePointsSafe(points []AnnotatedPoint, privacyZones []*PrivacyZone) []AnnotatedPoint {
-	var safePoints []AnnotatedPoint
-
-	for _, point := range points {
-		if !positionIsWithinPrivacyZones(point.Position(), privacyZones) {
-			safePoints = append(safePoints, point)
-		}
-	}
-
-	return safePoints
-}
-
-const notMovingSpeedThreshold = 0.25 // meters per second
-
-func toAnnotatedPoints(points []Point) ([]AnnotatedPoint, error) {
 	var result []AnnotatedPoint
 
-	avg := NewSpeedMovingAverage(60 * time.Second)
-	var cumulativeDistance Distance
+	avg := NewSpeedMovingAverage(averageSpeedWindow)
+	var distance Distance
+	var timeMoving time.Duration
 
 	for i := range points {
 		point := points[i]
 
 		if i > 0 {
 			previousPoint := points[i-1]
-			cumulativeDistance = cumulativeDistance.Add(
+			distance = distance.Add(
 				point.Position().Distance(previousPoint.Position()),
 			)
 		}
@@ -102,7 +52,7 @@ func toAnnotatedPoints(points []Point) ([]AnnotatedPoint, error) {
 			return nil, errors.Wrap(err, "could not retrieve the average speed")
 		}
 
-		annotatedPoint, err := NewAnnotatedPoint(point, speed, cumulativeDistance)
+		annotatedPoint, err := NewAnnotatedPoint(point, speed, distance)
 		if err != nil {
 			return nil, errors.Wrap(err, "could not create a new annotated point")
 		}
@@ -116,9 +66,62 @@ func toAnnotatedPoints(points []Point) ([]AnnotatedPoint, error) {
 				result[i].SetSpeedToZero()
 			}
 		}
+
+		if i > 0 {
+			a := result[i]
+			b := result[i-1]
+			if !(a.Speed().IsZero() && b.Speed().IsZero()) {
+				timeMoving += a.Time().Sub(b.Time())
+			}
+		}
 	}
 
-	return result, nil
+	return &SafeRoute{
+		uuid:        route.UUID(),
+		distance:    distance,
+		safePoints:  makePointsSafe(result, privacyZones),
+		timeMoving:  timeMoving,
+		timeStarted: points[0].Time(),
+		timeEnded:   points[len(points)-1].Time(),
+	}, nil
+}
+
+func (r SafeRoute) UUID() RouteUUID {
+	return r.uuid
+}
+
+func (r SafeRoute) Points() []AnnotatedPoint {
+	points := make([]AnnotatedPoint, len(r.safePoints))
+	copy(points, r.safePoints)
+	return points
+}
+
+func (r SafeRoute) TimeStarted() time.Time {
+	return r.timeStarted
+}
+
+func (r SafeRoute) TimeEnded() time.Time {
+	return r.timeEnded
+}
+
+func (r SafeRoute) TimeMoving() time.Duration {
+	return r.timeMoving
+}
+
+func (r SafeRoute) Distance() Distance {
+	return r.distance
+}
+
+func makePointsSafe(points []AnnotatedPoint, privacyZones []*PrivacyZone) []AnnotatedPoint {
+	var safePoints []AnnotatedPoint
+
+	for _, point := range points {
+		if !positionIsWithinPrivacyZones(point.Position(), privacyZones) {
+			safePoints = append(safePoints, point)
+		}
+	}
+
+	return safePoints
 }
 
 func positionIsWithinPrivacyZones(position Position, privacyZones []*PrivacyZone) bool {

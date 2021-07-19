@@ -60,6 +60,8 @@ func TestAddActivity(t *testing.T) {
 
 	require.False(t, result.Route.UUID().IsZero())
 	require.NotEmpty(t, result.Route.Points())
+	require.InEpsilon(t, 6478, result.Route.Distance().Float64(), 0.001)
+	require.InEpsilon(t, 34.61, result.Route.TimeMoving().Minutes(), 0.001)
 
 	require.NotEmpty(t, result.User.Username)
 
