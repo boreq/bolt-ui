@@ -88,11 +88,9 @@ func toUserProfile(user auth.ReadUser) UserProfile {
 
 func toDetailedUsers(users []auth.ReadUser) []DetailedUser {
 	result := make([]DetailedUser, 0)
-
 	for _, user := range users {
 		result = append(result, toDetailedUser(user))
 	}
-
 	return result
 }
 
@@ -152,6 +150,7 @@ func toUserActivities(v tracker.ListUserActivitiesResult) UserActivities {
 	result := UserActivities{
 		HasPrevious: v.HasPrevious,
 		HasNext:     v.HasNext,
+		Activities:  make([]Activity, 0),
 	}
 
 	for _, activity := range v.Activities {
