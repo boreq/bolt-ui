@@ -3,7 +3,6 @@ package domain
 import (
 	"fmt"
 	"sort"
-	"time"
 
 	"github.com/boreq/errors"
 	"github.com/boreq/velo/internal/eventsourcing"
@@ -28,7 +27,7 @@ func NewRoute(uuid RouteUUID, points []Point) (*Route, error) {
 	points = NormaliseRoutePoints(points)
 
 	if len(points) < 2 {
-		return nil, errors.New(" a route has to have at least 2 points")
+		return nil, errors.New("a route has to have at least 2 points")
 	}
 
 	route := &Route{}
@@ -104,11 +103,6 @@ func (r RouteCreated) EventType() eventsourcing.EventType {
 	return "RouteCreated_v1"
 }
 
-// Points that occur more often than that will be dropped. Should probably be
-// slightly lower than the desired 5 seconds just to account for tiny precision
-// problems.
-const intervalBetweenPoints = 4 * time.Second
-
 func NormaliseRoutePoints(points []Point) []Point {
 	sort.Slice(points, func(i, j int) bool {
 		return points[i].Time().Before(points[j].Time())
@@ -130,7 +124,9 @@ func NormaliseRoutePoints(points []Point) []Point {
 	return normalised
 }
 
+// Points that occur more often than that will be dropped.
+const distanceBetweenPointsInMeters = 10
+
 func shouldAdd(previous Point, next Point) bool {
-	mustBeAfter := previous.Time().Add(intervalBetweenPoints)
-	return !next.Time().Before(mustBeAfter)
+	return next.Position().Distance(previous.Position()).Float64() >= distanceBetweenPointsInMeters
 }

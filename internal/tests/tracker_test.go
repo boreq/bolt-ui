@@ -60,8 +60,10 @@ func TestAddActivity(t *testing.T) {
 
 	require.False(t, result.Route.UUID().IsZero())
 	require.NotEmpty(t, result.Route.Points())
-	require.InEpsilon(t, 6478, result.Route.Distance().Float64(), 0.001)
-	require.InEpsilon(t, 34.61, result.Route.TimeMoving().Minutes(), 0.001)
+	t.Log("distance", result.Route.Distance().Float64())
+	require.InEpsilon(t, 6235, result.Route.Distance().Float64(), 0.001)
+	t.Log("time moving", result.Route.TimeMoving().Minutes())
+	require.InEpsilon(t, 26.11, result.Route.TimeMoving().Minutes(), 0.001)
 
 	require.NotEmpty(t, result.User.Username)
 
@@ -753,17 +755,17 @@ func TestApplyPrivacyZones(t *testing.T) {
 		{
 			Name:           "unauthorized",
 			AsUser:         nil,
-			ExpectedPoints: 433,
+			ExpectedPoints: 366,
 		},
 		{
 			Name:           "other",
 			AsUser:         &otherUser,
-			ExpectedPoints: 433,
+			ExpectedPoints: 366,
 		},
 		{
 			Name:           "owner",
 			AsUser:         &readUser,
-			ExpectedPoints: 481,
+			ExpectedPoints: 431,
 		},
 	}
 
@@ -777,6 +779,7 @@ func TestApplyPrivacyZones(t *testing.T) {
 					},
 				)
 				require.NoError(t, err)
+				t.Log("length", len(result.Route.Points()))
 				require.Len(t, result.Route.Points(), testCase.ExpectedPoints)
 			})
 
@@ -790,6 +793,7 @@ func TestApplyPrivacyZones(t *testing.T) {
 				require.NoError(t, err)
 
 				require.Len(t, result.Activities, 1)
+				t.Log("length", len(result.Activities[0].Route.Points()))
 				require.Len(t, result.Activities[0].Route.Points(), testCase.ExpectedPoints)
 			})
 		})
