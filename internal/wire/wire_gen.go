@@ -17,12 +17,18 @@ import (
 // Injectors from wire.go:
 
 func BuildTransactableAdapters(tx *bbolt.Tx) (*application.TransactableAdapters, error) {
-	transactableAdapters := &application.TransactableAdapters{}
+	database := adapters.NewDatabase(tx)
+	transactableAdapters := &application.TransactableAdapters{
+		Database: database,
+	}
 	return transactableAdapters, nil
 }
 
 func BuildTestTransactableAdapters(tx *bbolt.Tx, mocks Mocks) (*application.TransactableAdapters, error) {
-	transactableAdapters := &application.TransactableAdapters{}
+	database := adapters.NewDatabase(tx)
+	transactableAdapters := &application.TransactableAdapters{
+		Database: database,
+	}
 	return transactableAdapters, nil
 }
 
@@ -37,6 +43,7 @@ func BuildApplicationForTest(db *bbolt.DB) (TestApplication, error) {
 	testApplication := TestApplication{
 		Application: applicationApplication,
 		Mocks:       mocks,
+		DB:          db,
 	}
 	return testApplication, nil
 }
@@ -67,6 +74,7 @@ func BuildService(conf *config.Config) (*service.Service, error) {
 type TestApplication struct {
 	Application *application.Application
 	Mocks
+	DB *bbolt.DB
 }
 
 type Mocks struct {

@@ -4,26 +4,29 @@ import (
 	"encoding/json"
 	"os"
 
-	"github.com/boreq/errors"
 	"github.com/boreq/guinea"
 	"github.com/boreq/velo/internal/config"
 	"github.com/boreq/velo/internal/wire"
+	"github.com/pkg/errors"
 )
 
-var runCmd = guinea.Command{
-	Run: runRun,
+var MainCmd = guinea.Command{
+	Run: run,
 	Arguments: []guinea.Argument{
 		{
-			Name:        "config",
+			Name:        "database",
 			Optional:    false,
 			Multiple:    false,
-			Description: "Path to the configuration file",
+			Description: "Path to the database file",
 		},
 	},
-	ShortDescription: "serves your music",
+	ShortDescription: "a web user interface for the Bolt database",
+	Description: `
+Thanks to bolt-ui you are able to explore a Bolt database using a web interface.
+`,
 }
 
-func runRun(c guinea.Context) error {
+func run(c guinea.Context) error {
 	conf, err := loadConfig(c.Arguments[0])
 	if err != nil {
 		return errors.Wrap(err, "could not load the configuration")

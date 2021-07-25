@@ -54,12 +54,12 @@ func (h *Handler) browse(r *http.Request) rest.RestResponse {
 		return rest.ErrForbidden.WithMessage("Invalid token.")
 	}
 
-	query := application.Browse{}
+	//query := application.Browse{}
 
-	if err := h.app.Browse.Execute(query); err != nil {
-		h.log.Error("could not browse", "err", err)
-		return rest.ErrInternalServerError
-	}
+	//if err := h.app.Browse.Execute(query); err != nil {
+	//	h.log.Error("could not browse", "err", err)
+	//	return rest.ErrInternalServerError
+	//}
 
 	return rest.NewResponse(nil)
 }

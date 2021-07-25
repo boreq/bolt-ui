@@ -2,7 +2,6 @@ package adapters
 
 import (
 	"os"
-	"path/filepath"
 	"time"
 
 	"github.com/boreq/errors"
@@ -10,12 +9,20 @@ import (
 )
 
 func NewBolt(path string) (*bolt.DB, error) {
-	dir, _ := filepath.Split(path)
-	if err := os.MkdirAll(dir, os.ModePerm); err != nil {
-		return nil, errors.Wrap(err, "mkdir all error")
+	_, err := os.Stat(path)
+	if err != nil {
+		if errors.Is(err, os.ErrNotExist) {
+			return nil, errors.Wrap(err, "database file does not exist")
+		}
+
+		return nil, errors.Wrap(err, "could not stat the database file")
 	}
 
-	db, err := bolt.Open(path, 0600, &bolt.Options{Timeout: 5 * time.Second})
+	options := &bolt.Options{
+		Timeout: 5 * time.Second,
+	}
+
+	db, err := bolt.Open(path, 0600, options)
 	if err != nil {
 		if errors.Is(err, bolt.ErrTimeout) {
 			return nil, errors.Wrap(err, "error opening the database (is another instance of the program running?)")

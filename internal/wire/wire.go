@@ -41,6 +41,7 @@ func BuildApplicationForTest(db *bolt.DB) (TestApplication, error) {
 type TestApplication struct {
 	Application *application.Application
 	Mocks
+	DB *bolt.DB
 }
 
 type Mocks struct {
