@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/boreq/errors"
-
 	"github.com/oklog/ulid/v2"
 )
 

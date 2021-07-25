@@ -7,301 +7,53 @@ package wire
 
 import (
 	"github.com/boreq/velo/adapters"
-	auth2 "github.com/boreq/velo/adapters/auth"
-	tracker2 "github.com/boreq/velo/adapters/tracker"
 	"github.com/boreq/velo/application"
-	"github.com/boreq/velo/application/auth"
-	"github.com/boreq/velo/application/tracker"
 	"github.com/boreq/velo/internal/config"
 	"github.com/boreq/velo/internal/service"
-	"github.com/boreq/velo/internal/tests/mocks"
 	"github.com/boreq/velo/ports/http"
 	"go.etcd.io/bbolt"
 )
 
 // Injectors from wire.go:
 
-func BuildTransactableAuthRepositories(tx *bbolt.Tx) (*auth.TransactableRepositories, error) {
-	invitationRepository, err := auth2.NewInvitationRepository(tx)
-	if err != nil {
-		return nil, err
-	}
-	uuidToUsernameRepository, err := auth2.NewUUIDToUsernameRepository(tx)
-	if err != nil {
-		return nil, err
-	}
-	userRepository, err := auth2.NewUserRepository(tx, uuidToUsernameRepository)
-	if err != nil {
-		return nil, err
-	}
-	transactableRepositories := &auth.TransactableRepositories{
-		Invitations: invitationRepository,
-		Users:       userRepository,
-	}
-	return transactableRepositories, nil
+func BuildTransactableAdapters(tx *bbolt.Tx) (*application.TransactableAdapters, error) {
+	transactableAdapters := &application.TransactableAdapters{}
+	return transactableAdapters, nil
 }
 
-func BuildTransactableTrackerRepositories(tx *bbolt.Tx) (*tracker.TransactableRepositories, error) {
-	routeRepository, err := tracker2.NewRouteRepository(tx)
-	if err != nil {
-		return nil, err
-	}
-	activityRepository, err := tracker2.NewActivityRepository(tx)
-	if err != nil {
-		return nil, err
-	}
-	privacyZoneRepository, err := tracker2.NewPrivacyZoneRepository(tx)
-	if err != nil {
-		return nil, err
-	}
-	userToActivityRepository, err := tracker2.NewUserToActivityRepository(tx, activityRepository)
-	if err != nil {
-		return nil, err
-	}
-	userToPrivacyZoneRepository, err := tracker2.NewUserToPrivacyZoneRepository(tx, privacyZoneRepository)
-	if err != nil {
-		return nil, err
-	}
-	uuidToUsernameRepository, err := auth2.NewUUIDToUsernameRepository(tx)
-	if err != nil {
-		return nil, err
-	}
-	userRepository, err := auth2.NewUserRepository(tx, uuidToUsernameRepository)
-	if err != nil {
-		return nil, err
-	}
-	transactableRepositories := &tracker.TransactableRepositories{
-		Route:             routeRepository,
-		Activity:          activityRepository,
-		PrivacyZone:       privacyZoneRepository,
-		UserToActivity:    userToActivityRepository,
-		UserToPrivacyZone: userToPrivacyZoneRepository,
-		User:              userRepository,
-	}
-	return transactableRepositories, nil
+func BuildTestTransactableAdapters(tx *bbolt.Tx, mocks Mocks) (*application.TransactableAdapters, error) {
+	transactableAdapters := &application.TransactableAdapters{}
+	return transactableAdapters, nil
 }
 
-func BuildTestTransactableTrackerRepositories(tx *bbolt.Tx, trackerMocks TrackerMocks) (*tracker.TransactableRepositories, error) {
-	routeRepository, err := tracker2.NewRouteRepository(tx)
-	if err != nil {
-		return nil, err
+func BuildApplicationForTest(db *bbolt.DB) (TestApplication, error) {
+	wireAdaptersProvider := newAdaptersProvider()
+	transactionProvider := adapters.NewTransactionProvider(db, wireAdaptersProvider)
+	browseHandler := application.NewBrowseHandler(transactionProvider)
+	applicationApplication := &application.Application{
+		Browse: browseHandler,
 	}
-	activityRepository, err := tracker2.NewActivityRepository(tx)
-	if err != nil {
-		return nil, err
+	mocks := Mocks{}
+	testApplication := TestApplication{
+		Application: applicationApplication,
+		Mocks:       mocks,
 	}
-	privacyZoneRepository, err := tracker2.NewPrivacyZoneRepository(tx)
-	if err != nil {
-		return nil, err
-	}
-	userToActivityRepository, err := tracker2.NewUserToActivityRepository(tx, activityRepository)
-	if err != nil {
-		return nil, err
-	}
-	userToPrivacyZoneRepository, err := tracker2.NewUserToPrivacyZoneRepository(tx, privacyZoneRepository)
-	if err != nil {
-		return nil, err
-	}
-	trackerUserRepositoryMock := trackerMocks.UserRepository
-	transactableRepositories := &tracker.TransactableRepositories{
-		Route:             routeRepository,
-		Activity:          activityRepository,
-		PrivacyZone:       privacyZoneRepository,
-		UserToActivity:    userToActivityRepository,
-		UserToPrivacyZone: userToPrivacyZoneRepository,
-		User:              trackerUserRepositoryMock,
-	}
-	return transactableRepositories, nil
-}
-
-func BuildTrackerForTest(db *bbolt.DB) (TestTracker, error) {
-	trackerUserRepositoryMock := mocks.NewTrackerUserRepositoryMock()
-	trackerMocks := TrackerMocks{
-		UserRepository: trackerUserRepositoryMock,
-	}
-	wireTrackerTestRepositoriesProvider := newTrackerTestRepositoriesProvider(trackerMocks)
-	trackerTransactionProvider := tracker2.NewTrackerTransactionProvider(db, wireTrackerTestRepositoriesProvider)
-	routeFileParserGpx := tracker2.NewRouteFileParserGpx()
-	routeFileParserFit := tracker2.NewRouteFileParserFit()
-	routeFileParser := tracker2.NewRouteFileParser(routeFileParserGpx, routeFileParserFit)
-	uuidGenerator := adapters.NewUUIDGenerator()
-	addActivityHandler := tracker.NewAddActivityHandler(trackerTransactionProvider, routeFileParser, uuidGenerator)
-	getActivityHandler := tracker.NewGetActivityHandler(trackerTransactionProvider)
-	editActivityHandler := tracker.NewEditActivityHandler(trackerTransactionProvider)
-	deleteActivityHandler := tracker.NewDeleteActivityHandler(trackerTransactionProvider)
-	listUserActivitiesHandler := tracker.NewListUserActivitiesHandler(trackerTransactionProvider)
-	addPrivacyZoneHandler := tracker.NewAddPrivacyZoneHandler(trackerTransactionProvider, routeFileParser, uuidGenerator)
-	getPrivacyZoneHandler := tracker.NewGetPrivacyZoneHandler(trackerTransactionProvider)
-	listUserPrivacyZonesHandler := tracker.NewListUserPrivacyZonesHandler(trackerTransactionProvider)
-	deletePrivacyZoneHandler := tracker.NewDeletePrivacyZoneHandler(trackerTransactionProvider)
-	stravaExportFileParser := tracker2.NewStravaExportFileParser(routeFileParser)
-	importStravaHandler := tracker.NewImportStravaHandler(trackerTransactionProvider, uuidGenerator, stravaExportFileParser)
-	trackerTracker := &tracker.Tracker{
-		AddActivity:          addActivityHandler,
-		GetActivity:          getActivityHandler,
-		EditActivity:         editActivityHandler,
-		DeleteActivity:       deleteActivityHandler,
-		ListUserActivities:   listUserActivitiesHandler,
-		AddPrivacyZone:       addPrivacyZoneHandler,
-		GetPrivacyZone:       getPrivacyZoneHandler,
-		ListUserPrivacyZones: listUserPrivacyZonesHandler,
-		DeletePrivacyZone:    deletePrivacyZoneHandler,
-		ImportStrava:         importStravaHandler,
-	}
-	testTracker := TestTracker{
-		Tracker:      trackerTracker,
-		TrackerMocks: trackerMocks,
-	}
-	return testTracker, nil
-}
-
-func BuildAuthForTest(db *bbolt.DB) (*auth.Auth, error) {
-	bcryptPasswordHasher := auth2.NewBcryptPasswordHasher()
-	wireAuthRepositoriesProvider := newAuthRepositoriesProvider()
-	authTransactionProvider := auth2.NewAuthTransactionProvider(db, wireAuthRepositoriesProvider)
-	uuidGenerator := adapters.NewUUIDGenerator()
-	registerInitialHandler := auth.NewRegisterInitialHandler(bcryptPasswordHasher, authTransactionProvider, uuidGenerator)
-	registerHandler := auth.NewRegisterHandler(bcryptPasswordHasher, authTransactionProvider, uuidGenerator)
-	cryptoAccessTokenGenerator := auth2.NewCryptoAccessTokenGenerator()
-	loginHandler := auth.NewLoginHandler(bcryptPasswordHasher, authTransactionProvider, cryptoAccessTokenGenerator)
-	logoutHandler := auth.NewLogoutHandler(authTransactionProvider, cryptoAccessTokenGenerator)
-	checkAccessTokenHandler := auth.NewCheckAccessTokenHandler(authTransactionProvider, cryptoAccessTokenGenerator)
-	listHandler := auth.NewListHandler(authTransactionProvider)
-	cryptoStringGenerator := auth2.NewCryptoStringGenerator()
-	createInvitationHandler := auth.NewCreateInvitationHandler(cryptoStringGenerator, authTransactionProvider)
-	removeHandler := auth.NewRemoveHandler(authTransactionProvider)
-	setPasswordHandler := auth.NewSetPasswordHandler(bcryptPasswordHasher, authTransactionProvider)
-	getUserHandler := auth.NewGetUserHandler(authTransactionProvider)
-	updateProfileHandler := auth.NewUpdateProfileHandler(authTransactionProvider)
-	changePasswordHandler := auth.NewChangePasswordHandler(authTransactionProvider, bcryptPasswordHasher)
-	authAuth := &auth.Auth{
-		RegisterInitial:  registerInitialHandler,
-		Register:         registerHandler,
-		Login:            loginHandler,
-		Logout:           logoutHandler,
-		CheckAccessToken: checkAccessTokenHandler,
-		List:             listHandler,
-		CreateInvitation: createInvitationHandler,
-		Remove:           removeHandler,
-		SetPassword:      setPasswordHandler,
-		GetUser:          getUserHandler,
-		UpdateProfile:    updateProfileHandler,
-		ChangePassword:   changePasswordHandler,
-	}
-	return authAuth, nil
-}
-
-func BuildAuth(conf *config.Config) (*auth.Auth, error) {
-	bcryptPasswordHasher := auth2.NewBcryptPasswordHasher()
-	db, err := newBolt(conf)
-	if err != nil {
-		return nil, err
-	}
-	wireAuthRepositoriesProvider := newAuthRepositoriesProvider()
-	authTransactionProvider := auth2.NewAuthTransactionProvider(db, wireAuthRepositoriesProvider)
-	uuidGenerator := adapters.NewUUIDGenerator()
-	registerInitialHandler := auth.NewRegisterInitialHandler(bcryptPasswordHasher, authTransactionProvider, uuidGenerator)
-	registerHandler := auth.NewRegisterHandler(bcryptPasswordHasher, authTransactionProvider, uuidGenerator)
-	cryptoAccessTokenGenerator := auth2.NewCryptoAccessTokenGenerator()
-	loginHandler := auth.NewLoginHandler(bcryptPasswordHasher, authTransactionProvider, cryptoAccessTokenGenerator)
-	logoutHandler := auth.NewLogoutHandler(authTransactionProvider, cryptoAccessTokenGenerator)
-	checkAccessTokenHandler := auth.NewCheckAccessTokenHandler(authTransactionProvider, cryptoAccessTokenGenerator)
-	listHandler := auth.NewListHandler(authTransactionProvider)
-	cryptoStringGenerator := auth2.NewCryptoStringGenerator()
-	createInvitationHandler := auth.NewCreateInvitationHandler(cryptoStringGenerator, authTransactionProvider)
-	removeHandler := auth.NewRemoveHandler(authTransactionProvider)
-	setPasswordHandler := auth.NewSetPasswordHandler(bcryptPasswordHasher, authTransactionProvider)
-	getUserHandler := auth.NewGetUserHandler(authTransactionProvider)
-	updateProfileHandler := auth.NewUpdateProfileHandler(authTransactionProvider)
-	changePasswordHandler := auth.NewChangePasswordHandler(authTransactionProvider, bcryptPasswordHasher)
-	authAuth := &auth.Auth{
-		RegisterInitial:  registerInitialHandler,
-		Register:         registerHandler,
-		Login:            loginHandler,
-		Logout:           logoutHandler,
-		CheckAccessToken: checkAccessTokenHandler,
-		List:             listHandler,
-		CreateInvitation: createInvitationHandler,
-		Remove:           removeHandler,
-		SetPassword:      setPasswordHandler,
-		GetUser:          getUserHandler,
-		UpdateProfile:    updateProfileHandler,
-		ChangePassword:   changePasswordHandler,
-	}
-	return authAuth, nil
+	return testApplication, nil
 }
 
 func BuildService(conf *config.Config) (*service.Service, error) {
-	bcryptPasswordHasher := auth2.NewBcryptPasswordHasher()
 	db, err := newBolt(conf)
 	if err != nil {
 		return nil, err
 	}
-	wireAuthRepositoriesProvider := newAuthRepositoriesProvider()
-	authTransactionProvider := auth2.NewAuthTransactionProvider(db, wireAuthRepositoriesProvider)
-	uuidGenerator := adapters.NewUUIDGenerator()
-	registerInitialHandler := auth.NewRegisterInitialHandler(bcryptPasswordHasher, authTransactionProvider, uuidGenerator)
-	registerHandler := auth.NewRegisterHandler(bcryptPasswordHasher, authTransactionProvider, uuidGenerator)
-	cryptoAccessTokenGenerator := auth2.NewCryptoAccessTokenGenerator()
-	loginHandler := auth.NewLoginHandler(bcryptPasswordHasher, authTransactionProvider, cryptoAccessTokenGenerator)
-	logoutHandler := auth.NewLogoutHandler(authTransactionProvider, cryptoAccessTokenGenerator)
-	checkAccessTokenHandler := auth.NewCheckAccessTokenHandler(authTransactionProvider, cryptoAccessTokenGenerator)
-	listHandler := auth.NewListHandler(authTransactionProvider)
-	cryptoStringGenerator := auth2.NewCryptoStringGenerator()
-	createInvitationHandler := auth.NewCreateInvitationHandler(cryptoStringGenerator, authTransactionProvider)
-	removeHandler := auth.NewRemoveHandler(authTransactionProvider)
-	setPasswordHandler := auth.NewSetPasswordHandler(bcryptPasswordHasher, authTransactionProvider)
-	getUserHandler := auth.NewGetUserHandler(authTransactionProvider)
-	updateProfileHandler := auth.NewUpdateProfileHandler(authTransactionProvider)
-	changePasswordHandler := auth.NewChangePasswordHandler(authTransactionProvider, bcryptPasswordHasher)
-	authAuth := auth.Auth{
-		RegisterInitial:  registerInitialHandler,
-		Register:         registerHandler,
-		Login:            loginHandler,
-		Logout:           logoutHandler,
-		CheckAccessToken: checkAccessTokenHandler,
-		List:             listHandler,
-		CreateInvitation: createInvitationHandler,
-		Remove:           removeHandler,
-		SetPassword:      setPasswordHandler,
-		GetUser:          getUserHandler,
-		UpdateProfile:    updateProfileHandler,
-		ChangePassword:   changePasswordHandler,
-	}
-	wireTrackerRepositoriesProvider := newTrackerRepositoriesProvider()
-	trackerTransactionProvider := tracker2.NewTrackerTransactionProvider(db, wireTrackerRepositoriesProvider)
-	routeFileParserGpx := tracker2.NewRouteFileParserGpx()
-	routeFileParserFit := tracker2.NewRouteFileParserFit()
-	routeFileParser := tracker2.NewRouteFileParser(routeFileParserGpx, routeFileParserFit)
-	addActivityHandler := tracker.NewAddActivityHandler(trackerTransactionProvider, routeFileParser, uuidGenerator)
-	getActivityHandler := tracker.NewGetActivityHandler(trackerTransactionProvider)
-	editActivityHandler := tracker.NewEditActivityHandler(trackerTransactionProvider)
-	deleteActivityHandler := tracker.NewDeleteActivityHandler(trackerTransactionProvider)
-	listUserActivitiesHandler := tracker.NewListUserActivitiesHandler(trackerTransactionProvider)
-	addPrivacyZoneHandler := tracker.NewAddPrivacyZoneHandler(trackerTransactionProvider, routeFileParser, uuidGenerator)
-	getPrivacyZoneHandler := tracker.NewGetPrivacyZoneHandler(trackerTransactionProvider)
-	listUserPrivacyZonesHandler := tracker.NewListUserPrivacyZonesHandler(trackerTransactionProvider)
-	deletePrivacyZoneHandler := tracker.NewDeletePrivacyZoneHandler(trackerTransactionProvider)
-	stravaExportFileParser := tracker2.NewStravaExportFileParser(routeFileParser)
-	importStravaHandler := tracker.NewImportStravaHandler(trackerTransactionProvider, uuidGenerator, stravaExportFileParser)
-	trackerTracker := tracker.Tracker{
-		AddActivity:          addActivityHandler,
-		GetActivity:          getActivityHandler,
-		EditActivity:         editActivityHandler,
-		DeleteActivity:       deleteActivityHandler,
-		ListUserActivities:   listUserActivitiesHandler,
-		AddPrivacyZone:       addPrivacyZoneHandler,
-		GetPrivacyZone:       getPrivacyZoneHandler,
-		ListUserPrivacyZones: listUserPrivacyZonesHandler,
-		DeletePrivacyZone:    deletePrivacyZoneHandler,
-		ImportStrava:         importStravaHandler,
-	}
+	wireAdaptersProvider := newAdaptersProvider()
+	transactionProvider := adapters.NewTransactionProvider(db, wireAdaptersProvider)
+	browseHandler := application.NewBrowseHandler(transactionProvider)
 	applicationApplication := &application.Application{
-		Auth:    authAuth,
-		Tracker: trackerTracker,
+		Browse: browseHandler,
 	}
-	httpAuthProvider := http.NewHttpAuthProvider(applicationApplication)
-	handler, err := http.NewHandler(applicationApplication, httpAuthProvider)
+	tokenAuthProvider := http.NewTokenAuthProvider(applicationApplication)
+	handler, err := http.NewHandler(applicationApplication, tokenAuthProvider)
 	if err != nil {
 		return nil, err
 	}
@@ -312,11 +64,10 @@ func BuildService(conf *config.Config) (*service.Service, error) {
 
 // wire.go:
 
-type TestTracker struct {
-	Tracker *tracker.Tracker
-	TrackerMocks
+type TestApplication struct {
+	Application *application.Application
+	Mocks
 }
 
-type TrackerMocks struct {
-	UserRepository *mocks.TrackerUserRepositoryMock
+type Mocks struct {
 }
