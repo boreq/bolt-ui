@@ -48,7 +48,21 @@ func MustNewValue(b []byte) Value {
 	return v
 }
 
+func (v Value) Bytes() []byte {
+	tmp := make([]byte, len(v.b))
+	copy(tmp, v.b)
+	return tmp
+}
+
+func (v Value) IsEmpty() bool {
+	return len(v.b) == 0
+}
+
+var ErrBucketNotFound = errors.New("err bucket not found")
+
 type Database interface {
+	// Browse returns ErrBucketNotFound if the bucket specified by the path
+	// does not exist.
 	Browse(path []Key, before *Key, after *Key) ([]Entry, error)
 }
 

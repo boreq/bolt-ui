@@ -20,15 +20,20 @@ func NewDatabase(tx *bbolt.Tx) *Database {
 
 func (d *Database) Browse(path []application.Key, before *application.Key, after *application.Key) ([]application.Entry, error) {
 	if len(path) == 0 {
-		return d.browseRoot(before, after)
+		c := d.tx.Cursor()
+		return d.iterate(c, before, after)
 	}
 
-	return nil, errors.New("not implemented")
+	bucket, err := d.getBucket(path)
+	if err != nil {
+		return nil, errors.Wrap(err, "could not get the bucket")
+	}
+
+	c := bucket.Cursor()
+	return d.iterate(c, before, after)
 }
 
-func (d *Database) browseRoot(before *application.Key, after *application.Key) ([]application.Entry, error) {
-	c := d.tx.Cursor()
-
+func (d *Database) iterate(c *bbolt.Cursor, before *application.Key, after *application.Key) ([]application.Entry, error) {
 	if before != nil {
 		return iterBefore(c, *before)
 	}
@@ -38,6 +43,22 @@ func (d *Database) browseRoot(before *application.Key, after *application.Key) (
 	}
 
 	return iter(c)
+}
+
+func (d *Database) getBucket(path []application.Key) (*bbolt.Bucket, error) {
+	bucket := d.tx.Bucket(path[0].Bytes())
+	if bucket == nil {
+		return nil, application.ErrBucketNotFound
+	}
+
+	for i := 1; i < len(path); i++ {
+		bucket = bucket.Bucket(path[i].Bytes())
+		if bucket == nil {
+			return nil, application.ErrBucketNotFound
+		}
+	}
+
+	return bucket, nil
 }
 
 func iterBefore(c *bbolt.Cursor, before application.Key) ([]application.Entry, error) {
