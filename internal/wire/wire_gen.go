@@ -64,7 +64,7 @@ func BuildService(conf *config.Config) (*service.Service, error) {
 	if err != nil {
 		return nil, err
 	}
-	server := http.NewServer(handler)
+	server := http.NewServer(handler, conf)
 	serviceService := service.NewService(server)
 	return serviceService, nil
 }
