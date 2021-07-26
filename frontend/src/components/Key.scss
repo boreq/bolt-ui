@@ -1,0 +1,9 @@
+.key {
+    >span {
+        font-family: monospace;
+
+        .decoration {
+            color: $text-color-dimmed;
+        }
+    }
+}

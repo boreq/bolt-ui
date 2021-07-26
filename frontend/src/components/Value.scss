@@ -1,0 +1,44 @@
+.value {
+    padding: 1em;
+
+    .header {
+        display: flex;
+        flex-flow: row nowrap;
+
+        >* {
+            display: inline;
+        }
+
+        i {
+            flex: 0 1 0;
+            color: $text-color-dimmed;
+            padding-right: 5px;
+        }
+
+        .key {
+            flex: 1 1 0;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .format-note {
+            flex: 0 1 0;
+            color: $text-color-dimmed;
+        }
+    }
+
+    .value-string, .value-empty {
+        margin-top: 1em;
+
+        overflow-wrap: break-word;
+    }
+
+    .value-string {
+        font-family: monospace;
+    }
+
+    .value-empty {
+        color: $text-color-dimmed;
+    }
+}

@@ -1,0 +1,32 @@
+.entries {
+
+    ul {
+        padding: 0;
+        margin: 0;
+        list-style-type: none;
+
+        li {
+            a {
+                padding: 1em;
+                display: block;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+
+                .icon, .key {
+                    display: inline;
+                }
+
+                .icon {
+                    padding-right: 5px;
+                    color: $text-color-dimmed;
+                }
+
+                &.selected, &:hover {
+                    background-color: $primary-color;
+                    color: #fff;
+                }
+            }
+        }
+    }
+}

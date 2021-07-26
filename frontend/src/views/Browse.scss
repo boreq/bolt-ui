@@ -1,0 +1,70 @@
+.browse {
+    height: 100%;
+    display: flex;
+    flex-flow: column nowrap;
+
+    .top-bar {
+        display: flex;
+        flex-flow: row nowrap;
+        padding: 1em;
+        border-bottom: $border;
+        align-items: center;
+        flex: 0;
+
+        .main-header {
+            display: inline;
+            padding: 0;
+            margin: 0;
+            font-size: 20px;
+        }
+
+        ul {
+            $padding: 5px;
+
+            flex: 1;
+            margin: 0;
+            padding: 0 0 0 2em;
+            list-style-type: none;
+
+            li {
+                display: inline-block;
+                padding: 0 $padding;
+
+                .key {
+                    display: inline;
+                }
+
+                &:after {
+                    font-family: "Font Awesome 5 Free";
+                    content: "\f054";
+                    font-weight: 900;
+                    padding-left: 2 * $padding;
+                    color: $text-color-dimmed;
+                }
+
+                &:last-child:after {
+                    display: none;
+                }
+            }
+        }
+    }
+
+    .wrapper {
+        display: flex;
+        flex-flow: row nowrap;
+        align-items: stretch;
+        flex: 1;
+        min-height: 0;
+
+        >* {
+            flex: 1 1 0;
+            overflow-y: auto;
+            border-right: $border;
+
+            &:last-child {
+                flex: 2 1 0;
+                border-right: none;
+            }
+        }
+    }
+}
