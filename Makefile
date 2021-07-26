@@ -1,5 +1,5 @@
 BUILD_DIRECTORY=_build
-PROGRAM_NAME=velo
+PROGRAM_NAME=bolt-ui
 
 all: test lint build
 
@@ -34,17 +34,10 @@ lint:
 	go vet ./...
 	staticcheck ./...
 
-doc:
-	@echo "http://localhost:6060/pkg/github.com/boreq/${PROGRAM_NAME}/"
-	godoc -http=:6060
-
 test:
 	go test ./...
-
-test-verbose:
-	go test -v ./...
 
 clean:
 	rm -rf ./${BUILD_DIRECTORY}
 
-.PHONY: all build build-directory frontend check-repository-unchanged build-race tools dependencies lint doc test test-verbose clean
+.PHONY: all build build-directory frontend check-repository-unchanged build-race tools dependencies generate lint test clean

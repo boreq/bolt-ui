@@ -20,21 +20,23 @@ func NewBrowseHandler(transactionProvider TransactionProvider) *BrowseHandler {
 	}
 }
 
-func (h *BrowseHandler) Execute(query Browse) (entries []Entry, err error) {
+func (h *BrowseHandler) Execute(query Browse) (tree Tree, err error) {
 	if query.Before != nil && query.After != nil {
-		return entries, errors.New("passed both before and after")
+		return tree, errors.New("passed both before and after")
 	}
 
+	tree.Path = query.Path
+
 	if err := h.transactionProvider.Read(func(adapters *TransactableAdapters) error {
-		entries, err = adapters.Database.Browse(query.Path, query.Before, query.After)
+		tree.Entries, err = adapters.Database.Browse(query.Path, query.Before, query.After)
 		if err != nil {
 			return errors.Wrap(err, "could not browse the database")
 		}
 
 		return nil
 	}); err != nil {
-		return entries, errors.Wrap(err, "transaction failed")
+		return tree, errors.Wrap(err, "transaction failed")
 	}
 
-	return entries, nil
+	return tree, nil
 }

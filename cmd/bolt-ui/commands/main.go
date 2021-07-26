@@ -1,9 +1,6 @@
 package commands
 
 import (
-	"encoding/json"
-	"os"
-
 	"github.com/boreq/guinea"
 	"github.com/boreq/velo/internal/config"
 	"github.com/boreq/velo/internal/wire"
@@ -27,10 +24,8 @@ Thanks to bolt-ui you are able to explore a Bolt database using a web interface.
 }
 
 func run(c guinea.Context) error {
-	conf, err := loadConfig(c.Arguments[0])
-	if err != nil {
-		return errors.Wrap(err, "could not load the configuration")
-	}
+	conf := config.Default()
+	conf.DatabaseFile = c.Arguments[0]
 
 	service, err := wire.BuildService(conf)
 	if err != nil {
@@ -38,19 +33,4 @@ func run(c guinea.Context) error {
 	}
 
 	return service.HTTPServer.Serve(conf.ServeAddress)
-}
-
-func loadConfig(path string) (*config.Config, error) {
-	conf := config.Default()
-
-	f, err := os.Open(path)
-	if err != nil {
-		return nil, errors.Wrap(err, "could not open the config file")
-	}
-
-	if err := json.NewDecoder(f).Decode(&conf); err != nil {
-		return nil, errors.Wrap(err, "could not unmarshal the config")
-	}
-
-	return conf, nil
 }

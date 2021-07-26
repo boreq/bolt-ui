@@ -21,8 +21,8 @@ var testAdaptersSet = wire.NewSet(
 	adapters.NewTransactionProvider,
 	wire.Bind(new(application.TransactionProvider), new(*adapters.TransactionProvider)),
 
-	newAdaptersProvider,
-	wire.Bind(new(adapters.AdaptersProvider), new(*adaptersProvider)),
+	newTestAdaptersProvider,
+	wire.Bind(new(adapters.AdaptersProvider), new(*testAdaptersProvider)),
 )
 
 //lint:ignore U1000 because

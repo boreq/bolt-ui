@@ -58,6 +58,11 @@ func (v Value) IsEmpty() bool {
 	return len(v.b) == 0
 }
 
+type Tree struct {
+	Path    []Key
+	Entries []Entry
+}
+
 var ErrBucketNotFound = errors.New("err bucket not found")
 
 type Database interface {

@@ -35,70 +35,70 @@ func TestBrowseRoot(t *testing.T) {
 	thirdPage := expectedEntries[20:30]
 
 	// initial
-	entries, err := testApp.Application.Browse.Execute(
+	tree, err := testApp.Application.Browse.Execute(
 		application.Browse{
 			Path: nil,
 		},
 	)
 	require.NoError(t, err)
-	require.Equal(t, (firstPage), entries)
+	require.Equal(t, (firstPage), tree.Entries)
 
 	// first page
-	entries, err = testApp.Application.Browse.Execute(
+	tree, err = testApp.Application.Browse.Execute(
 		application.Browse{
 			Path:   nil,
 			Before: keyPointer(firstPage[0].Key),
 		},
 	)
 	require.NoError(t, err)
-	require.Empty(t, entries)
+	require.Empty(t, tree.Entries)
 
-	entries, err = testApp.Application.Browse.Execute(
+	tree, err = testApp.Application.Browse.Execute(
 		application.Browse{
 			Path:  nil,
 			After: keyPointer(firstPage[len(firstPage)-1].Key),
 		},
 	)
 	require.NoError(t, err)
-	require.Equal(t, (secondPage), entries)
+	require.Equal(t, (secondPage), tree.Entries)
 
 	// second page
-	entries, err = testApp.Application.Browse.Execute(
+	tree, err = testApp.Application.Browse.Execute(
 		application.Browse{
 			Path:   nil,
 			Before: keyPointer(secondPage[0].Key),
 		},
 	)
 	require.NoError(t, err)
-	require.Equal(t, (firstPage), entries)
+	require.Equal(t, (firstPage), tree.Entries)
 
-	entries, err = testApp.Application.Browse.Execute(
+	tree, err = testApp.Application.Browse.Execute(
 		application.Browse{
 			Path:  nil,
 			After: keyPointer(secondPage[len(secondPage)-1].Key),
 		},
 	)
 	require.NoError(t, err)
-	require.Equal(t, (thirdPage), entries)
+	require.Equal(t, (thirdPage), tree.Entries)
 
 	// third page
-	entries, err = testApp.Application.Browse.Execute(
+	tree, err = testApp.Application.Browse.Execute(
 		application.Browse{
 			Path:   nil,
 			Before: keyPointer(thirdPage[0].Key),
 		},
 	)
 	require.NoError(t, err)
-	require.Equal(t, (secondPage), entries)
+	require.Equal(t, (secondPage), tree.Entries)
 
-	entries, err = testApp.Application.Browse.Execute(
+	tree, err = testApp.Application.Browse.Execute(
 		application.Browse{
 			Path:  nil,
 			After: keyPointer(thirdPage[len(thirdPage)-1].Key),
 		},
 	)
 	require.NoError(t, err)
-	require.Empty(t, entries)
+	require.Empty(t, tree.Entries)
 }
 
 func TestBrowse(t *testing.T) {
@@ -146,70 +146,70 @@ func TestBrowse(t *testing.T) {
 	}
 
 	// initial
-	entries, err := testApp.Application.Browse.Execute(
+	tree, err := testApp.Application.Browse.Execute(
 		application.Browse{
 			Path: path,
 		},
 	)
 	require.NoError(t, err)
-	require.Equal(t, (firstPage), entries)
+	require.Equal(t, (firstPage), tree.Entries)
 
 	// first page
-	entries, err = testApp.Application.Browse.Execute(
+	tree, err = testApp.Application.Browse.Execute(
 		application.Browse{
 			Path:   path,
 			Before: keyPointer(firstPage[0].Key),
 		},
 	)
 	require.NoError(t, err)
-	require.Empty(t, entries)
+	require.Empty(t, tree.Entries)
 
-	entries, err = testApp.Application.Browse.Execute(
+	tree, err = testApp.Application.Browse.Execute(
 		application.Browse{
 			Path:  path,
 			After: keyPointer(firstPage[len(firstPage)-1].Key),
 		},
 	)
 	require.NoError(t, err)
-	require.Equal(t, (secondPage), entries)
+	require.Equal(t, (secondPage), tree.Entries)
 
 	// second page
-	entries, err = testApp.Application.Browse.Execute(
+	tree, err = testApp.Application.Browse.Execute(
 		application.Browse{
 			Path:   path,
 			Before: keyPointer(secondPage[0].Key),
 		},
 	)
 	require.NoError(t, err)
-	require.Equal(t, (firstPage), entries)
+	require.Equal(t, (firstPage), tree.Entries)
 
-	entries, err = testApp.Application.Browse.Execute(
+	tree, err = testApp.Application.Browse.Execute(
 		application.Browse{
 			Path:  path,
 			After: keyPointer(secondPage[len(secondPage)-1].Key),
 		},
 	)
 	require.NoError(t, err)
-	require.Equal(t, (thirdPage), entries)
+	require.Equal(t, (thirdPage), tree.Entries)
 
 	// third page
-	entries, err = testApp.Application.Browse.Execute(
+	tree, err = testApp.Application.Browse.Execute(
 		application.Browse{
 			Path:   path,
 			Before: keyPointer(thirdPage[0].Key),
 		},
 	)
 	require.NoError(t, err)
-	require.Equal(t, (secondPage), entries)
+	require.Equal(t, (secondPage), tree.Entries)
 
-	entries, err = testApp.Application.Browse.Execute(
+	tree, err = testApp.Application.Browse.Execute(
 		application.Browse{
 			Path:  nil,
 			After: keyPointer(thirdPage[len(thirdPage)-1].Key),
 		},
 	)
 	require.NoError(t, err)
-	require.Empty(t, entries)
+	require.Empty(t, tree.Entries)
 }
 
 func keyPointer(v application.Key) *application.Key {

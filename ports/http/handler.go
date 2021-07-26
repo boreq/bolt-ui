@@ -1,13 +1,16 @@
 package http
 
 import (
+	"encoding/hex"
 	"net/http"
+	"strings"
 
 	"github.com/boreq/rest"
 	"github.com/boreq/velo/application"
 	"github.com/boreq/velo/logging"
 	"github.com/boreq/velo/ports/http/frontend"
 	"github.com/julienschmidt/httprouter"
+	"github.com/pkg/errors"
 )
 
 type Handler struct {
@@ -41,8 +44,7 @@ func (h *Handler) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 }
 
 func (h *Handler) browse(r *http.Request) rest.RestResponse {
-	//	ps := httprouter.ParamsFromContext(r.Context())
-	//	path := strings.Trim(ps.ByName("path"), "/")
+	ps := httprouter.ParamsFromContext(r.Context())
 
 	ok, err := h.authProvider.Check(r)
 	if err != nil {
@@ -54,12 +56,51 @@ func (h *Handler) browse(r *http.Request) rest.RestResponse {
 		return rest.ErrForbidden.WithMessage("Invalid token.")
 	}
 
-	//query := application.Browse{}
+	path, err := readPath(ps.ByName("path"))
+	if err != nil {
+		h.log.Warn("invalid path", "err", err)
+		return rest.ErrBadRequest.WithMessage("Invalid path.")
+	}
 
-	//if err := h.app.Browse.Execute(query); err != nil {
-	//	h.log.Error("could not browse", "err", err)
-	//	return rest.ErrInternalServerError
-	//}
+	query := application.Browse{
+		Path: path,
+	}
 
-	return rest.NewResponse(nil)
+	tree, err := h.app.Browse.Execute(query)
+	if err != nil {
+		h.log.Error("browse failure", "err", err)
+		return rest.ErrInternalServerError
+	}
+
+	return rest.NewResponse(
+		toTree(tree),
+	)
+}
+
+const sep = "/"
+
+func readPath(s string) ([]application.Key, error) {
+	s = strings.Trim(s, sep)
+
+	if s == "" {
+		return nil, nil
+	}
+
+	var path []application.Key
+
+	for _, element := range strings.Split(s, "/") {
+		b, err := hex.DecodeString(element)
+		if err != nil {
+			return nil, errors.Wrap(err, "could not decode")
+		}
+
+		key, err := application.NewKey(b)
+		if err != nil {
+			return nil, errors.Wrap(err, "could not create a key")
+		}
+
+		path = append(path, key)
+	}
+
+	return path, nil
 }

@@ -33,13 +33,13 @@ func BuildTestTransactableAdapters(tx *bbolt.Tx, mocks Mocks) (*application.Tran
 }
 
 func BuildApplicationForTest(db *bbolt.DB) (TestApplication, error) {
-	wireAdaptersProvider := newAdaptersProvider()
-	transactionProvider := adapters.NewTransactionProvider(db, wireAdaptersProvider)
+	mocks := Mocks{}
+	wireTestAdaptersProvider := newTestAdaptersProvider(mocks)
+	transactionProvider := adapters.NewTransactionProvider(db, wireTestAdaptersProvider)
 	browseHandler := application.NewBrowseHandler(transactionProvider)
 	applicationApplication := &application.Application{
 		Browse: browseHandler,
 	}
-	mocks := Mocks{}
 	testApplication := TestApplication{
 		Application: applicationApplication,
 		Mocks:       mocks,
