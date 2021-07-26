@@ -2,7 +2,7 @@ package http
 
 import (
 	"encoding/hex"
-	"unicode/utf8"
+	"unicode"
 
 	"github.com/boreq/velo/application"
 )
@@ -23,8 +23,9 @@ type Value struct {
 }
 
 type Entry struct {
-	Key   Key    `json:"key"`
-	Value *Value `json:"value,omitempty"`
+	Bucket bool   `json:"bucket"`
+	Key    Key    `json:"key"`
+	Value  *Value `json:"value,omitempty"`
 }
 
 func toTree(tree application.Tree) Tree {
@@ -52,8 +53,9 @@ func toEntries(entries []application.Entry) []Entry {
 
 func toEntry(entry application.Entry) Entry {
 	return Entry{
-		Key:   toKey(entry.Key),
-		Value: toValue(entry.Value),
+		Bucket: entry.Bucket,
+		Key:    toKey(entry.Key),
+		Value:  toValue(entry.Value),
 	}
 }
 
@@ -64,7 +66,7 @@ func toKey(key application.Key) Key {
 		Hex: hex.EncodeToString(b),
 	}
 
-	if utf8.Valid(b) {
+	if canDisplayAsString(b) {
 		result.Str = string(b)
 	}
 
@@ -82,9 +84,18 @@ func toValue(value application.Value) *Value {
 		Hex: hex.EncodeToString(b),
 	}
 
-	if utf8.Valid(b) {
+	if canDisplayAsString(b) {
 		result.Str = string(b)
 	}
 
 	return result
+}
+
+func canDisplayAsString(b []byte) bool {
+	for _, rne := range string(b) {
+		if !unicode.IsPrint(rne) {
+			return false
+		}
+	}
+	return true
 }

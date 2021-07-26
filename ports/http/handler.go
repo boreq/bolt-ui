@@ -5,12 +5,12 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/boreq/errors"
 	"github.com/boreq/rest"
 	"github.com/boreq/velo/application"
 	"github.com/boreq/velo/logging"
 	"github.com/boreq/velo/ports/http/frontend"
 	"github.com/julienschmidt/httprouter"
-	"github.com/pkg/errors"
 )
 
 type Handler struct {
@@ -68,6 +68,9 @@ func (h *Handler) browse(r *http.Request) rest.RestResponse {
 
 	tree, err := h.app.Browse.Execute(query)
 	if err != nil {
+		if errors.Is(err, application.ErrBucketNotFound) {
+			return rest.ErrNotFound
+		}
 		h.log.Error("browse failure", "err", err)
 		return rest.ErrInternalServerError
 	}

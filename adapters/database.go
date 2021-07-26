@@ -21,7 +21,7 @@ func NewDatabase(tx *bbolt.Tx) *Database {
 func (d *Database) Browse(path []application.Key, before *application.Key, after *application.Key) ([]application.Entry, error) {
 	if len(path) == 0 {
 		c := d.tx.Cursor()
-		return d.iterate(c, before, after)
+		return d.iterate(c, before, after, isAlwaysBucket)
 	}
 
 	bucket, err := d.getBucket(path)
@@ -29,20 +29,24 @@ func (d *Database) Browse(path []application.Key, before *application.Key, after
 		return nil, errors.Wrap(err, "could not get the bucket")
 	}
 
+	isBucket := func(key []byte) bool {
+		return bucket.Bucket(key) != nil
+	}
+
 	c := bucket.Cursor()
-	return d.iterate(c, before, after)
+	return d.iterate(c, before, after, isBucket)
 }
 
-func (d *Database) iterate(c *bbolt.Cursor, before *application.Key, after *application.Key) ([]application.Entry, error) {
+func (d *Database) iterate(c *bbolt.Cursor, before *application.Key, after *application.Key, isBucket isBucketFn) ([]application.Entry, error) {
 	if before != nil {
-		return iterBefore(c, *before)
+		return iterBefore(c, *before, isBucket)
 	}
 
 	if after != nil {
-		return iterAfter(c, *after)
+		return iterAfter(c, *after, isBucket)
 	}
 
-	return iter(c)
+	return iter(c, isBucket)
 }
 
 func (d *Database) getBucket(path []application.Key) (*bbolt.Bucket, error) {
@@ -61,13 +65,13 @@ func (d *Database) getBucket(path []application.Key) (*bbolt.Bucket, error) {
 	return bucket, nil
 }
 
-func iterBefore(c *bbolt.Cursor, before application.Key) ([]application.Entry, error) {
+func iterBefore(c *bbolt.Cursor, before application.Key, isBucket isBucketFn) ([]application.Entry, error) {
 	var entries []application.Entry
 
 	c.Seek(before.Bytes())
 
 	for key, value := c.Prev(); key != nil; key, value = c.Prev() {
-		entry, err := newEntry(key, value)
+		entry, err := newEntry(isBucket, key, value)
 		if err != nil {
 			return nil, errors.Wrap(err, "could not create an entry")
 		}
@@ -86,13 +90,13 @@ func iterBefore(c *bbolt.Cursor, before application.Key) ([]application.Entry, e
 	return entries, nil
 }
 
-func iterAfter(c *bbolt.Cursor, after application.Key) ([]application.Entry, error) {
+func iterAfter(c *bbolt.Cursor, after application.Key, isBucket isBucketFn) ([]application.Entry, error) {
 	var entries []application.Entry
 
 	c.Seek(after.Bytes())
 
 	for key, value := c.Next(); key != nil; key, value = c.Next() {
-		entry, err := newEntry(key, value)
+		entry, err := newEntry(isBucket, key, value)
 		if err != nil {
 			return nil, errors.Wrap(err, "could not create an entry")
 		}
@@ -107,11 +111,11 @@ func iterAfter(c *bbolt.Cursor, after application.Key) ([]application.Entry, err
 	return entries, nil
 }
 
-func iter(c *bbolt.Cursor) ([]application.Entry, error) {
+func iter(c *bbolt.Cursor, isBucket isBucketFn) ([]application.Entry, error) {
 	var entries []application.Entry
 
 	for key, value := c.First(); key != nil; key, value = c.Next() {
-		entry, err := newEntry(key, value)
+		entry, err := newEntry(isBucket, key, value)
 		if err != nil {
 			return nil, errors.Wrap(err, "could not create an entry")
 		}
@@ -126,7 +130,13 @@ func iter(c *bbolt.Cursor) ([]application.Entry, error) {
 	return entries, nil
 }
 
-func newEntry(k, v []byte) (application.Entry, error) {
+type isBucketFn func(k []byte) bool
+
+func isAlwaysBucket(_ []byte) bool {
+	return true
+}
+
+func newEntry(isBucket isBucketFn, k, v []byte) (application.Entry, error) {
 	key, err := application.NewKey(k)
 	if err != nil {
 		return application.Entry{}, errors.Wrap(err, "could not create a key")
@@ -137,8 +147,16 @@ func newEntry(k, v []byte) (application.Entry, error) {
 		return application.Entry{}, errors.Wrap(err, "could not create a value")
 	}
 
-	return application.Entry{
+	entry := application.Entry{
 		Key:   key,
 		Value: value,
-	}, nil
+	}
+
+	if !value.IsEmpty() {
+		entry.Bucket = false
+	} else {
+		entry.Bucket = isBucket(k)
+	}
+
+	return entry, nil
 }

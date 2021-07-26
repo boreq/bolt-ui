@@ -72,8 +72,9 @@ type Database interface {
 }
 
 type Entry struct {
-	Key   Key
-	Value Value
+	Bucket bool
+	Key    Key
+	Value  Value
 }
 
 type Application struct {

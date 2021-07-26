@@ -212,8 +212,67 @@ func TestBrowse(t *testing.T) {
 	require.Empty(t, tree.Entries)
 }
 
-func keyPointer(v application.Key) *application.Key {
-	return &v
+func TestBrowseNilValues(t *testing.T) {
+	testApp := NewTracker(t)
+
+	bucketName := "bucket"
+
+	key1 := []byte("a")
+	key2 := []byte("b")
+	key3 := []byte("c")
+
+	err := testApp.DB.Update(func(tx *bbolt.Tx) error {
+		bucket, err := tx.CreateBucket([]byte(bucketName))
+		if err != nil {
+			return err
+		}
+
+		_, err = bucket.CreateBucket(key1)
+		if err != nil {
+			return err
+		}
+
+		if err = bucket.Put(key2, key2); err != nil {
+			return err
+		}
+
+		if err = bucket.Put(key3, nil); err != nil {
+			return err
+		}
+
+		return nil
+	})
+	require.NoError(t, err)
+
+	path := []application.Key{
+		application.MustNewKey([]byte(bucketName)),
+	}
+
+	tree, err := testApp.Application.Browse.Execute(
+		application.Browse{
+			Path: path,
+		},
+	)
+	require.NoError(t, err)
+	require.Equal(t,
+		[]application.Entry{
+			{
+				Bucket: true,
+				Key:    application.MustNewKey(key1),
+				Value:  nilValue,
+			},
+			{
+				Bucket: false,
+				Key:    application.MustNewKey(key2),
+				Value:  application.MustNewValue(key2),
+			},
+			{
+				Bucket: false,
+				Key:    application.MustNewKey(key3),
+				Value:  nilValue,
+			},
+		},
+		tree.Entries)
 }
 
 func NewTracker(t *testing.T) wire.TestApplication {
@@ -240,8 +299,9 @@ func bucketEntries(n int) (result []application.Entry) {
 
 	for _, key := range keys {
 		entry := application.Entry{
-			Key:   application.MustNewKey([]byte(key)),
-			Value: nilValue,
+			Bucket: true,
+			Key:    application.MustNewKey([]byte(key)),
+			Value:  nilValue,
 		}
 		result = append(result, entry)
 	}
@@ -262,14 +322,16 @@ func mixedBucketEntries(n int) (result []application.Entry) {
 	for i, key := range keys {
 		if i%2 == 0 {
 			entry := application.Entry{
-				Key:   application.MustNewKey([]byte(key)),
-				Value: nilValue,
+				Bucket: true,
+				Key:    application.MustNewKey([]byte(key)),
+				Value:  nilValue,
 			}
 			result = append(result, entry)
 		} else {
 			entry := application.Entry{
-				Key:   application.MustNewKey([]byte(key)),
-				Value: application.MustNewValue([]byte(key + "_value")),
+				Bucket: false,
+				Key:    application.MustNewKey([]byte(key)),
+				Value:  application.MustNewValue([]byte(key + "_value")),
 			}
 			result = append(result, entry)
 		}
@@ -286,4 +348,8 @@ func randString() string {
 		b[i] = letters[rand.Intn(len(letters))]
 	}
 	return string(b)
+}
+
+func keyPointer(v application.Key) *application.Key {
+	return &v
 }
