@@ -2,9 +2,11 @@
 package config
 
 type Config struct {
-	ServeAddress string
-	DatabaseFile string
-	InsecureCORS bool
+	ServeAddress  string
+	DatabaseFile  string
+	Token         string
+	InsecureCORS  bool
+	InsecureToken bool
 }
 
 // Default returns the default config.

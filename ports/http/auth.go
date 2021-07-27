@@ -1,9 +1,10 @@
 package http
 
 import (
+	"errors"
 	"net/http"
 
-	"github.com/boreq/velo/application"
+	"github.com/boreq/velo/internal/config"
 )
 
 type AuthProvider interface {
@@ -11,41 +12,28 @@ type AuthProvider interface {
 }
 
 type TokenAuthProvider struct {
-	app *application.Application
+	conf *config.Config
 }
 
-func NewTokenAuthProvider(app *application.Application) *TokenAuthProvider {
+func NewTokenAuthProvider(conf *config.Config) *TokenAuthProvider {
 	return &TokenAuthProvider{
-		app: app,
+		conf: conf,
 	}
 }
 
 func (h *TokenAuthProvider) Check(r *http.Request) (bool, error) {
-	//token := h.getToken(r)
-	//if token == "" {
-	//	return nil, nil
-	//}
+	if h.conf.InsecureToken {
+		return true, nil
+	}
 
-	//cmd := auth.CheckAccessToken{
-	//	Token: token,
-	//}
+	if h.conf.Token == "" {
+		return false, errors.New("auth token is not set in the config")
+	}
 
-	//user, err := h.app.Auth.CheckAccessToken.Execute(cmd)
-	//if err != nil {
-	//	if errors.Is(err, auth.ErrUnauthorized) {
-	//		return nil, nil
-	//	}
-	//	return nil, errors.Wrap(err, "could not check the access token")
-	//}
-
-	//u := AuthenticatedUser{
-	//	User:  *user,
-	//	Token: token,
-	//}
+	token := r.Header.Get("Access-Token")
+	if token != h.conf.Token {
+		return false, nil
+	}
 
 	return true, nil
 }
-
-//func (h *TokenAuthProvider) getToken(r *http.Request) authDomain.AccessToken {
-//	return authDomain.AccessToken(r.Header.Get("Access-Token"))
-//}

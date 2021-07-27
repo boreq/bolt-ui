@@ -59,7 +59,7 @@ func BuildService(conf *config.Config) (*service.Service, error) {
 	applicationApplication := &application.Application{
 		Browse: browseHandler,
 	}
-	tokenAuthProvider := http.NewTokenAuthProvider(applicationApplication)
+	tokenAuthProvider := http.NewTokenAuthProvider(conf)
 	handler, err := http.NewHandler(applicationApplication, tokenAuthProvider)
 	if err != nil {
 		return nil, err

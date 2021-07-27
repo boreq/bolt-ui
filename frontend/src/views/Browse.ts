@@ -1,6 +1,7 @@
 import { Component, Vue } from 'vue-property-decorator';
 import { ApiService } from '@/services/ApiService';
 import { Tree } from '@/dto/Tree';
+import { Mutation } from '@/store';
 import { Entry as EntryDTO, Key as KeyDTO } from '@/dto/Entry';
 
 import Notifications from '@/components/Notifications.vue';
@@ -58,6 +59,7 @@ export default class Browse extends Vue {
     }
 
     created(): void {
+        this.setToken();
         this.load();
     }
 
@@ -107,6 +109,11 @@ export default class Browse extends Vue {
         }
 
         return tree.entries.find(entry => entry.key.hex === selectedPath[index].hex);
+    }
+
+    private setToken(): void {
+        const token = this.$route.query.token;
+        this.$store.commit(Mutation.SetToken, token);
     }
 
     private load(): void {
