@@ -1,15 +1,15 @@
 #!/bin/bash
 set -e
 
+if ! git diff-index --quiet HEAD --; then
+    echo "You have uncommited changes in your repository!"
+    exit 1
+fi
+
 versionFile="ports/http/frontend/version.go"
 previousCommit=$(cat ${versionFile} | grep FrontendCommit | awk ' {gsub(/"/, "", $4); print $4 }')
 
-cd ../velo-frontend
-
-if ! git diff-index --quiet HEAD --; then
-    echo "You have uncommited changes in the frontend repository!"
-    exit 1
-fi
+cd ./frontend
 
 commit=$(git rev-parse HEAD)
 echo "Previous frontend commit: ${previousCommit}"
@@ -17,38 +17,25 @@ echo "Current frontend commit: ${commit}"
 
 if [ "$commit" = "$previousCommit" ]; then
     echo "Frontend is already up to date (${commit} == ${previousCommit})"
-    exit 1
+    exit 0
 fi
 
-echo "Generating a commit message ${previousCommit} -> ${commit}"
-
-commitFile="/tmp/velo-frontend-commit.txt"
-touch ${commitFile}
-echo "Update frontend" > ${commitFile}
-echo "" >> ${commitFile}
-git log --pretty=medium ${previousCommit}..${commit} >> ${commitFile}
-
-echo "Building the frontend"
+echo "Building..."
 rm -rf dist
 yarn build
 
-cd ../velo
-
-if ! git diff-index --quiet HEAD --; then
-    echo "You have uncommited changes in the backend repository!"
-    exit 1
-fi
-
-echo "Running https://github.com/rakyll/statik"
-cd ./ports/http/frontend
-cp -r ../../../../velo-frontend/dist/. ./
+echo "Copying files..."
+cd ../ports/http/frontend
+cp -r ../../../frontend/dist/. ./
 cd ../../../
 
-echo "Persisting frontend version"
-
+echo "Persisting frontend version..."
 echo "package frontend" > "${versionFile}"
 echo "" >> "${versionFile}"
 echo "const FrontendCommit = \"${commit}\"" >> "${versionFile}"
 
+echo "Commiting..."
+commitFile="/tmp/velo-frontend-commit.txt"
+echo "Update frontend" > ${commitFile}
 git add ports/http/frontend/
 git commit -F ${commitFile}
