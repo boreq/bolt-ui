@@ -101,11 +101,6 @@ export default class Tree extends Vue {
         const scrollHeight = this.domTree.scrollHeight;
         const clientHeight = this.domTree.clientHeight;
 
-        //console.log('scroll position', scrollPosition);
-        //console.log('scroll height', scrollHeight);
-        //console.log('client height', this.domTree.clientHeight);
-        //console.log('+', );
-
         if (scrollPosition < this.loadThresholdInPixels) {
             this.loadPreviousIfNeeded();
         }
