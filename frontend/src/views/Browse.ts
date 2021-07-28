@@ -1,61 +1,42 @@
 import { Component, Vue } from 'vue-property-decorator';
-import { ApiService } from '@/services/ApiService';
-import { Tree } from '@/dto/Tree';
 import { Mutation } from '@/store';
 import { Entry as EntryDTO, Key as KeyDTO } from '@/dto/Entry';
 
-import Notifications from '@/components/Notifications.vue';
-import Entries from '@/components/Entries.vue';
+import Tree from '@/components/Tree.vue';
 import Value from '@/components/Value.vue';
 import Key from '@/components/Key.vue';
 
 
 @Component({
     components: {
-        Entries,
+        Tree,
         Value,
         Key,
     },
 })
 export default class Browse extends Vue {
 
-    trees: Tree[] = [];
-    selected: EntryDTO = null;
+    paths: KeyDTO[][] = [];
+    selected: KeyDTO[] = null;
+    selectedEntry: EntryDTO = null;
 
-    private readonly apiService = new ApiService(this);
     private readonly numVisibleTrees = 3;
 
-    get selectedPath(): KeyDTO[] {
-        if (this.trees.length === 0) {
-            return [];
-        }
+    get visiblePaths(): Tree[] {
+        const paths = [];
 
-        const path =  [
-            ...this.trees[this.trees.length - 1].path,
-        ];
-
-        if (this.selected) {
-            path.push(this.selected.key);
-        }
-
-        return path;
-    }
-
-    get visibleTrees(): Tree[] {
-        const trees = [];
-
-        let minIndex = this.trees.length - this.numVisibleTrees;
-        if (this.selected) {
+        let minIndex = this.paths.length - this.numVisibleTrees;
+        if (this.selectedEntry) {
             minIndex++;
         }
 
-        this.trees.forEach((tree, index) => {
+        this.paths.forEach((path, index) => {
             if (index >= minIndex) {
-                trees.push(tree);
+                paths.push(path);
             }
         });
 
-        return trees;
+        return paths;
     }
 
     created(): void {
@@ -63,52 +44,29 @@ export default class Browse extends Vue {
         this.load();
     }
 
-    treeKey(tree: Tree): string {
-        return tree.path.map(v => v.hex).join('-');
+    treeKey(path: KeyDTO[]): string {
+        return path.map(v => v.hex).join('-');
     }
 
     onHeaderClick(): void {
         this.load();
     }
 
-    onEntry(tree: Tree, entry: EntryDTO): void {
-        const index = this.trees.indexOf(tree);
+    onEntry(path: KeyDTO[], entry: EntryDTO): void {
+        const index = this.paths.indexOf(path);
         if (index >= 0) {
-            this.trees.length = index + 1;
+            this.paths.length = index + 1;
         }
 
-        this.selected = null;
+        const childPath = [...path, entry.key];
+        this.selected = childPath;
 
         if (entry.bucket) {
-            const path = [...tree.path, entry.key];
-            const stringPath  = path.map(key => key.hex).join('/');
-            this.apiService.browse(stringPath, null, null)
-                .then(
-                    result => {
-                        this.trees.push(result.data);
-                    },
-                    error => {
-                        Notifications.pushError(this, 'Could not query the backend.', error);
-                    },
-
-                );
+            this.paths.push(childPath);
+            this.selectedEntry = null;
         } else {
-            this.selected = entry;
+            this.selectedEntry = entry;
         }
-    }
-
-    selectedInTree(tree: Tree): EntryDTO {
-        const index = this.trees.indexOf(tree);
-        if (index < 0) {
-            return null;
-        }
-
-        const selectedPath =  this.selectedPath;
-        if (index > selectedPath.length - 1) {
-            return null;
-        }
-
-        return tree.entries.find(entry => entry.key.hex === selectedPath[index].hex);
     }
 
     private setToken(): void {
@@ -117,20 +75,9 @@ export default class Browse extends Vue {
     }
 
     private load(): void {
-        this.trees = [];
+        this.paths = [
+            [],
+        ];
         this.selected = null;
-
-        this.apiService.browse(null, null, null)
-            .then(
-                result => {
-                    this.trees = [
-                        result.data,
-                    ];
-                },
-                error => {
-                    Notifications.pushError(this, 'Could not query the backend.', error);
-                },
-
-            );
     }
 }

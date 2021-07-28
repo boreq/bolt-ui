@@ -16,6 +16,10 @@ export default class Entries extends Vue {
     @Prop()
     selected: Entry;
 
+    get isEmpty(): boolean {
+        return this.entries && this.entries.length === 0;
+    }
+
     onClick(entry: Entry): void {
         this.$emit('entry', entry);
     }

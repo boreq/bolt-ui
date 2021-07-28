@@ -12,6 +12,9 @@
                 </a>
             </li>
         </ul>
+        <div class="empty-message" v-if="isEmpty">
+            This bucket is empty.
+        </div>
     </div>
 </template>
 <script lang="ts" src="./Entries.ts"></script>
