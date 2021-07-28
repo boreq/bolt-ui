@@ -1,5 +1,5 @@
 <template>
-    <div class="tree">
+    <div class="tree" ref="tree" @scroll="onScroll">
         <entries :entries="tree.entries" :selected="selectedInTree" 
             @entry="onEntry($event)" v-if="tree">
         </entries>
