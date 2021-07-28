@@ -17,8 +17,7 @@ import Key from '@/components/Key.vue';
 export default class Browse extends Vue {
 
     paths: KeyDTO[][] = [];
-    selected: KeyDTO[] = null;
-    selectedEntry: EntryDTO = null;
+    selectedValue: EntryDTO = null;
 
     private readonly numVisibleTrees = 3;
 
@@ -26,7 +25,7 @@ export default class Browse extends Vue {
         const paths = [];
 
         let minIndex = this.paths.length - this.numVisibleTrees;
-        if (this.selectedEntry) {
+        if (this.selectedValue) {
             minIndex++;
         }
 
@@ -37,6 +36,13 @@ export default class Browse extends Vue {
         });
 
         return paths;
+    }
+
+    get selectedPath(): KeyDTO[] {
+        if (this.paths.length === 0) {
+            return null;
+        }
+        return this.paths[this.paths.length - 1];
     }
 
     created(): void {
@@ -58,14 +64,12 @@ export default class Browse extends Vue {
             this.paths.length = index + 1;
         }
 
-        const childPath = [...path, entry.key];
-        this.selected = childPath;
-
         if (entry.bucket) {
+            const childPath = [...path, entry.key];
             this.paths.push(childPath);
-            this.selectedEntry = null;
+            this.selectedValue = null;
         } else {
-            this.selectedEntry = entry;
+            this.selectedValue = entry;
         }
     }
 
@@ -78,6 +82,6 @@ export default class Browse extends Vue {
         this.paths = [
             [],
         ];
-        this.selected = null;
+        this.selectedValue = null;
     }
 }

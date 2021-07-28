@@ -3,18 +3,18 @@
         <div class="top-bar">
             <a class="main-header" @click="onHeaderClick">Bolt UI</a>
 
-            <ul v-if="selected">
-                <li v-for="key in selected" :key="key.hex">
+            <ul v-if="selectedPath">
+                <li v-for="key in selectedPath" :key="key.hex">
                     <key :k="key"></key>
                 </li>
             </ul>
         </div>
         <div class="wrapper">
-            <tree :path="path" :selected="selected"
+            <tree :path="path" :selected="selectedPath"
                 v-for="path in visiblePaths" :key="treeKey(path)"
                 @entry="onEntry(path, $event)"></tree>
 
-            <value :entry="selectedEntry" v-if="selectedEntry"></value>
+            <value :entry="selectedValue" v-if="selectedValue"></value>
         </div>
     </div>
 </template>
