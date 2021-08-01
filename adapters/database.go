@@ -18,10 +18,10 @@ func NewDatabase(tx *bbolt.Tx) *Database {
 	}
 }
 
-func (d *Database) Browse(path []application.Key, before *application.Key, after *application.Key) ([]application.Entry, error) {
+func (d *Database) Browse(path []application.Key, before, after, from *application.Key) ([]application.Entry, error) {
 	if len(path) == 0 {
 		c := d.tx.Cursor()
-		return d.iterate(c, before, after, isAlwaysBucket)
+		return d.iterate(c, before, after, from, isAlwaysBucket)
 	}
 
 	bucket, err := d.getBucket(path)
@@ -34,16 +34,20 @@ func (d *Database) Browse(path []application.Key, before *application.Key, after
 	}
 
 	c := bucket.Cursor()
-	return d.iterate(c, before, after, isBucket)
+	return d.iterate(c, before, after, from, isBucket)
 }
 
-func (d *Database) iterate(c *bbolt.Cursor, before *application.Key, after *application.Key, isBucket isBucketFn) ([]application.Entry, error) {
+func (d *Database) iterate(c *bbolt.Cursor, before, after, from *application.Key, isBucket isBucketFn) ([]application.Entry, error) {
 	if before != nil {
 		return iterBefore(c, *before, isBucket)
 	}
 
 	if after != nil {
 		return iterAfter(c, *after, isBucket)
+	}
+
+	if from != nil {
+		return iterFrom(c, *from, isBucket)
 	}
 
 	return iter(c, isBucket)
@@ -96,6 +100,25 @@ func iterAfter(c *bbolt.Cursor, after application.Key, isBucket isBucketFn) ([]a
 	c.Seek(after.Bytes())
 
 	for key, value := c.Next(); key != nil; key, value = c.Next() {
+		entry, err := newEntry(isBucket, key, value)
+		if err != nil {
+			return nil, errors.Wrap(err, "could not create an entry")
+		}
+
+		entries = append(entries, entry)
+
+		if len(entries) >= perPage {
+			break
+		}
+	}
+
+	return entries, nil
+}
+
+func iterFrom(c *bbolt.Cursor, after application.Key, isBucket isBucketFn) ([]application.Entry, error) {
+	var entries []application.Entry
+
+	for key, value := c.Seek(after.Bytes()); key != nil; key, value = c.Next() {
 		entry, err := newEntry(isBucket, key, value)
 		if err != nil {
 			return nil, errors.Wrap(err, "could not create an entry")

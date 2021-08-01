@@ -173,6 +173,15 @@ func TestBrowse(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, (secondPage), tree.Entries)
 
+	tree, err = testApp.Application.Browse.Execute(
+		application.Browse{
+			Path: path,
+			From: keyPointer(firstPage[0].Key),
+		},
+	)
+	require.NoError(t, err)
+	require.Equal(t, firstPage, tree.Entries)
+
 	// second page
 	tree, err = testApp.Application.Browse.Execute(
 		application.Browse{

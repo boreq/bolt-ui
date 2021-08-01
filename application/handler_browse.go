@@ -8,6 +8,7 @@ type Browse struct {
 	Path   []Key
 	Before *Key
 	After  *Key
+	From   *Key
 }
 
 type BrowseHandler struct {
@@ -21,14 +22,14 @@ func NewBrowseHandler(transactionProvider TransactionProvider) *BrowseHandler {
 }
 
 func (h *BrowseHandler) Execute(query Browse) (tree Tree, err error) {
-	if query.Before != nil && query.After != nil {
-		return tree, errors.New("passed both before and after")
+	if !h.queryValid(query) {
+		return tree, errors.New("passed two or more of before/after/from at the same time")
 	}
 
 	tree.Path = query.Path
 
 	if err := h.transactionProvider.Read(func(adapters *TransactableAdapters) error {
-		tree.Entries, err = adapters.Database.Browse(query.Path, query.Before, query.After)
+		tree.Entries, err = adapters.Database.Browse(query.Path, query.Before, query.After, query.From)
 		if err != nil {
 			return errors.Wrap(err, "could not browse the database")
 		}
@@ -39,4 +40,18 @@ func (h *BrowseHandler) Execute(query Browse) (tree Tree, err error) {
 	}
 
 	return tree, nil
+}
+
+func (h *BrowseHandler) queryValid(query Browse) bool {
+	var counter int
+	if query.Before != nil {
+		counter++
+	}
+	if query.After != nil {
+		counter++
+	}
+	if query.From != nil {
+		counter++
+	}
+	return counter <= 1
 }

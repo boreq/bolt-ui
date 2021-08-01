@@ -68,7 +68,7 @@ var ErrBucketNotFound = errors.New("err bucket not found")
 type Database interface {
 	// Browse returns ErrBucketNotFound if the bucket specified by the path
 	// does not exist.
-	Browse(path []Key, before *Key, after *Key) ([]Entry, error)
+	Browse(path []Key, before, after, from *Key) ([]Entry, error)
 }
 
 type Entry struct {
