@@ -274,20 +274,6 @@ export default class Tree extends Vue {
         return true;
     }
 
-    private pathIsIdentical(oldValue: KeyDTO[], newValue: KeyDTO[]): boolean {
-        if (oldValue.length !== newValue.length) {
-            return false;
-        }
-
-        for (let i = 0; i < oldValue.length; i++) {
-            if (oldValue[i].hex !== newValue[i].hex) {
-                return false;
-            }
-        }
-
-        return true;
-    }
-
     private emitEntry(entry: EntryDTO): void {
         this.$emit('entry', entry);
     }
