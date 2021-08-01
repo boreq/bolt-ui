@@ -35,10 +35,10 @@ export default class Tree extends Vue {
         //this.load();
     }
 
-    //@Watch('selected')
-    //onSelectedChanged(): void {
-    //    this.tryEmitSelected();
-    //}
+    @Watch('selected')
+    onSelectedChanged(): void {
+        this.tryEmitSelected();
+    }
 
     get selectedInTree(): EntryDTO {
         if (!this.selected || !this.tree) {
@@ -59,32 +59,35 @@ export default class Tree extends Vue {
         return null;
     }
 
-    //private tryEmitSelected(): void {
-    //    if (!this.selected || !this.tree) {
-    //        return null;
-    //    }
+    private tryEmitSelected(): void {
+        if (!this.selected || !this.tree) {
+            return null;
+        }
 
-    //    if (this.path.length !== this.selected.length - 1) { 
-    //        return;
-    //    }
+        if (this.path.length !== this.selected.length - 1) { 
+            return;
+        }
 
-    //    for (const entry of this.tree.entries) {
-    //        if (entry.bucket) {
-    //            continue;
-    //        }
+        for (const entry of this.tree.entries) {
+            if (entry.bucket) {
+                continue;
+            }
 
-    //        const entryPath = [
-    //            ...this.path,
-    //            entry.key,
-    //        ]
+            if (entry.key.hex === this.selected[this.selected.length - 1].hex) {
 
-    //        if (this.pathIsIdentical(this.selected, entryPath)) {
-    //            this.$emit('entry', entry);
-    //        }
-    //    }
+            //const entryPath = [
+            //    ...this.path,
+            //    entry.key,
+            //]
 
-    //    return null;
-    //}
+            //if (this.pathIsIdentical(this.selected, entryPath)) {
+                this.$emit('entry', entry);
+            }
+            //}
+        }
+
+        return null;
+    }
 
     get stringPath(): string {
         return this.path.map(key => key.hex).join('/');
@@ -130,7 +133,6 @@ export default class Tree extends Vue {
     private loadSelected(): void {
         const fromKey = this.selectedKeyInThisBucket;
         const from = fromKey ? fromKey.hex : null;
-        console.log(this.stringPath, 'from', from);
         this.load(from)
     }
 
@@ -145,7 +147,7 @@ export default class Tree extends Vue {
                     this.tree = result.data;
                     this.loadMoreEntriesIfNeeded();
                     //this.$emit('path', this.tree.path);
-                    //this.tryEmitSelected();
+                    this.tryEmitSelected();
 
                     // if this key is no longer available try loading all
                     // entries from the bucket, maybe just this key (and
@@ -272,19 +274,19 @@ export default class Tree extends Vue {
         return true;
     }
 
-    //private pathIsIdentical(oldValue: KeyDTO[], newValue: KeyDTO[]): boolean {
-    //    if (oldValue.length !== newValue.length) {
-    //        return false;
-    //    }
+    private pathIsIdentical(oldValue: KeyDTO[], newValue: KeyDTO[]): boolean {
+        if (oldValue.length !== newValue.length) {
+            return false;
+        }
 
-    //    for (let i = 0; i < oldValue.length; i++) {
-    //        if (oldValue[i].hex !== newValue[i].hex) {
-    //            return false;
-    //        }
-    //    }
+        for (let i = 0; i < oldValue.length; i++) {
+            if (oldValue[i].hex !== newValue[i].hex) {
+                return false;
+            }
+        }
 
-    //    return true;
-    //}
+        return true;
+    }
 
     private emitEntry(entry: EntryDTO): void {
         this.$emit('entry', entry);

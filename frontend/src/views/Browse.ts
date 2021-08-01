@@ -1,4 +1,4 @@
-import { Component, Vue } from 'vue-property-decorator';
+import { Component, Vue, Watch } from 'vue-property-decorator';
 import { Mutation } from '@/store';
 import { Entry as EntryDTO, Key as KeyDTO } from '@/dto/Entry';
 import { NavigationService } from '@/services/NavigationService';
@@ -55,9 +55,15 @@ export default class Browse extends Vue {
         return path;
     }
 
+    @Watch('$route')
+    onRouteChanged(): void {
+        this.setToken();
+        this.loadFromRoute();
+    }
+
     created(): void {
         this.setToken();
-        this.load();
+        this.loadFromRoute();
     }
 
     treeKey(path: KeyDTO[]): string {
@@ -69,7 +75,7 @@ export default class Browse extends Vue {
     }
 
     onEntry(path: KeyDTO[], entry: EntryDTO): void {
-        console.log(entry);
+        console.log('on entry', entry);
 
         const index = this.paths.indexOf(path);
         if (index >= 0) {
@@ -113,7 +119,7 @@ export default class Browse extends Vue {
         this.selectedValue = null;
     }
 
-    private load(): void {
+    private loadFromRoute(): void {
         const path: KeyDTO[] = this.$route.params.pathMatch
             .split('/')
             .filter(v => v !== "")
