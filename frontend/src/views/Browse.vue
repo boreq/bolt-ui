@@ -11,8 +11,8 @@
         </div>
         <div class="wrapper">
             <tree :path="path" :selected="selectedPath"
-                v-for="path in visiblePaths" :key="treeKey(path)"
-                @entry="onEntry(path, $event)"></tree>
+                v-for="(path, index) in paths" :key="treeKey(path)"
+                @entry="onEntry(path, $event)" v-show="isTreeVisible(index)"></tree>
 
             <value :entry="selectedValue" v-if="selectedValue"></value>
         </div>

@@ -25,21 +25,13 @@ export default class Browse extends Vue {
 
     private readonly numVisibleTrees = 3;
 
-    get visiblePaths(): Tree[] {
-        const paths = [];
-
+    isTreeVisible(index: number): boolean {
         let minIndex = this.paths.length - this.numVisibleTrees;
         if (this.selectedValueKey) {
             minIndex++;
         }
 
-        this.paths.forEach((path, index) => {
-            if (index >= minIndex) {
-                paths.push(path);
-            }
-        });
-
-        return paths;
+        return index >= minIndex;
     }
 
     get selectedPath(): KeyDTO[] {
