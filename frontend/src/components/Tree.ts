@@ -1,4 +1,4 @@
-import { Component, Vue, Prop, Ref } from 'vue-property-decorator';
+import { Component, Vue, Prop, Ref, Watch } from 'vue-property-decorator';
 import { Tree as TreeDTO } from '@/dto/Tree';
 import { Entry as EntryDTO, Key as KeyDTO } from '@/dto/Entry';
 import { ApiService } from '@/services/ApiService';
@@ -30,6 +30,16 @@ export default class Tree extends Vue {
 
     private readonly loadThresholdInPixels = 50;
 
+    @Watch('path')
+    onPathChanged(): void {
+        //this.load();
+    }
+
+    //@Watch('selected')
+    //onSelectedChanged(): void {
+    //    this.tryEmitSelected();
+    //}
+
     get selectedInTree(): EntryDTO {
         if (!this.selected || !this.tree) {
             return null;
@@ -48,6 +58,33 @@ export default class Tree extends Vue {
 
         return null;
     }
+
+    //private tryEmitSelected(): void {
+    //    if (!this.selected || !this.tree) {
+    //        return null;
+    //    }
+
+    //    if (this.path.length !== this.selected.length - 1) { 
+    //        return;
+    //    }
+
+    //    for (const entry of this.tree.entries) {
+    //        if (entry.bucket) {
+    //            continue;
+    //        }
+
+    //        const entryPath = [
+    //            ...this.path,
+    //            entry.key,
+    //        ]
+
+    //        if (this.pathIsIdentical(this.selected, entryPath)) {
+    //            this.$emit('entry', entry);
+    //        }
+    //    }
+
+    //    return null;
+    //}
 
     get stringPath(): string {
         return this.path.map(key => key.hex).join('/');
@@ -70,7 +107,7 @@ export default class Tree extends Vue {
     }
 
     created(): void {
-        this.load();
+        this.loadSelected();
     }
 
     onScroll(): void {
@@ -78,20 +115,52 @@ export default class Tree extends Vue {
     }
 
     onEntry(entry: EntryDTO): void {
-        this.$emit('entry', entry);
+        this.emitEntry(entry);
     }
 
-    private load(): void {
+    get selectedKeyInThisBucket(): KeyDTO {
+        if (this.selected.length >= this.path.length) {
+            return this.selected[this.path.length];
+        }
+
+        return null;
+    }
+
+    //private loading = false;
+    private loadSelected(): void {
+        const fromKey = this.selectedKeyInThisBucket;
+        const from = fromKey ? fromKey.hex : null;
+        console.log(this.stringPath, 'from', from);
+        this.load(from)
+    }
+
+    private load(from: string): void {
         this.tree = null;
 
-        this.apiService.browse(this.stringPath, null, null)
+        //this.loading = true;
+
+        this.apiService.browse(this.stringPath, null, null, from)
             .then(
                 result => {
                     this.tree = result.data;
                     this.loadMoreEntriesIfNeeded();
+                    //this.$emit('path', this.tree.path);
+                    //this.tryEmitSelected();
+
+                    // if this key is no longer available try loading all
+                    // entries from the bucket, maybe just this key (and
+                    // subsequent keys) were removed
+                    if (this.tree.entries.length === 0 && from) {
+                        this.load(null);
+                    }
                 },
                 error => {
                     Notifications.pushError(this, 'Could not query the backend.', error);
+                },
+            ).finally(
+                () => {
+                    //this.loading = false;
+
                 },
             );
     }
@@ -125,7 +194,7 @@ export default class Tree extends Vue {
 
         this.loadingPrevious = true;
 
-        this.apiService.browse(this.stringPath, firstKey.hex, null)
+        this.apiService.browse(this.stringPath, firstKey.hex, null, null)
             .then(
                 result => {
                     const currentFirstKey = this.firstKey;
@@ -165,7 +234,7 @@ export default class Tree extends Vue {
 
         this.loadingNext = true;
 
-        this.apiService.browse(this.stringPath, null, lastKey.hex)
+        this.apiService.browse(this.stringPath, null, lastKey.hex, null)
             .then(
                 result => {
                     const currentLastKey = this.lastKey;
@@ -201,6 +270,24 @@ export default class Tree extends Vue {
             }
         }
         return true;
+    }
+
+    //private pathIsIdentical(oldValue: KeyDTO[], newValue: KeyDTO[]): boolean {
+    //    if (oldValue.length !== newValue.length) {
+    //        return false;
+    //    }
+
+    //    for (let i = 0; i < oldValue.length; i++) {
+    //        if (oldValue[i].hex !== newValue[i].hex) {
+    //            return false;
+    //        }
+    //    }
+
+    //    return true;
+    //}
+
+    private emitEntry(entry: EntryDTO): void {
+        this.$emit('entry', entry);
     }
 
 }

@@ -35,21 +35,17 @@ export class ApiService {
             });
     }
 
-    browse(path: string, before: string, after: string): Promise<AxiosResponse<Tree>> {
+    browse(path: string, before: string, after: string, from: string): Promise<AxiosResponse<Tree>> {
         const url = path ? `browse/${path}` : `browse/`;
         return this.axios.get<Tree>(
             process.env.VUE_APP_API_PREFIX + url,
             {
-                params: this.browseParams(before, after),
+                params: this.browseParams(before, after, from),
             },
         );
     }
 
-    private browseParams(before: string, after: string): { before: string } | { after: string } | null {
-        if (before && after) {
-            throw new Error('defined both before and after');
-        }
-
+    private browseParams(before: string, after: string, from: string): { before: string } | { after: string } | { from: string} | null {
         if (before) {
             return {
                 before: before,
@@ -59,6 +55,12 @@ export class ApiService {
         if (after) {
             return {
                 after: after,
+            };
+        }
+
+        if (from) {
+            return {
+                from: from,
             };
         }
 
