@@ -112,6 +112,8 @@ export default class Browse extends Vue {
     }
 
     private loadFromRoute(): void {
+        this.loadBlank();
+
         const path: KeyDTO[] = this.$route.params.pathMatch
             .split('/')
             .filter(v => v !== "")
@@ -123,10 +125,6 @@ export default class Browse extends Vue {
                     };
                 }
             );
-
-        this.paths = [
-            [],
-        ];
 
         for (let i = 1; i <= path.length; i++) {
             this.paths.push(
@@ -140,7 +138,5 @@ export default class Browse extends Vue {
                 str: null,
             };
         }
-
-        this.selectedValue = null;
     }
 }
