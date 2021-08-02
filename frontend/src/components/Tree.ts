@@ -30,6 +30,12 @@ export default class Tree extends Vue {
 
     private readonly loadThresholdInPixels = 50;
 
+    @Watch('path')
+    onPathChanged(): void {
+        this.tryEmitSelected();
+        this.tryEmitPath();
+    }
+
     @Watch('selected')
     onSelectedChanged(): void {
         this.tryEmitSelected();
@@ -130,7 +136,7 @@ export default class Tree extends Vue {
                 result => {
                     this.tree = result.data;
                     this.loadMoreEntriesIfNeeded();
-                    this.emitPath();
+                    this.tryEmitPath();
                     this.tryEmitSelected();
 
                     // if this key is no longer available try loading all
@@ -253,8 +259,10 @@ export default class Tree extends Vue {
         return true;
     }
 
-    private emitPath(): void {
-        this.$emit('path', this.tree.path);
+    private tryEmitPath(): void {
+        if (this.tree) {
+            this.$emit('path', this.tree.path);
+        }
     }
 
     private emitEntry(entry: EntryDTO): void {
