@@ -30,11 +30,6 @@ export default class Tree extends Vue {
 
     private readonly loadThresholdInPixels = 50;
 
-    @Watch('path')
-    onPathChanged(): void {
-        //this.load();
-    }
-
     @Watch('selected')
     onSelectedChanged(): void {
         this.tryEmitSelected();
@@ -74,16 +69,8 @@ export default class Tree extends Vue {
             }
 
             if (entry.key.hex === this.selected[this.selected.length - 1].hex) {
-
-            //const entryPath = [
-            //    ...this.path,
-            //    entry.key,
-            //]
-
-            //if (this.pathIsIdentical(this.selected, entryPath)) {
                 this.$emit('entry', entry);
             }
-            //}
         }
 
         return null;
@@ -129,7 +116,6 @@ export default class Tree extends Vue {
         return null;
     }
 
-    //private loading = false;
     private loadSelected(): void {
         const fromKey = this.selectedKeyInThisBucket;
         const from = fromKey ? fromKey.hex : null;
@@ -139,14 +125,12 @@ export default class Tree extends Vue {
     private load(from: string): void {
         this.tree = null;
 
-        //this.loading = true;
-
         this.apiService.browse(this.stringPath, null, null, from)
             .then(
                 result => {
                     this.tree = result.data;
                     this.loadMoreEntriesIfNeeded();
-                    //this.$emit('path', this.tree.path);
+                    this.emitPath();
                     this.tryEmitSelected();
 
                     // if this key is no longer available try loading all
@@ -158,11 +142,6 @@ export default class Tree extends Vue {
                 },
                 error => {
                     Notifications.pushError(this, 'Could not query the backend.', error);
-                },
-            ).finally(
-                () => {
-                    //this.loading = false;
-
                 },
             );
     }
@@ -272,6 +251,10 @@ export default class Tree extends Vue {
             }
         }
         return true;
+    }
+
+    private emitPath(): void {
+        this.$emit('path', this.tree.path);
     }
 
     private emitEntry(entry: EntryDTO): void {

@@ -67,8 +67,6 @@ export default class Browse extends Vue {
     }
 
     onEntry(path: KeyDTO[], entry: EntryDTO): void {
-        console.log('on entry', entry);
-
         const index = this.paths.indexOf(path);
         if (index >= 0) {
             this.paths.length = index + 1;
@@ -93,9 +91,11 @@ export default class Browse extends Vue {
         }
     }
 
-    onPath(path: KeyDTO[], newPath: KeyDTO[]): void {
-        this.paths[path.length] = newPath;
-        this.paths = [...this.paths]; // trigger refresh
+    onPath(path: KeyDTO[]): void {
+        const index = path.length;
+        for (let i = 0; i < path.length; i++) {
+            this.paths[index][i].str = path[i].str;
+        }
     }
 
     private setToken(): void {
