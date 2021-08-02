@@ -1,9 +1,12 @@
 package http
 
 import (
+	"crypto/tls"
+	"net"
 	"net/http"
 
 	"github.com/NYTimes/gziphandler"
+	"github.com/boreq/errors"
 	"github.com/boreq/velo/internal/config"
 	"github.com/boreq/velo/logging"
 	"github.com/rs/cors"
@@ -23,7 +26,7 @@ func NewServer(handler http.Handler, conf *config.Config) *Server {
 	}
 }
 
-func (s *Server) Serve(address string) error {
+func (s *Server) Serve() error {
 	handler := s.handler
 
 	if s.conf.InsecureCORS {
@@ -32,6 +35,24 @@ func (s *Server) Serve(address string) error {
 
 	handler = gziphandler.GzipHandler(handler)
 
-	s.log.Debug("starting listening", "address", address)
-	return http.ListenAndServe(address, handler)
+	if s.conf.InsecureTLS {
+		s.log.Debug("starting an insecure listener", "address", s.conf.ServeAddress)
+		return http.ListenAndServe(s.conf.ServeAddress, handler)
+	}
+
+	s.log.Debug("starting listening", "address", s.conf.ServeAddress)
+
+	l, err := net.Listen("tcp", s.conf.ServeAddress)
+	if err != nil {
+		return errors.Wrap(err, "could not create listener")
+	}
+
+	l = tls.NewListener(l, &tls.Config{
+		Certificates: []tls.Certificate{
+			s.conf.Certificate,
+		},
+	})
+
+	return http.Serve(l, handler)
+
 }
