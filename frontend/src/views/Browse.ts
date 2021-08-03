@@ -62,11 +62,11 @@ export default class Browse extends Vue {
         this.setToken();
         this.loadFromRoute();
 
-        document.body.addEventListener('click', this.onBodyClick);
+        document.body.addEventListener('click', this.cancelEditing);
     }
 
     destroyed(): void {
-        document.body.removeEventListener('click', this.onBodyClick);
+        document.body.removeEventListener('click', this.cancelEditing);
     }
 
     treeKey(path: KeyDTO[]): string {
@@ -109,16 +109,17 @@ export default class Browse extends Vue {
         }
     }
 
-    onSelectedPathClick(): void {
+    startEditing(): void {
         this.editedPath = this.pathService.marshal(this.selectedPath);
         this.editingSelectedPath = true;
     }
 
-    onEditPathSubmit(): void {
-        console.log(this.editedPath);
+    finishEditing(): void {
+        const newPath = this.pathService.unmarshal(this.editedPath);
+        console.log(newPath);
     }
 
-    onBodyClick(): void {
+    cancelEditing(): void {
         this.editingSelectedPath = false;
     }
 
