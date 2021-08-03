@@ -1,32 +1,78 @@
 import { Key } from '@/dto/Entry';
 
+export class UnmarshalResult {
+    path: Key[]
+    value: Key;
+}
+
 export class PathService {
 
-    marshal(path: Key[]): string {
+    marshal(path: Key[], value: Key): string {
         const elements: string[] = [];
 
         for (const key of path) {
             if (key.str) {
-                elements.push(`"${key.str}"`);
+                elements.push(
+                    tokenStrStart + key.str + tokenStrEnd
+                );
             } else {
-                elements.push(`0x${key.hex}`);
+                elements.push(
+                    tokenHexStartFirst + tokenHexStartSecondSmall + key.hex
+                );
             }
         }
 
-        return elements.join(' / ');
+        let result = elements.join(tokenSpace + tokenSeparator + tokenSpace);
+        if (value) {
+            const prefix = tokenSpace + tokenValueSeparator + tokenSpace;
+            if (value.str) {
+                result +=  prefix + value.str;
+            } else {
+                result +=  prefix + tokenHexStartFirst + tokenHexStartSecondSmall + value.hex;
+            }
+        }
+
+        return result;
     }
 
-    unmarshal(path: string): Key[] {
+    unmarshal(path: string): UnmarshalResult {
         const buf = new StringBuffer(path);
-        const result: Key[] = [];
+        const result: ResultElement[] = [];
 
         for (let state: stateFunc = stateStart; state;) {
             state = state(buf, result);
         }
 
-        for (const key of result) {
-            if (!key.hex) {
-                key.hex = this.hexEncode(key.str);
+        return this.convert(result);
+    }
+
+    private convert(parsed: ResultElement[]): UnmarshalResult {
+        const result: UnmarshalResult = {
+            path: [],
+            value: null,
+        }
+
+        let foundValueSeparator = false;
+
+        for (const element of parsed){
+            if (!isSeparator(element)) {
+                if (result.value) {
+                    throw 'Encountered bucket after value.'; 
+                }
+
+                if (!element.hex) {
+                    element.hex = this.hexEncode(element.str);
+                }
+
+                if (foundValueSeparator) {
+                    result.value = element;
+                } else {
+                    result.path.push(element);
+                }
+            } else {
+                if (!element.bucket) {
+                    foundValueSeparator = true;
+                }
             }
         }
 
@@ -46,6 +92,8 @@ export class PathService {
 
 class StringBuffer {
 
+    private last: string = null;
+
     constructor(private s: string) {
     }
 
@@ -54,14 +102,32 @@ class StringBuffer {
             return tokenNull;
         }
 
-        const v = this.s[0];
+        this.last = this.s[0];
         this.s = this.s.slice(1);
-        return v;
+        return this.last;
+    }
+
+    unread(): void {
+        if (this.s) {
+            this.s = this.last + this.s;
+        } else {
+            this.s = this.last;
+        }
     }
 
 }
 
-type stateFunc = (buf: StringBuffer, result: Key[]) => stateFunc;
+class Separator {
+    bucket: boolean;
+}
+
+type ResultElement = Key | Separator;
+
+function isSeparator(v: Key | Separator): v is Separator {
+   return (<Separator>v).bucket !== undefined;
+}
+
+type stateFunc = (buf: StringBuffer, result: ResultElement[]) => stateFunc;
 
 const tokenNull = null;
 const tokenSpace = ' ';
@@ -74,6 +140,8 @@ const tokenHexStartFirst = '0';
 const tokenHexStartSecondSmall = 'x';
 const tokenHexStartSecondCapital = 'X';
 
+const tokenValueSeparator = "-"
+
 const errInvalid = 'invalid path';
 
 function stateStart(buf: StringBuffer): stateFunc {
@@ -82,7 +150,7 @@ function stateStart(buf: StringBuffer): stateFunc {
         case tokenSpace:
             return stateStart; // keep consuming spaces
         case tokenStrStart:
-            return stateBeforeStr;
+            return stateBeforeBucketStr;
         case tokenHexStartFirst:
             return stateHexStartSecond;
         case tokenNull:
@@ -92,13 +160,15 @@ function stateStart(buf: StringBuffer): stateFunc {
     }
 }
 
-function stateBeforeSeparator(buf: StringBuffer): stateFunc {
+function stateAfterElement(buf: StringBuffer): stateFunc {
     const next = buf.next();
     switch (next) {
         case tokenSpace:
-            return stateBeforeSeparator; // keep consuming spaces
+            return stateAfterElement; // keep consuming spaces
         case tokenSeparator:
-            return stateAfterSeparator;
+            return stateSeparator;
+        case tokenValueSeparator:
+            return stateValueSeparator;
         case tokenNull:
             return null; // we read the full path
         default:
@@ -106,13 +176,23 @@ function stateBeforeSeparator(buf: StringBuffer): stateFunc {
     }
 }
 
-function stateAfterSeparator(buf: StringBuffer): stateFunc {
+function stateSeparator(_: StringBuffer, result: ResultElement[]): stateFunc {
+    result.push(
+        {
+            bucket: true,
+        }
+    );
+
+    return stateBeforeElement;
+}
+
+function stateBeforeElement(buf: StringBuffer): stateFunc {
     const next = buf.next();
     switch (next) {
         case tokenSpace:
-            return stateAfterSeparator; // keep consuming spaces
+            return stateBeforeElement; // keep consuming spaces
         case tokenStrStart:
-            return stateBeforeStr;
+            return stateBeforeBucketStr;
         case tokenHexStartFirst:
             return stateHexStartSecond;
         default:
@@ -120,7 +200,7 @@ function stateAfterSeparator(buf: StringBuffer): stateFunc {
     }
 }
 
-function stateBeforeStr(_: StringBuffer, result: Key[]): stateFunc {
+function stateBeforeBucketStr(_: StringBuffer, result: ResultElement[]): stateFunc {
     result.push(
         {
             hex: null,
@@ -130,15 +210,15 @@ function stateBeforeStr(_: StringBuffer, result: Key[]): stateFunc {
     return stateStr;
 }
 
-function stateStr(buf: StringBuffer, result: Key[]): stateFunc {
+function stateStr(buf: StringBuffer, result: ResultElement[]): stateFunc {
     const next = buf.next();
     switch (next) {
         case tokenStrEnd:
-            return stateBeforeSeparator;
+            return stateAfterElement;
         case tokenNull:
             throw errInvalid;
         default:
-            result[result.length - 1].str += next;
+            (result[result.length - 1] as Key).str += next;
             return stateStr;
     }
 }
@@ -154,7 +234,7 @@ function stateHexStartSecond(buf: StringBuffer): stateFunc {
     }
 }
 
-function stateBeforeHex(_: StringBuffer, result: Key[]): stateFunc {
+function stateBeforeHex(_: StringBuffer, result: ResultElement[]): stateFunc {
     result.push(
         {
             hex: '',
@@ -164,24 +244,32 @@ function stateBeforeHex(_: StringBuffer, result: Key[]): stateFunc {
     return stateHex;
 }
 
+const hex = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'];
 
-function stateHex(buf: StringBuffer, result: Key[]): stateFunc {
-    const hex = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'];
+function stateHex(buf: StringBuffer, result: ResultElement[]): stateFunc {
     const next = buf.next();
 
     switch (next) {
-        case tokenSpace:
-            return stateBeforeSeparator;
-        case tokenSeparator:
-            return stateAfterSeparator;
         case tokenNull:
             return null; // we read the whole hex
     }
 
     if (hex.includes(next.toLowerCase())) {
-        result[result.length - 1].hex += next;
+        (result[result.length - 1] as Key).hex += next;
         return stateHex;
     }
 
-    throw errInvalid; 
+    buf.unread();
+    return stateAfterElement;
 }
+
+function stateValueSeparator(_: StringBuffer, result: ResultElement[]): stateFunc {
+    result.push(
+        {
+            bucket: false,
+        }
+    );
+
+    return stateBeforeElement;
+}
+

@@ -4,6 +4,7 @@ import { Entry as EntryDTO, Key as KeyDTO } from '@/dto/Entry';
 import { NavigationService } from '@/services/NavigationService';
 import { PathService } from '@/services/PathService';
 
+import Notifications from '@/components/Notifications.vue';
 import Tree from '@/components/Tree.vue';
 import Value from '@/components/Value.vue';
 import Key from '@/components/Key.vue';
@@ -110,13 +111,34 @@ export default class Browse extends Vue {
     }
 
     startEditing(): void {
-        this.editedPath = this.pathService.marshal(this.selectedPath);
+        if (this.paths.length > 0) {
+            this.editedPath = this.pathService.marshal(
+                this.paths[this.paths.length - 1],
+                this.selectedValueKey,
+            );
+        }
+
         this.editingSelectedPath = true;
     }
 
     finishEditing(): void {
-        const newPath = this.pathService.unmarshal(this.editedPath);
-        console.log(newPath);
+        try {
+            const newPath = this.pathService.unmarshal(this.editedPath);
+
+            this.loadBlank();
+
+            for (let i = 1; i <= newPath.path.length; i++) {
+                this.paths.push(
+                    newPath.path.slice(0, i),
+                );
+            }
+
+            this.selectedValueKey = newPath.value;
+            this.editingSelectedPath = false;
+        }
+        catch (e) {
+            Notifications.pushError(this, 'Invalid path.', e);
+        }
     }
 
     cancelEditing(): void {
