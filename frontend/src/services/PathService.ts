@@ -24,6 +24,21 @@ export class PathService {
             state = state(buf, result);
         }
 
+        for (const key of result) {
+            if (!key.hex) {
+                key.hex = this.hexEncode(key.str);
+            }
+        }
+
+        return result;
+    }
+
+    private hexEncode(s: string): string {
+        let result = '';
+        for (let i = 0; i < s.length; i++) {
+            const hex = s.charCodeAt(i).toString(16);
+            result += hex;
+        }
         return result;
     }
 
