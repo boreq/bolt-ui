@@ -3,11 +3,16 @@
         <div class="top-bar">
             <a class="main-header" @click="onHeaderClick">Bolt UI</a>
 
-            <ul v-if="selectedPath">
+            <ul v-if="selectedPath && !editingSelectedPath" @click.stop="onSelectedPathClick">
                 <li v-for="key in selectedPath" :key="key.hex">
                     <key :k="key"></key>
                 </li>
             </ul>
+
+            <div class="edit-path" v-if="editingSelectedPath">
+                <input v-model="editedPath" class="path-input"
+                    @keyup.enter="onEditPathSubmit" @click.stop>
+            </div>
         </div>
         <div class="wrapper">
             <tree :path="path" :selected="selectedPath"

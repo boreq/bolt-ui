@@ -2,6 +2,7 @@ import { Component, Vue, Watch } from 'vue-property-decorator';
 import { Mutation } from '@/store';
 import { Entry as EntryDTO, Key as KeyDTO } from '@/dto/Entry';
 import { NavigationService } from '@/services/NavigationService';
+import { PathService } from '@/services/PathService';
 
 import Tree from '@/components/Tree.vue';
 import Value from '@/components/Value.vue';
@@ -21,7 +22,11 @@ export default class Browse extends Vue {
     selectedValueKey: KeyDTO = null;
     selectedValue: EntryDTO = null;
 
+    editingSelectedPath = false;
+    editedPath: string = null;
+
     private readonly navigationService = new NavigationService();
+    private readonly pathService = new PathService();
 
     private readonly numVisibleTrees = 3;
 
@@ -56,6 +61,12 @@ export default class Browse extends Vue {
     created(): void {
         this.setToken();
         this.loadFromRoute();
+
+        document.body.addEventListener('click', this.onBodyClick);
+    }
+
+    destroyed(): void {
+        document.body.removeEventListener('click', this.onBodyClick);
     }
 
     treeKey(path: KeyDTO[]): string {
@@ -96,6 +107,19 @@ export default class Browse extends Vue {
         for (let i = 0; i < path.length; i++) {
             this.paths[index][i].str = path[i].str;
         }
+    }
+
+    onSelectedPathClick(): void {
+        this.editedPath = this.pathService.marshal(this.selectedPath);
+        this.editingSelectedPath = true;
+    }
+
+    onEditPathSubmit(): void {
+        console.log(this.editedPath);
+    }
+
+    onBodyClick(): void {
+        this.editingSelectedPath = false;
     }
 
     private setToken(): void {
