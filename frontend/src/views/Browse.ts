@@ -147,7 +147,9 @@ export default class Browse extends Vue {
 
     private setToken(): void {
         const token = this.$route.query.token;
-        this.$store.commit(Mutation.SetToken, token);
+        if (token) {
+            this.$store.commit(Mutation.SetToken, token);
+        }
     }
 
     private loadBlank(): void {
