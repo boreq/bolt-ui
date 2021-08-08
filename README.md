@@ -14,7 +14,7 @@ is secure by default by using TLS as well as a secure token.
 Currently the easiest way of installing Bolt UI is by using the Go programming
 language toolchain:
 
-    $ go install github.com/boreq/bolt-ui/cmd/bolt-ui
+    $ go install github.com/boreq/bolt-ui/cmd/bolt-ui@latest
 
 ## Usage
 
