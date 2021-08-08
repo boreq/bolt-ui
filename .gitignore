@@ -1,4 +1,3 @@
 _*
-cmd/eggplant/eggplant
-config.json
 .idea
+cmd/bolt-ui/bolt-ui

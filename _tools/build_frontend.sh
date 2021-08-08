@@ -18,7 +18,7 @@ cp -r ../../../frontend/dist/. ./
 cd ../../../
 
 echo "Commiting..."
-commitFile="/tmp/velo-frontend-commit.txt"
+commitFile="/tmp/bolt-ui-frontend-commit.txt"
 echo "Update frontend" > ${commitFile}
 git add ports/http/frontend/
 git commit -F ${commitFile}
