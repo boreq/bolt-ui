@@ -1,7 +1,7 @@
 package wire
 
 import (
-	"github.com/boreq/velo/application"
+	"github.com/boreq/bolt-ui/application"
 	"github.com/google/wire"
 )
 

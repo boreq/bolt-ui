@@ -1,8 +1,8 @@
 package adapters
 
 import (
+	"github.com/boreq/bolt-ui/application"
 	"github.com/boreq/errors"
-	"github.com/boreq/velo/application"
 	bolt "go.etcd.io/bbolt"
 )
 

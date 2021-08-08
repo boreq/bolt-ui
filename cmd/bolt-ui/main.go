@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/boreq/bolt-ui/cmd/bolt-ui/commands"
+	"github.com/boreq/bolt-ui/logging"
 	"github.com/boreq/guinea"
-	"github.com/boreq/velo/cmd/bolt-ui/commands"
-	"github.com/boreq/velo/logging"
 )
 
 func main() {

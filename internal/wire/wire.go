@@ -3,9 +3,9 @@
 package wire
 
 import (
-	"github.com/boreq/velo/application"
-	"github.com/boreq/velo/internal/config"
-	"github.com/boreq/velo/internal/service"
+	"github.com/boreq/bolt-ui/application"
+	"github.com/boreq/bolt-ui/internal/config"
+	"github.com/boreq/bolt-ui/internal/service"
 	"github.com/google/wire"
 	bolt "go.etcd.io/bbolt"
 )

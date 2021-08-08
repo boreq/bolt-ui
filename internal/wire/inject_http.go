@@ -3,7 +3,7 @@ package wire
 import (
 	"net/http"
 
-	httpPort "github.com/boreq/velo/ports/http"
+	httpPort "github.com/boreq/bolt-ui/ports/http"
 	"github.com/google/wire"
 )
 

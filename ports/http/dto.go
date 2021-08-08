@@ -4,7 +4,7 @@ import (
 	"encoding/hex"
 	"unicode"
 
-	"github.com/boreq/velo/application"
+	"github.com/boreq/bolt-ui/application"
 )
 
 type Tree struct {
