@@ -1,6 +1,6 @@
 # Bolt UI [![CI](https://github.com/boreq/bolt-ui/workflows/CI/badge.svg)][actions]
 
-A web interface which lets you browse your Bolt database.
+A web interface which lets you browse your [Bolt database](https://github.com/etcd-io/bbolt).
 
 The program is designed mainly with debugging in mind and provides a simple way
 of navigating your database structure. As you may want to temporarily expose
