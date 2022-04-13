@@ -2,6 +2,7 @@ package http
 
 import (
 	"encoding/hex"
+	"encoding/json"
 	"unicode"
 
 	"github.com/boreq/bolt-ui/application"
@@ -92,10 +93,15 @@ func toValue(value application.Value) *Value {
 }
 
 func canDisplayAsString(b []byte) bool {
-	for _, rne := range string(b) {
-		if !unicode.IsPrint(rne) {
+	if json.Valid(b) {
+		return true
+	}
+
+	for i, rne := range string(b) {
+		if !unicode.IsGraphic(rne) {
 			return false
 		}
 	}
+
 	return true
 }
