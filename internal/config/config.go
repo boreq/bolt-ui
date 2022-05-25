@@ -11,4 +11,5 @@ type Config struct {
 	InsecureCORS  bool
 	InsecureToken bool
 	InsecureTLS   bool
+	EncodingCBOR  bool
 }
