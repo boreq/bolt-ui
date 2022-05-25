@@ -18,14 +18,16 @@ type Handler struct {
 	authProvider AuthProvider
 	router       *httprouter.Router
 	log          logging.Logger
+	encodingCBOR bool
 }
 
-func NewHandler(app *application.Application, authProvider AuthProvider) (*Handler, error) {
+func NewHandler(app *application.Application, authProvider AuthProvider, encodingCBOR bool) (*Handler, error) {
 	h := &Handler{
 		app:          app,
 		authProvider: authProvider,
 		router:       httprouter.New(),
 		log:          logging.New("ports/http.Handler"),
+		encodingCBOR: encodingCBOR,
 	}
 
 	h.router.HandlerFunc(http.MethodGet, "/api/browse/*path", rest.Wrap(h.browse))
@@ -104,7 +106,7 @@ func (h *Handler) browse(r *http.Request) rest.RestResponse {
 	}
 
 	return rest.NewResponse(
-		toTree(tree),
+		toTree(tree, h.encodingCBOR),
 	)
 }
 

@@ -27,6 +27,7 @@ const (
 	nameInsecureCORS  = "insecure-cors"
 	nameInsecureToken = "insecure-token"
 	nameInsecureTLS   = "insecure-tls"
+	nameEncodingCBOR  = "encoding-cbor"
 )
 
 var MainCmd = guinea.Command{
@@ -63,6 +64,12 @@ var MainCmd = guinea.Command{
 			Type:        guinea.Bool,
 			Default:     false,
 			Description: "Disables serving using TLS",
+		},
+		{
+			Name:        nameEncodingCBOR,
+			Type:        guinea.Bool,
+			Default:     false,
+			Description: "Try to parse values as CBOR encoded",
 		},
 	},
 	ShortDescription: "a web user interface for the Bolt database",
@@ -110,6 +117,7 @@ func newConfig(c guinea.Context) (*config.Config, error) {
 		InsecureCORS:  c.Options[nameInsecureCORS].Bool(),
 		InsecureToken: c.Options[nameInsecureToken].Bool(),
 		InsecureTLS:   c.Options[nameInsecureTLS].Bool(),
+		EncodingCBOR:  c.Options[nameEncodingCBOR].Bool(),
 	}
 
 	if !conf.InsecureToken {
