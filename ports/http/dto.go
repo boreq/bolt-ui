@@ -96,12 +96,14 @@ func canDisplayAsString(b []byte) bool {
 	if json.Valid(b) {
 		return true
 	}
+	return isDisplayableString(string(b))
+}
 
-	for _, rne := range string(b) {
-		if !unicode.IsGraphic(rne) {
+func isDisplayableString(str string) bool {
+	for _, rne := range str {
+		if !unicode.IsGraphic(rne) && !unicode.IsSpace(rne) {
 			return false
 		}
 	}
-
 	return true
 }
