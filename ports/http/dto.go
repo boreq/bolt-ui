@@ -97,7 +97,7 @@ func canDisplayAsString(b []byte) bool {
 		return true
 	}
 
-	for i, rne := range string(b) {
+	for _, rne := range string(b) {
 		if !unicode.IsGraphic(rne) {
 			return false
 		}
