@@ -21,8 +21,8 @@ check-repository-unchanged:
 	./_tools/check_repository_unchanged.sh
 
 tools:
-	 go get -u honnef.co/go/tools/cmd/staticcheck
-	 go get -u github.com/google/wire/cmd/wire
+	 go install honnef.co/go/tools/cmd/staticcheck@latest
+	 go install github.com/google/wire/cmd/wire@latest
 
 dependencies:
 	go get ./...
