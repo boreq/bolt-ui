@@ -11,5 +11,10 @@ export class Key {
 
 export class Value {
     hex: string;
-    str: string;
+    pretty: Pretty;
+}
+
+export class Pretty {
+    content_type: string;
+    value: string;
 }

@@ -38,6 +38,10 @@
         font-family: monospace;
     }
 
+    .value-header {
+        color: $text-color-dimmed;
+    }
+
     .value-empty {
         color: $text-color-dimmed;
     }

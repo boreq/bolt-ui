@@ -2,7 +2,8 @@ package http
 
 import (
 	"encoding/hex"
-	"encoding/json"
+	"github.com/boreq/bolt-ui/display"
+	"github.com/boreq/errors"
 	"unicode"
 
 	"github.com/boreq/bolt-ui/application"
@@ -13,27 +14,36 @@ type Tree struct {
 	Entries []Entry `json:"entries"`
 }
 
-type Key struct {
-	Hex string `json:"hex"`
-	Str string `json:"str,omitempty"`
-}
-
-type Value struct {
-	Hex string `json:"hex"`
-	Str string `json:"str,omitempty"`
-}
-
 type Entry struct {
 	Bucket bool   `json:"bucket"`
 	Key    Key    `json:"key"`
 	Value  *Value `json:"value,omitempty"`
 }
 
-func toTree(tree application.Tree) Tree {
-	return Tree{
-		toKeys(tree.Path),
-		toEntries(tree.Entries),
+type Key struct {
+	Hex string `json:"hex"`
+	Str string `json:"str,omitempty"`
+}
+
+type Value struct {
+	Hex    string  `json:"hex"`
+	Pretty *Pretty `json:"pretty"`
+}
+
+type Pretty struct {
+	ContentType string `json:"content_type"`
+	Value       string `json:"value"`
+}
+
+func toTree(tree application.Tree) (Tree, error) {
+	entries, err := toEntries(tree.Entries)
+	if err != nil {
+		return Tree{}, errors.Wrap(err, "error converting to entries")
 	}
+	return Tree{
+		Path:    toKeys(tree.Path),
+		Entries: entries,
+	}, nil
 }
 
 func toKeys(keys []application.Key) []Key {
@@ -44,20 +54,29 @@ func toKeys(keys []application.Key) []Key {
 	return result
 }
 
-func toEntries(entries []application.Entry) []Entry {
+func toEntries(entries []application.Entry) ([]Entry, error) {
 	result := make([]Entry, 0)
 	for _, entry := range entries {
-		result = append(result, toEntry(entry))
+		v, err := toEntry(entry)
+		if err != nil {
+			return nil, errors.Wrap(err, "error converting to an entry")
+		}
+		result = append(result, v)
 	}
-	return result
+	return result, nil
 }
 
-func toEntry(entry application.Entry) Entry {
+func toEntry(entry application.Entry) (Entry, error) {
+	value, err := toValue(entry.Value)
+	if err != nil {
+		return Entry{}, errors.Wrap(err, "error converting to a value")
+	}
+
 	return Entry{
 		Bucket: entry.Bucket,
 		Key:    toKey(entry.Key),
-		Value:  toValue(entry.Value),
-	}
+		Value:  value,
+	}, nil
 }
 
 func toKey(key application.Key) Key {
@@ -67,41 +86,67 @@ func toKey(key application.Key) Key {
 		Hex: hex.EncodeToString(b),
 	}
 
-	if canDisplayAsString(b) {
+	if canDisplayKeyAsString(b) {
 		result.Str = string(b)
 	}
 
 	return result
 }
 
-func toValue(value application.Value) *Value {
+func toValue(value application.Value) (*Value, error) {
 	if value.IsEmpty() {
-		return nil
+		return nil, nil
 	}
 
 	b := value.Bytes()
-
-	result := &Value{
-		Hex: hex.EncodeToString(b),
+	hexB := hex.EncodeToString(b)
+	pretty, err := toPretty(value)
+	if err != nil {
+		return nil, errors.Wrap(err, "error converting to a pretty value")
 	}
 
-	if canDisplayAsString(b) {
-		result.Str = string(b)
-	}
-
-	return result
+	return &Value{
+		Hex:    hexB,
+		Pretty: pretty,
+	}, nil
 }
 
-func canDisplayAsString(b []byte) bool {
-	if json.Valid(b) {
-		return true
-	}
+func toPretty(value application.Value) (*Pretty, error) {
+	b := value.Bytes()
+	pretty := display.NewPretty()
+	prettyPrinted, err := pretty.Print(b)
+	if err == nil {
+		encodedContentType, err := encodeContentType(prettyPrinted.Type)
+		if err != nil {
+			return nil, errors.New("error encoding content type")
+		}
 
+		return &Pretty{
+			ContentType: encodedContentType,
+			Value:       prettyPrinted.Value,
+		}, nil
+	}
+	return nil, nil
+}
+
+func encodeContentType(t display.ContentType) (string, error) {
+	switch t {
+	case display.ContentTypeJSON:
+		return "json", nil
+	case display.ContentTypeString:
+		return "string", nil
+	case display.ContentTypeCBOR:
+		return "cbor", nil
+	default:
+		return "", errors.New("unknown content type")
+	}
+}
+
+func canDisplayKeyAsString(b []byte) bool {
 	for _, rne := range string(b) {
-		if !unicode.IsGraphic(rne) {
+		if !unicode.IsGraphic(rne) || !unicode.IsSpace(rne) {
 			return false
 		}
 	}
-
 	return true
 }
