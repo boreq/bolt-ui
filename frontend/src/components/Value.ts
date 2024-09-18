@@ -35,7 +35,7 @@ export default class Value extends Vue {
             return `Recognized content type ${this.entry.value.pretty.content_type} for pretty printing.`;
         }
 
-        return 'Pretty printing is unavailable due to an unrecognized content type of this value.';
+        return 'Pretty printing is unavailable due to unrecognized content type of this value.';
     }
 
     get valuePretty(): string {
