@@ -25,5 +25,12 @@ To view `bolt.database` using Bolt UI execute the following command:
 The security features can be disabled by using command line flags if you are
 using the program locally.
 
+## Building
+
+### Frontend
+
+1. You need to downgrade to Node v16 to build the frontend project.
+2. Use `_tools/build_frontend.sh`.
+
 [actions]: https://github.com/boreq/bolt-ui/actions
 [screenshot]: https://user-images.githubusercontent.com/1935975/128639070-6c335b7a-26d9-4575-ae94-2250e31149c1.png

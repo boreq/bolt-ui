@@ -103,9 +103,12 @@ func (h *Handler) browse(r *http.Request) rest.RestResponse {
 		return rest.ErrInternalServerError
 	}
 
-	return rest.NewResponse(
-		toTree(tree),
-	)
+	transportTree, err := toTree(tree)
+	if err != nil {
+		h.log.Error("error converting to a tree", "err", err)
+		return rest.ErrInternalServerError
+	}
+	return rest.NewResponse(transportTree)
 }
 
 const sep = "/"

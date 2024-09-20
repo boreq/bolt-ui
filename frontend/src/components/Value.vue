@@ -11,7 +11,17 @@
         </div>
 
         <div class="value-string" v-if="entry.value">
-            {{ valueString }}
+            <div v-if="valuePretty">
+                <div class="value-header">
+                    Pretty printed
+                </div>
+                <pre class="value-string"><code>{{ valuePretty }}</code></pre>
+            </div>
+
+            <div class="value-header">
+                Raw value as hex
+            </div>
+            <pre class="value-string"><code>{{ valueHex }}</code></pre>
         </div>
 
         <div class="value-empty" v-else>

@@ -19,11 +19,11 @@ export default class Value extends Vue {
             return 'nil';
         }
 
-        if (this.entry.value.str) {
-            return 'string';
+        if (this.entry.value.pretty) {
+            return this.entry.value.pretty.content_type;
         }
 
-        return 'hex';
+        return 'unknown';
     }
 
     get formatTooltip(): string {
@@ -31,23 +31,30 @@ export default class Value extends Vue {
             return 'The value is empty.';
         }
 
-        if (this.entry.value.str) {
-            return 'Displaying the value as string.';
+        if (this.entry.value.pretty) {
+            return `Recognized content type ${this.entry.value.pretty.content_type} for pretty printing.`;
         }
 
-        return 'Display the bytes using hexadecimal encoding.';
+        return 'Pretty printing is unavailable due to unrecognized content type of this value.';
     }
 
-    get valueString(): string {
+    get valuePretty(): string {
         if (!this.entry.value) {
             return null;
         }
 
-        if (this.entry.value.str) {
-            return this.entry.value.str;
+        if (this.entry.value.pretty) {
+            return this.entry.value.pretty.value;
+        }
+
+        return null;
+    }
+
+    get valueHex(): string {
+        if (!this.entry.value) {
+            return null;
         }
 
         return this.entry.value.hex;
     }
-
 }
