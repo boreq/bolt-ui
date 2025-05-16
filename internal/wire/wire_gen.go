@@ -7,7 +7,7 @@
 package wire
 
 import (
-	"github.com/boreq/bolt-ui/adapters"
+	"github.com/boreq/bolt-ui/adapters/bolt"
 	"github.com/boreq/bolt-ui/application"
 	"github.com/boreq/bolt-ui/internal/config"
 	"github.com/boreq/bolt-ui/internal/service"
@@ -18,7 +18,7 @@ import (
 // Injectors from wire.go:
 
 func BuildTransactableAdapters(tx *bbolt.Tx) (*application.TransactableAdapters, error) {
-	database := adapters.NewDatabase(tx)
+	database := bolt.NewDatabase(tx)
 	transactableAdapters := &application.TransactableAdapters{
 		Database: database,
 	}
@@ -26,7 +26,7 @@ func BuildTransactableAdapters(tx *bbolt.Tx) (*application.TransactableAdapters,
 }
 
 func BuildTestTransactableAdapters(tx *bbolt.Tx, mocks Mocks) (*application.TransactableAdapters, error) {
-	database := adapters.NewDatabase(tx)
+	database := bolt.NewDatabase(tx)
 	transactableAdapters := &application.TransactableAdapters{
 		Database: database,
 	}
@@ -36,7 +36,7 @@ func BuildTestTransactableAdapters(tx *bbolt.Tx, mocks Mocks) (*application.Tran
 func BuildApplicationForTest(db *bbolt.DB) (TestApplication, error) {
 	mocks := Mocks{}
 	wireTestAdaptersProvider := newTestAdaptersProvider(mocks)
-	transactionProvider := adapters.NewTransactionProvider(db, wireTestAdaptersProvider)
+	transactionProvider := bolt.NewTransactionProvider(db, wireTestAdaptersProvider)
 	browseHandler := application.NewBrowseHandler(transactionProvider)
 	applicationApplication := &application.Application{
 		Browse: browseHandler,
@@ -55,7 +55,7 @@ func BuildService(conf *config.Config) (*service.Service, error) {
 		return nil, err
 	}
 	wireAdaptersProvider := newAdaptersProvider()
-	transactionProvider := adapters.NewTransactionProvider(db, wireAdaptersProvider)
+	transactionProvider := bolt.NewTransactionProvider(db, wireAdaptersProvider)
 	browseHandler := application.NewBrowseHandler(transactionProvider)
 	applicationApplication := &application.Application{
 		Browse: browseHandler,

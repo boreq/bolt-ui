@@ -1,7 +1,7 @@
 package wire
 
 import (
-	"github.com/boreq/bolt-ui/adapters"
+	bolt2 "github.com/boreq/bolt-ui/adapters/bolt"
 	"github.com/boreq/bolt-ui/application"
 	"github.com/google/wire"
 	bolt "go.etcd.io/bbolt"
@@ -9,36 +9,36 @@ import (
 
 //lint:ignore U1000 because
 var adaptersSet = wire.NewSet(
-	adapters.NewTransactionProvider,
-	wire.Bind(new(application.TransactionProvider), new(*adapters.TransactionProvider)),
+	bolt2.NewTransactionProvider,
+	wire.Bind(new(application.TransactionProvider), new(*bolt2.TransactionProvider)),
 
 	newAdaptersProvider,
-	wire.Bind(new(adapters.AdaptersProvider), new(*adaptersProvider)),
+	wire.Bind(new(bolt2.AdaptersProvider), new(*adaptersProvider)),
 )
 
 //lint:ignore U1000 because
 var testAdaptersSet = wire.NewSet(
-	adapters.NewTransactionProvider,
-	wire.Bind(new(application.TransactionProvider), new(*adapters.TransactionProvider)),
+	bolt2.NewTransactionProvider,
+	wire.Bind(new(application.TransactionProvider), new(*bolt2.TransactionProvider)),
 
 	newTestAdaptersProvider,
-	wire.Bind(new(adapters.AdaptersProvider), new(*testAdaptersProvider)),
+	wire.Bind(new(bolt2.AdaptersProvider), new(*testAdaptersProvider)),
 )
 
 //lint:ignore U1000 because
 var transactableAdaptersSet = wire.NewSet(
 	wire.Struct(new(application.TransactableAdapters), "*"),
 
-	adapters.NewDatabase,
-	wire.Bind(new(application.Database), new(*adapters.Database)),
+	bolt2.NewDatabase,
+	wire.Bind(new(application.Database), new(*bolt2.Database)),
 )
 
 //lint:ignore U1000 because
 var testTransactableAdaptersSet = wire.NewSet(
 	wire.Struct(new(application.TransactableAdapters), "*"),
 
-	adapters.NewDatabase,
-	wire.Bind(new(application.Database), new(*adapters.Database)),
+	bolt2.NewDatabase,
+	wire.Bind(new(application.Database), new(*bolt2.Database)),
 )
 
 type adaptersProvider struct {
