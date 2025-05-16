@@ -62,9 +62,8 @@ func (h *Handler) browse(r *http.Request) rest.RestResponse {
 		return rest.ErrBadRequest.WithMessage("Invalid path.")
 	}
 
-	query := application.Browse{
-		Path: path,
-	}
+	var before *application.Key
+	var after *application.Key
 
 	if beforeString := r.URL.Query().Get("before"); beforeString != "" {
 		b, err := hex.DecodeString(beforeString)
@@ -72,12 +71,12 @@ func (h *Handler) browse(r *http.Request) rest.RestResponse {
 			return rest.ErrBadRequest.WithMessage("Invalid before query param.")
 		}
 
-		before, err := application.NewKey(b)
+		tmp, err := application.NewKey(b)
 		if err != nil {
 			return rest.ErrBadRequest.WithMessage("Invalid before.")
 		}
 
-		query.Before = &before
+		before = &tmp
 	}
 
 	if afterString := r.URL.Query().Get("after"); afterString != "" {
@@ -86,12 +85,17 @@ func (h *Handler) browse(r *http.Request) rest.RestResponse {
 			return rest.ErrBadRequest.WithMessage("Invalid after query param.")
 		}
 
-		after, err := application.NewKey(b)
+		tmp, err := application.NewKey(b)
 		if err != nil {
 			return rest.ErrBadRequest.WithMessage("Invalid after.")
 		}
 
-		query.After = &after
+		after = &tmp
+	}
+
+	query, err := application.NewBrowse(path, before, after, nil)
+	if err != nil {
+		return rest.ErrBadRequest.WithMessage("Invalid parameters.")
 	}
 
 	tree, err := h.app.Browse.Execute(query)
