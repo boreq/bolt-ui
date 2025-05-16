@@ -34,6 +34,14 @@ func NewBrowse(path []Key, before *Key, after *Key, from *Key) (Browse, error) {
 	}, nil
 }
 
+func MustNewBrowse(path []Key, before *Key, after *Key, from *Key) Browse {
+	b, err := NewBrowse(path, before, after, from)
+	if err != nil {
+		panic(err)
+	}
+	return b
+}
+
 func (b Browse) Path() []Key {
 	return b.path
 }

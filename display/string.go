@@ -1,8 +1,9 @@
 package display
 
 import (
-	"github.com/boreq/errors"
 	"unicode"
+
+	"github.com/boreq/errors"
 )
 
 type PrettifierString struct {

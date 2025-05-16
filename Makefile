@@ -3,7 +3,7 @@ PROGRAM_NAME=bolt-ui
 
 all: test lint build
 
-ci: tools dependencies generate check-repository-unchanged test lint build
+ci: tools dependencies generate fmt check-repository-unchanged test lint build
 
 build-directory:
 	mkdir -p ./${BUILD_DIRECTORY}
@@ -21,8 +21,9 @@ check-repository-unchanged:
 	./_tools/check_repository_unchanged.sh
 
 tools:
-	 go install honnef.co/go/tools/cmd/staticcheck@latest
-	 go install github.com/google/wire/cmd/wire@latest
+	go install honnef.co/go/tools/cmd/staticcheck@latest
+	go install github.com/google/wire/cmd/wire@latest
+	go install github.com/rinchsan/gosimports/cmd/gosimports@v0.3.5 # https://github.com/golang/go/issues/20818
 
 dependencies:
 	go get ./...
@@ -40,4 +41,7 @@ test:
 clean:
 	rm -rf ./${BUILD_DIRECTORY}
 
-.PHONY: all build build-directory frontend check-repository-unchanged build-race tools dependencies generate lint test clean
+fmt:
+	gosimports -l -w ./
+
+.PHONY: all build build-directory frontend check-repository-unchanged build-race tools dependencies generate lint test clean fmt

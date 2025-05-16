@@ -1,10 +1,11 @@
 package display_test
 
 import (
+	"testing"
+
 	"github.com/boreq/bolt-ui/display"
 	"github.com/fxamacker/cbor/v2"
 	"github.com/stretchr/testify/require"
-	"testing"
 )
 
 func TestPretty(t *testing.T) {

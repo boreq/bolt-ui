@@ -2,11 +2,11 @@ package http
 
 import (
 	"encoding/hex"
-	"github.com/boreq/bolt-ui/display"
-	"github.com/boreq/errors"
 	"unicode"
 
 	"github.com/boreq/bolt-ui/application"
+	"github.com/boreq/bolt-ui/display"
+	"github.com/boreq/errors"
 )
 
 type Tree struct {

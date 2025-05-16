@@ -3,6 +3,7 @@ package display
 import (
 	"bytes"
 	"encoding/json"
+
 	"github.com/boreq/errors"
 )
 

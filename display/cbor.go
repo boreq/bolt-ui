@@ -3,6 +3,7 @@ package display
 import (
 	"bufio"
 	"bytes"
+
 	"github.com/acarl005/stripansi"
 	"github.com/boreq/errors"
 	"github.com/fxamacker/cbor/v2"
