@@ -144,7 +144,7 @@ func encodeContentType(t display.ContentType) (string, error) {
 
 func canDisplayKeyAsString(b []byte) bool {
 	for _, rne := range string(b) {
-		if !unicode.IsGraphic(rne) || !unicode.IsSpace(rne) {
+		if !unicode.IsGraphic(rne) && !unicode.IsSpace(rne) {
 			return false
 		}
 	}
